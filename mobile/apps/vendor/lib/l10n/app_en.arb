@@ -1,0 +1,8 @@
+{
+  "@@locale": "en",
+  "appTitle": "WeGoDeliva Vendor",
+  "homeGreeting": "Hello, {name}",
+  "@homeGreeting": { "placeholders": { "name": { "type": "String" } } },
+  "homePlaceholder": "Your order inbox, menu and earnings arrive in Phase 4.",
+  "signOut": "Sign out"
+}

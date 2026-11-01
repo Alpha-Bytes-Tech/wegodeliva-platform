@@ -1,0 +1,29 @@
+# Local development services for the WeGoDeliva API.
+#   docker compose up -d
+# Postgres with PostGIS (same image family as CI) and Mailpit to catch OTP emails.
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: wegodeliva
+      POSTGRES_PASSWORD: wegodeliva
+      POSTGRES_DB: wegodeliva
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wegodeliva"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI: http://localhost:8025
+
+volumes:
+  postgres-data:
