@@ -1,0 +1,8 @@
+{
+  "@@locale": "en",
+  "appTitle": "WeGoDeliva",
+  "homeGreeting": "Hello, {name}",
+  "@homeGreeting": { "placeholders": { "name": { "type": "String" } } },
+  "homePlaceholder": "Your orders, stores and wallet arrive in Phase 3.",
+  "signOut": "Sign out"
+}
