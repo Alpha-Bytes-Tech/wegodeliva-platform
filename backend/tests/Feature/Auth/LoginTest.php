@@ -51,6 +51,38 @@ it('lets a user with several roles sign in to each matching app with separate ab
     expect($user->tokens()->pluck('abilities')->all())->toEqualCanonicalizing([['app:customer'], ['app:rider']]);
 });
 
+it('gives riders and vendors the customer role when they sign in to the customer app', function (RoleName $role) {
+    $worker = makeUser($role);
+
+    $this->postJson('/api/v1/auth/login', ['email' => $worker->email, 'password' => 'password123', 'app' => 'customer'])
+        ->assertOk()
+        ->assertJsonPath('data.app', 'customer');
+
+    expect($worker->fresh()->roleNames())->toEqualCanonicalizing([$role->value, 'customer'])
+        ->and($worker->tokens()->sole()->abilities)->toBe(['app:customer']);
+})->with([RoleName::Rider, RoleName::VendorOwner, RoleName::VendorStaff]);
+
+it('does not give admin-only accounts the customer role', function () {
+    $admin = makeUser(RoleName::SuperAdmin);
+
+    expectApiError($this->postJson('/api/v1/auth/login', ['email' => $admin->email, 'password' => 'password123', 'app' => 'customer']), 403, 'role_not_allowed');
+    expect($admin->fresh()->roleNames())->toBe(['super_admin']);
+});
+
+it('does not give customers rider or vendor roles the other way round', function () {
+    $customer = makeUser(RoleName::Customer);
+
+    expectApiError($this->postJson('/api/v1/auth/login', ['email' => $customer->email, 'password' => 'password123', 'app' => 'vendor']), 403, 'role_not_allowed');
+    expect($customer->fresh()->roleNames())->toBe(['customer']);
+});
+
+it('refuses suspended riders in the customer app without upgrading them', function () {
+    $rider = User::factory()->status(UserStatus::Suspended)->withRole(RoleName::Rider)->create();
+
+    expectApiError($this->postJson('/api/v1/auth/login', ['email' => $rider->email, 'password' => 'password123', 'app' => 'customer']), 403, 'account_suspended');
+    expect($rider->fresh()->roleNames())->toBe(['rider']);
+});
+
 it('refuses suspended accounts', function () {
     $user = User::factory()->status(UserStatus::Suspended)->withRole(RoleName::Customer)->create();
 

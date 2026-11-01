@@ -70,8 +70,18 @@ it('links to an existing account with the same verified email', function () {
         ->and($existing->fresh()->email_verified_at)->not->toBeNull();
 });
 
-it('does not sign a rider-only account in to the customer app via social login', function () {
-    makeUser(RoleName::Rider)->forceFill(['email' => 'ngozi@gmail.com'])->save();
+it('links a rider account and gives it the customer role', function () {
+    $rider = makeUser(RoleName::Rider);
+    $rider->forceFill(['email' => 'ngozi@gmail.com'])->save();
+
+    $this->postJson('/api/v1/auth/social/google', ['id_token' => 'new'])->assertOk();
+
+    expect($rider->fresh()->roleNames())->toEqualCanonicalizing(['rider', 'customer'])
+        ->and(AuthIdentity::query()->sole()->user_id)->toBe($rider->id);
+});
+
+it('does not link an admin-only account in the customer app', function () {
+    makeUser(RoleName::Admin)->forceFill(['email' => 'ngozi@gmail.com'])->save();
 
     expectApiError($this->postJson('/api/v1/auth/social/google', ['id_token' => 'new']), 403, 'role_not_allowed');
     expect(AuthIdentity::query()->count())->toBe(0);

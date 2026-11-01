@@ -65,6 +65,8 @@ Every error uses the spec 14 §14.1 envelope:
 Each Sanctum token carries one ability: `app:customer`, `app:vendor`, `app:rider` or `app:admin`.
 An app only signs in users holding one of its roles (customer app → `customer`; vendor app →
 `vendor_owner`/`vendor_staff`; rider app → `rider`; admin panel → `admin`/`super_admin`/`zone_admin`).
+Riders and vendor owners/staff who sign in to the customer app are given the `customer` role
+automatically (owner decision); admin-only accounts are not.
 Admin endpoints require the `app:admin` ability **and** an admin role, so an admin's customer-app
 token cannot reach them. Token lifetimes: 60 days for apps, 12 hours for admin (env-configurable).
 

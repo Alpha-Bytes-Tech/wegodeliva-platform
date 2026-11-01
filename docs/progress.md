@@ -22,6 +22,7 @@ Last updated: 2026-11-01
   - **backend/**: Laravel 12 API on Postgres (PostGIS-ready). Users/roles/OTP/devices/auth identities/append-only audit log/cities/zones/vendor types/categories. Auth: customer sign-up (role always customer), email OTP send/verify, password login with app role hint, admin login, password reset by OTP, Google/Apple ID-token verification (JWKS) behind an interface, logout, me; app-scoped Sanctum tokens; spec 14 error envelope; rate limits per spec 13; device registration; health/readiness; audit-log endpoint. Seeders: vendor types, 14 service categories, 6 cities + 9 campus zones, super admin from env. 122 Pest tests, 96% coverage, Pint, Larastan level 6, composer audit clean. Docker Compose with PostGIS + Mailpit.
   - **web/**: Next.js 16 admin shell: login through a route handler that keeps the token in an httpOnly cookie, protected layout with spec 12 sections, dashboard placeholder, brand tokens + dark mode. ESLint/Prettier, Vitest (12 tests), Playwright smoke test, build.
   - **mobile/**: Melos 8 pub workspace: `core`, `ui`, `auth` packages; customer/vendor/rider shells (splash → email → code → home), dev/staging/prod flavours, Android IDs kept, target SDK 36. 44 unit/widget tests, analyze clean.
+  - Owner decision applied: riders and vendor owners/staff get the `customer` role automatically when they sign in to the customer app (spec 02 §2.4 updated; admin-only accounts excluded).
   - ADRs 0009 (roles table), 0010 (app-scoped tokens, cookie session for admin), 0011 (pub workspace + shared auth package).
 
 ## In progress
@@ -47,7 +48,6 @@ Last updated: 2026-11-01
 - **GitHub admin**: branch protection on `main` requiring the four CI jobs.
 
 **Questions for the owner**
-- A user with another role (e.g. a rider) who also wants to order food: should the customer app give them the customer role automatically after email verification, or keep the spec rule that each app accepts only users who already hold its role? Phase 1 follows the spec (rejects).
 - Admin "permissions per role" (spec 12.2): fixed in code (ADR 0009) unless you want admins to edit them at runtime.
 
 **Earlier items still open**

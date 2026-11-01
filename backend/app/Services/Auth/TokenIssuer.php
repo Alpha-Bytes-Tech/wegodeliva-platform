@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Enums\ClientApp;
+use App\Enums\RoleName;
 use App\Exceptions\ApiException;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -17,6 +18,7 @@ final class TokenIssuer
         if (! $user->status->canSignIn()) {
             throw new ApiException('account_suspended', 403);
         }
+        $this->grantCustomerRoleToWorkers($user, $app);
         if (! $user->canUseApp($app)) {
             throw new ApiException('role_not_allowed', 403);
         }
@@ -42,5 +44,20 @@ final class TokenIssuer
             'app' => $app->value,
             'user' => new UserResource($user->load('roles')),
         ];
+    }
+
+    /**
+     * Owner decision 2026-11-01: riders and vendor owners/staff may also order as customers, so
+     * the customer app gives them the customer role on their first sign-in there. Admin-only
+     * accounts are not upgraded; they keep separate personal accounts.
+     */
+    private function grantCustomerRoleToWorkers(User $user, ClientApp $app): void
+    {
+        if ($app !== ClientApp::Customer || $user->hasRole(RoleName::Customer)) {
+            return;
+        }
+        if ($user->hasRole(RoleName::Rider, RoleName::VendorOwner, RoleName::VendorStaff)) {
+            $user->assignRole(RoleName::Customer);
+        }
     }
 }
