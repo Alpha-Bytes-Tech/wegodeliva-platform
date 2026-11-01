@@ -55,15 +55,41 @@ Each vendor can have zero or more fees (e.g. "Service charge", "Packaging"):
 - percent of subtotal, or fixed amount;
 - `beneficiary`: platform (kept by WeGoDeliva) or vendor (added to vendor earnings).
 
-## 5.6 Tax
+## 5.6 Tax (VAT)
 
-Owner decisions 2026-11-01: prices are **not** VAT-inclusive; VAT is **not** charged on delivery fees or service fees; WeGoDeliva is VAT-registered.
+Owner decisions 2026-11-01: prices are **not** VAT-inclusive; VAT is **not** charged on delivery fees or service fees; WeGoDeliva is VAT-registered; **each vendor charges and remits VAT on its own goods and services**; **WeGoDeliva charges VAT on its commission**.
 
-- VAT applies to **goods and services sold by vendors** (item lines and service bookings) at the standard rate (7.5%, a setting).
-- Basis: the **discounted** item amount — `vat = rate × (vatable_subtotal − vendor-funded discount on vatable lines)`. Rationale: VAT is due on the consideration actually charged; a vendor-funded discount reduces it. (Old system: before discount.) Platform-funded discounts do not reduce the VAT base.
-- **Exempt items**: Nigerian VAT law exempts some supplies, notably basic food items and medical/pharmaceutical products. Each category (and, as an override, each product) has a `vat_treatment`: standard / exempt / zero-rated. Default for food, groceries and pharmacy categories: to be set by the accountant before launch.
-- VAT is shown as its own line at checkout and on receipts; each order stores the VAT per line.
-- ⚠ **Accountant to confirm before launch** (team cannot give tax advice): (a) whether WeGoDeliva charges and remits VAT on vendors' goods as the marketplace operator, or each VAT-registered vendor does; (b) the exempt list per category; (c) VAT on WeGoDeliva's own commission charged to vendors/riders (normally yes — that is WeGoDeliva's own service). The system supports both (a) options via a setting.
+### VAT on vendors' goods and services (vendor's liability)
+- WeGoDeliva only **calculates, shows and passes on** the vendor's VAT; the vendor files and remits it. WeGoDeliva does not account for this VAT.
+- Vendor settings: `vat_registered` (yes/no) and `tin` (Tax ID, checked at onboarding). Only VAT-registered vendors charge VAT. A vendor below the registration threshold, or not registered, charges no VAT, and the customer sees no VAT line. (Research note: reports on the Nigeria Tax Act 2025 put the VAT registration threshold at roughly ₦50m turnover, up from ₦25m; some sources say ₦100m. Vendors decide their own status with their advisers; WeGoDeliva only records it.)
+- Rate: standard 7.5% (setting).
+- Basis: the discounted line amount. `vat = rate × (vatable lines − vendor-funded discount on those lines)`. VAT is due on what the customer is actually charged, and coupons are vendor-funded by default. Platform-funded discounts do not reduce the base.
+- Each category has a `vat_treatment`, which a product or service can override: `standard` (7.5%), `zero_rated` (0%, the vendor can still reclaim input VAT) or `exempt` (no VAT). The customer sees no VAT for zero-rated or exempt items. The distinction matters only for the vendor's own returns, so it appears on vendor statements.
+- VAT is shown as its own line at checkout and on receipts, and each order line stores its VAT rate and amount. Vendor statements give per-period VAT totals (standard / zero-rated / exempt sales) so vendors can file.
+- VAT collected passes to the vendor's earnings in full. **Commission is never charged on the VAT.**
+
+### Proposed default VAT treatment per category (research, 2026-11-01; accountant to confirm)
+The Nigeria Tax Act 2025 (in force 1 January 2026) treats basic food and medical/pharmaceutical products favourably. Secondary sources disagree on whether some items are zero-rated or exempt, and the Minister can change the lists by order. The defaults below are therefore editable settings, not hard-coded:
+
+| Category group | Default | Note |
+| --- | --- | --- |
+| Basic/unprocessed food: grains, rice, beans, garri, yam, tubers, fresh fruit & vegetables, fresh meat & fish, eggs, bread, cooking oil, salt, water | zero_rated | "Basic food items" |
+| Baby food and baby products | exempt | Listed as exempt in reports on the new Act |
+| Medical and pharmaceutical products, including registered herbal medicines | zero_rated | Some sources say exempt; the customer pays 0% either way |
+| Medical equipment and assistive devices | exempt/zero_rated | Accountant to confirm |
+| Sanitary pads, tampons and similar | exempt | Listed in reports on the new Act |
+| Educational books and materials | zero_rated | |
+| Restaurant / prepared / cooked food, snacks, drinks (food vendors) | standard | Prepared meals are a taxable supply, not "basic food items" |
+| Packaged and processed groceries (beverages, confectionery, toiletries, household goods) | standard | |
+| Fashion and general merchandise | standard | |
+| Services (laundry, cleaning, beauty, repairs) | standard | Medical and educational services follow their own exemptions |
+
+Sources consulted: TheCable ("Understanding reliefs and exemptions in Nigeria's 2026 tax reforms"; "Full list: items exempted from VAT in new tax law"), Mondaq ("VAT provisions under the Nigeria Tax Act, 2025"), EY tax alert ("Nigeria Tax Act, 2025 has been signed"), Forvis Mazars ("VAT & Nigeria 2025 tax reforms"). ⚠ The accountant must sign off this table against the gazetted Act before launch.
+
+### VAT on WeGoDeliva's commission (WeGoDeliva's liability)
+- WeGoDeliva charges 7.5% VAT **on its commission** (the 5% vendor commission and the 3% delivery commission), and accounts for and remits that VAT.
+- It is accrued and deducted with the commission at withdrawal (§5.8). Statements show it as a separate line with WeGoDeliva's TIN, so VAT-registered vendors can claim it as input VAT.
+- Delivery fees and service fees charged to customers carry no VAT, per the owner's decision. ⚠ The accountant should confirm this, because platform service fees are WeGoDeliva's own taxable supply.
 
 ## 5.7 Total
 
@@ -81,19 +107,19 @@ Rates (owner decision 2026-11-01), both settings with per-vendor / per-rider ove
 **Commission is deducted when the vendor or rider withdraws** (owner decision): earnings are credited gross at delivery, the commission accrues against them, and it is settled out of the payout.
 
 At delivery (once per order, idempotent, one DB transaction):
-- `vendor_gross` = subtotal − vendor-funded discount + vendor-beneficiary fees. (VAT is not vendor revenue: it is held for remittance per §5.6.)
-- `vendor_commission` = 5% × (subtotal − vendor-funded discount).
+- `vendor_gross` = subtotal − vendor-funded discount + vendor-beneficiary fees + **VAT collected on the vendor's behalf** (passed through; the vendor remits it, §5.6).
+- `vendor_commission` = 5% × (subtotal − vendor-funded discount) — never on VAT; plus `vendor_commission_vat` = 7.5% × vendor_commission.
 - `rider_gross` = delivery fee (undiscounted; delivery coupons are platform-funded) + tip.
-- `rider_commission` = 3% × delivery fee (never on tips).
+- `rider_commission` = 3% × delivery fee (never on tips); plus `rider_commission_vat` = 7.5% × rider_commission.
 - Write `commission_records` with all of these.
 - Vendor earnings ledger: **credit** `vendor_gross` (kind `order_earning`) and **accrue** `vendor_commission` (kind `commission_accrued`, a pending debit).
 - Rider earnings ledger: **credit** `rider_gross`, **accrue** `rider_commission`.
 - Pay-on-delivery: the rider collected `total` → add to the rider's **cash balance** (owed to WeGoDeliva) — see [06](06-payments-wallet-payouts.md) §6.5.
 
 Balances shown to vendors/riders:
-- **Gross earnings**, **commission due**, **cash owed** (riders), and **available to withdraw** = gross − commission due − cash owed − pending payouts.
+- **Gross earnings**, **commission due (incl. VAT on commission)**, **cash owed** (riders), and **available to withdraw** = gross − commission due − VAT on commission − cash owed − pending payouts.
 
-At withdrawal (payout approval): post a debit settling all accrued commission (and, for riders, the cash owed) and a debit for the payout amount; the transfer amount = what the user requested, which can never exceed "available to withdraw". VAT on WeGoDeliva's commission (if the accountant confirms it applies) is shown on the payout statement.
+At withdrawal (payout approval): post debits settling all accrued commission and its VAT (and, for riders, the cash owed), and a debit for the payout amount; the transfer amount = what the user requested, which can never exceed "available to withdraw". The payout statement is a tax invoice for WeGoDeliva's commission (commission, 7.5% VAT, WeGoDeliva TIN).
 
 Vendor-owned riders: the delivery fee belongs to the vendor (credited to the vendor's earnings; the 3% delivery commission applies); the vendor pays its own riders outside the platform. Independent and WeGoDeliva-managed riders are credited directly.
 
@@ -101,7 +127,12 @@ Self-pickup orders: no delivery fee; vendor earnings as above. If the customer p
 
 Platform revenue per order = vendor commission + delivery commission + platform-beneficiary service fees − platform-funded discounts − referral rewards.
 
-Worked example (food order, delivered, paid online): items ₦5,000, vendor coupon −₦500, VAT 7.5% on ₦4,500 = ₦337.50, delivery ₦1,000, service fee (platform) ₦100, tip ₦200 → customer pays ₦6,137.50. Vendor gross ₦4,500, vendor commission ₦225 → vendor can withdraw ₦4,275. Rider gross ₦1,200, commission ₦30 → rider can withdraw ₦1,170. Platform keeps ₦225 + ₦30 + ₦100 = ₦355 and holds ₦337.50 VAT for remittance.
+Worked example (restaurant meal from a VAT-registered vendor, delivered, paid online): items ₦5,000, vendor coupon −₦500, VAT 7.5% on ₦4,500 = ₦337.50, delivery ₦1,000, platform service fee ₦100, tip ₦200 → **customer pays ₦6,137.50**.
+- Vendor: gross ₦4,500 + VAT ₦337.50 = ₦4,837.50; commission ₦225 + VAT on commission ₦16.88 → **can withdraw ₦4,595.62**, and remits ₦337.50 VAT itself (it can claim ₦16.88 as input VAT).
+- Rider: gross ₦1,200; commission ₦30 + VAT ₦2.25 → **can withdraw ₦1,167.75**.
+- WeGoDeliva: revenue ₦225 + ₦30 + ₦100 = **₦355**; collects ₦19.13 VAT on commission and remits it.
+- Check: 4,595.62 + 1,167.75 + 355 + 19.13 = 6,137.50 ✔.
+- Same order from a non-VAT-registered vendor, or for zero-rated groceries: no VAT line; the customer pays ₦5,800.
 
 ## 5.9 Service booking price
 

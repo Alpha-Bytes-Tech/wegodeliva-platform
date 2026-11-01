@@ -7,7 +7,7 @@ All vendors and customers on the old system are **test/demo users**. So:
 - **No customer, vendor, order, wallet or earnings data is migrated.** The new platform starts with an empty production database (plus seed data: vendor types, categories, cities, campus zones, content pages, FAQs, settings).
 - The Phase 7 wallet "reconciliation to the kobo" from CLAUDE.md does not apply to customers/vendors because no balances carry over. Before cut-over we still take a **read-only snapshot** of the old database from cPanel and confirm no real money is involved (any non-zero wallet/earnings balance, any successful real Paystack/Flutterwave payment). If real balances turn up, the owner decides case by case and §M.4 below applies to those accounts only.
 - Loyalty points: the owner chose to convert points to wallet credit, but since all holders are test users there is nothing to convert. If the snapshot shows real holders, convert at the old rate.
-- Riders: the owner's answer covered vendors and customers. ⚠ **Owner to confirm riders are also test accounts.** If there are real riders, re-onboard them in the new rider app (fresh documents and approval) rather than migrating.
+- Riders: also test accounts (owner, R5). Nothing is migrated.
 - Old production is on **cPanel**. It stays up, read-only, until the new apps are live, then is switched off (files and DB dump archived privately for 1 year).
 - What still matters from the old system: the **app store identities** (§M.7), the Firebase project (kept, so FCM continues), the domain, and the Google Maps keys (restrict/rotate).
 
@@ -119,13 +119,10 @@ The same method applies to vendor/rider earnings balances and rider cash balance
 
 ## M.7 App identity continuity
 
-Keep `com.wegodeliva.customerapp`, `com.wegodeliva.vendorapp`, `com.wegodeliva.riderapp` (Android `applicationId` and iOS bundle id) and sign with the existing upload keys / Play App Signing, so the new apps install as updates. Version codes must be higher than the live ones.
+Owner answer 2026-11-01 (R1): **Play App Signing is enabled** for all three apps, and **Alpha Bytes Technologies owns the Apple Developer account**. So:
 
-**Owner answer 2026-11-01: the keystore passwords are not available, Play App Signing status is unknown, and there is no Apple certificate access.** Options, in order of preference:
-
-1. **Play App Signing is on** (check: Play Console → app → Test and release → App integrity). Then the lost upload key can be replaced: request an **upload key reset** in Play Console, register a new upload key, and keep the same package IDs. Usually takes a few days.
-2. **Play App Signing is off and the key passwords can't be recovered.** The existing Android listings can never be updated. Publish new listings with new package IDs (e.g. `com.wegodeliva.app`, `com.wegodeliva.vendor`, `com.wegodeliva.rider`) and unpublish the old ones. Because all current users are test users, nobody is lost.
-3. **iOS**: bundle IDs belong to the Apple Developer account, not to a certificate. Whoever owns that account can create new certificates. If the account is lost, use new bundle IDs under a new account.
-4. **Not on the stores at all**: choose fresh IDs now (same as option 2).
-
-Decision needed before Phase 1 sets up app flavours (package IDs are set there). Until then, Phase 1 uses the existing IDs with `.dev` / `.staging` suffixes for non-production flavours, which works with either outcome.
+- Keep `com.wegodeliva.customerapp`, `com.wegodeliva.vendorapp`, `com.wegodeliva.riderapp` as the Android `applicationId` and iOS bundle id for production. Non-production flavours use `.dev` / `.staging` suffixes.
+- **Android:** the old upload keystores' passwords are lost, so before the first Phase 7 release the owner requests an **upload key reset** in Play Console (Test and release → App integrity → App signing → Request upload key reset) for each app. The team generates the new upload keys and stores them in the CI secret store and the owner's vault. Google keeps the app signing key, so users receive updates normally. Allow a few days per app for Google to process the reset.
+- **iOS:** the team creates new distribution certificates and provisioning profiles under the Alpha Bytes account (admin or App Manager access needed). Bundle ids are unchanged.
+- Version codes and build numbers must be higher than the live ones: customer > 11, vendor > 3, rider > 2.
+- The old `upload-keystore.jks` files in `../legacy/` are no longer needed and must never be copied.

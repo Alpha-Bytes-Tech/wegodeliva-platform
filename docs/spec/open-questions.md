@@ -41,14 +41,23 @@ Items 1–27 were answered on 2026-11-01. The answers have been applied to the s
 - **Referral "purchase"** = goods/services value after discount, excluding delivery, fees, VAT and tip. The reward is paid when the order is delivered or the booking is completed.
 - **Campuses outside Lagos** (UI, FUNAAB, OOU, OAU, UNIBEN) make the platform multi-city within Nigeria. The product description changes from "for Lagos" to "for Nigeria, starting with Lagos and campuses".
 
+## Answered 2026-11-01 (second round)
+
+| # | Answer | Applied in |
+| --- | --- | --- |
+| R1 | Play App Signing is on for all three apps; Alpha Bytes owns the Apple Developer account | [data-migration](data-migration.md) §M.7: keep the package IDs; request upload key resets |
+| R2 | OK to open Termii, starting on the free tier | Owner creates the account (the team can't create accounts or handle passwords), then puts the API key in the staging secret store |
+| R3 | (a) Each vendor charges and remits VAT; (b) team to research exemptions; (c) VAT on commission: yes | [05](05-pricing-fees-commission.md) §5.6, §5.8 |
+| R4 | Team to research and advise | [06](06-payments-wallet-payouts.md) §6.4.1: recommends launching without cash top-ups |
+| R5 | Riders are test accounts too | [data-migration](data-migration.md) §M.0 |
+| R6 | Use the services list from the existing app | The list is **not in the old code**. It lives in the live database. Needs an export (see S1) |
+| R7 | 50% cancellation fee: yes | [13](13-settings.md) |
+| R8 | Campus boundaries later | Phase 6 admin panel |
+
 ## Remaining questions
 
-- **R1 ★ App signing.** In Play Console, is Play App Signing enabled for the three apps? Who owns the Apple Developer account? This decides whether we keep the old package IDs or publish new apps ([data-migration](data-migration.md) §M.7).
-- **R2 ★ SMS provider.** OK to open a Termii account (with DND route) for OTP? It costs money, so your approval is needed. Until then dev/staging log OTPs instead of sending them.
-- **R3 Accountant.** (a) Does WeGoDeliva charge and remit VAT on vendors' goods, or does each vendor? (b) Which categories are VAT-exempt (basic food, pharmaceuticals)? (c) Is VAT due on WeGoDeliva's commission?
-- **R4 Legal.** Can WeGoDeliva hold a closed-loop customer wallet without a CBN licence, and what are the current CBN tier limits ([06](06-payments-wallet-payouts.md) §6.4)?
-- **R5 Riders.** Are the riders on the old system also test accounts?
-- **R6 Services list.** Which service categories at launch (laundry, cleaning, hair & beauty, repairs, tutoring…)?
-- **R7 Cancellation fee** after the vendor accepts a food order: is 50% of the item value OK?
-- **R8 Campus boundaries.** Can ops share a map pin or rough boundary for each campus? Can be done later in the admin panel.
-- **R9 Support WhatsApp numbers** — when available.
+- **S1 Services list.** The old app reads its service categories from the live database on cPanel, not from code. Export the `categories` and `subcategories` tables (phpMyAdmin → Export → CSV), or send a screenshot of the Services screen in the old app.
+- **S2 ★ Wallet decision (R4).** Approve launching with "WeGoDeliva Credit" (refunds + referral rewards, no cash top-ups), adding top-ups later through a licensed partner? See [06](06-payments-wallet-payouts.md) §6.4.1.
+- **S3 Lawyer and accountant sign-off before launch.** Lawyer: the wallet and earnings-holding model. Accountant: the default VAT table, VAT on platform service fees, and the CBN tier figures. Not needed before Phase 1.
+- **S4 Termii account.** Tell us when it exists. Also register a sender ID ("WeGoDeliva"); it takes a few days and is needed for the DND route.
+- **S5 Support WhatsApp numbers**, when available.

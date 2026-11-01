@@ -165,3 +165,6 @@ Parcel orders also carry: `package_type_id`, `weight_g`, `length_cm`, `width_cm`
 - **conversation_participants** — `conversation_id`, `user_id`, `role`, `last_read_at`.
 - **messages** — `conversation_id`, `sender_user_id`, `body` (text, length-limited), `attachment_path` (images only, private bucket), `created_at`, `deleted_at` (moderation). Phone numbers and links in messages are allowed but flagged for moderation (SHOULD).
 - Messages are written through Laravel (validated, rate-limited, stored in Postgres) and broadcast on Supabase Realtime channel `conversation:{uuid}` authorised by a Laravel-minted JWT; RLS limits reads to participants.
+
+**VAT (2026-11-01, R3)**: `vendors.vat_registered` (bool), `vendors.tin`, `vendors.vat_certificate_path` (private). `commission_records` gains `vendor_commission_vat_kobo`, `rider_commission_vat_kobo`. `categories.vat_treatment` defaults come from the table in [05](05-pricing-fees-commission.md) §5.6.
+**Wallet (R4)**: `wallet_transactions.kind` gains `promo_credit`. Cash top-ups sit behind a feature flag. When the flag is on, `wallets.provider` and `provider_account_ref` hold the licensed partner's sub-account.

@@ -36,17 +36,32 @@ The old system skipped the amount, currency and reference checks and accepted we
 - Every user has one wallet (created at sign-up). Currency NGN.
 - **Balance changes only through the ledger**: each change creates a `wallet_transactions` row with `balance_after`, inside a DB transaction holding a row lock on the wallet. Wallet balance never goes below zero except through an explicit admin adjustment.
 - **Closed loop** (owner decision 2026-11-01): wallet money can only be spent on WeGoDeliva. **No withdrawal to a bank account** and no transfers between users. The only ways money leaves a wallet are order payments and admin adjustments. The terms of service must say so.
-- **KYC tiers following CBN's three-tier structure** (owner decision). Limits are settings so they can follow CBN changes; the defaults below must be **checked against the current CBN circular by the owner's legal adviser before launch**:
+- **KYC tiers following CBN's three-tier structure** (owner decision). Limits are settings. The figures below are the ones most consistently reported from CBN's 2017 mobile-money review (circular BPS/DIR/GEN/CIR/04/007). Some 2026 sources quote ₦30,000 a day for Tier 1, so **confirm against the CBN circular itself**. Since CBN's December 2023 circular, Tier 2 and 3 need **both BVN and NIN**.
 
   | Tier | Verification needed | Daily top-up limit | Max wallet balance |
   | --- | --- | --- | --- |
   | 1 (default) | Verified phone (OTP) + name + verified email | ₦50,000 | ₦300,000 |
-  | 2 | Tier 1 + BVN **or** NIN verified via a KYC provider (e.g. Paystack/Flutterwave identity, Dojah, Prembly/Smile ID) | ₦200,000 | ₦500,000 |
+  | 2 | Tier 1 + **BVN and NIN** verified through a KYC provider | ₦200,000 | ₦500,000 |
   | 3 | Tier 2 + government ID document + verified address | ₦5,000,000 | No cap |
 
-  A top-up that would exceed the daily limit or the balance cap is refused with a message explaining how to upgrade. Refunds and referral rewards are allowed to exceed the daily top-up limit but not the balance cap (excess is refunded to the original payment method instead). Launch scope: Tiers 1 and 2; Tier 3 LATER.
-- ⚠ Regulatory note for the owner: holding customer balances can require a CBN licence (e.g. as a payment service provider) depending on how funds are held. A closed-loop wallet with funds sitting in WeGoDeliva's Paystack/Flutterwave balance is the common lower-risk pattern, but this needs a legal opinion before launch.
-- **Top-up**: amount ≥ minimum (setting, default ₦100) and within the tier limits. Creates a pending top-up + gateway payment; credited only after server verification as in 6.2. Pending top-ups expire after 15 minutes.
+  A top-up that would exceed the daily limit or the balance cap is refused, with a message explaining how to upgrade. Refunds and referral rewards may exceed the daily top-up limit but not the balance cap; any excess is refunded to the original payment method. Launch scope: Tiers 1 and 2. Tier 3 is LATER.
+
+### 6.4.1 Regulatory position and recommendation (research 2026-11-01, R4)
+
+What the research found (see sources in the owner report). This is not legal advice:
+- In Nigeria, **issuing wallets that hold customer funds is a regulated activity**. Sources agree that a Payment Solution Service Provider (PSSP) licence does **not** allow holding customer funds or issuing wallets. Wallets fall under the **Mobile Money Operator (MMO)** licence, reported at about ₦2 billion minimum capital, or are run by a bank or MMO partner.
+- No source found a Nigerian equivalent of the EU/UK "limited network" exemption for closed-loop wallets. **Being closed-loop does not, on the evidence found, take a prepaid top-up wallet outside CBN rules.**
+- Collecting payments for vendors and paying them out after commission (the marketplace model) is common, and normally runs on licensed processors' settlement features (Paystack/Flutterwave). That is a different question from customers storing their own money with WeGoDeliva.
+
+**Recommendation, needs owner approval because it narrows the earlier decision:**
+1. **Launch without cash top-ups.** The wallet becomes **"WeGoDeliva Credit"**, holding only (a) refunds the customer chooses to take as credit (they can always choose a refund to their card or bank instead) and (b) referral rewards and promotional credit. Credit is closed-loop, can't be withdrawn or transferred, and is spent at checkout like today. No customer deposits means far lower regulatory exposure. The KYC tiers stay designed but switched off.
+2. **Add cash top-ups later** only through a **licensed partner**: a bank or MMO wallet-as-a-service provider, where each customer wallet is a sub-account the partner holds and the partner does KYC. Our ledger mirrors the partner's balances. This keeps the top-up UX and the CBN tier limits (the partner enforces them) without WeGoDeliva needing an MMO licence.
+3. **Vendor and rider earnings**: before launch, ask the Paystack/Flutterwave account managers whether holding earnings until a payout request (with commission deducted at withdrawal) is acceptable in a WeGoDeliva merchant balance. The alternative is the gateways' split-payment/subaccount features, which pay vendors automatically. That would change "commission at withdrawal" to "commission at payment".
+4. Get a short written opinion from a Nigerian fintech lawyer on 1–3 before go-live. Budget for it.
+
+The ledger, KYC and limit design in this section stays as written. Only the **top-up feature flag** is off at launch, pending the owner's decision.
+
+- **Top-up** (when enabled): amount ≥ minimum (setting, default ₦100) and within the tier limits. Creates a pending top-up + gateway payment; credited only after server verification as in 6.2. Pending top-ups expire after 15 minutes.
 - **Paying for an order** with the wallet: debit `total` in the same transaction that creates the order.
 - **History**: paginated list of transactions with kind, amount, date, related order.
 - Admin manual credit/debit: requires a reason, written to the audit log, shown to the user as "Adjustment".

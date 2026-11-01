@@ -30,12 +30,12 @@ The old system had ~250 setting keys, many for template features or app theming.
 
 ## Finance
 - Default vendor commission [5%]; default delivery commission [3% of the delivery fee]; commission settled at withdrawal.
-- VAT rate [7.5%]; prices exclude VAT; VAT not applied to delivery or service fees; VAT on goods charged by [platform | vendor] (accountant to confirm).
+- VAT rate [7.5%]; prices exclude VAT; no VAT on delivery or service fees; VAT on goods is charged and remitted by each VAT-registered vendor; VAT on WeGoDeliva commission [7.5%]; default VAT treatment per category (05 §5.6).
 - Auto-refund to wallet on cancellation [on].
-- Wallet top-up min [₦100]; KYC tier limits (daily top-up, max balance) per tier [CBN figures, see 06 §6.4]; wallet withdrawals disabled (fixed).
+- Wallet cash top-ups [off at launch — see 06 §6.4.1]; top-up min [₦100]; KYC tier limits (daily top-up, max balance) per tier [CBN figures, see 06 §6.4]; wallet withdrawals disabled (fixed).
 - Payout minimum [₦1,000]; payouts on request; transfer gateway [Paystack | Flutterwave]; transfer fee borne by [platform].
 - Referral reward [5% of first purchase, cap ₦5,000, referrer only]; clawback window [7 days].
-- Pay on delivery max order total [₦20,000]; cancellation fee after vendor accepts [50% of items for perishable food]; rider item-loss charge cap [setting].
+- Pay on delivery max order total [₦20,000]; cancellation fee after vendor accepts [50% of items for perishable food — confirmed]; rider item-loss charge cap [setting].
 - Paystack enabled, Flutterwave enabled, default gateway.
 
 ## Notifications

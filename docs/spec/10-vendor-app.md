@@ -39,3 +39,10 @@ App name **WeGoDeliva Vendor** (keep the live package/bundle ID). The vendor web
 | Availability | Working hours per weekday, blocked dates, capacity per slot. |
 | Booking inbox | Requested / Confirmed / Today / Completed. Accept or decline (reason) requested bookings; calendar view (SHOULD). |
 | Booking details | Customer, location, time, options, note; chat; **Start** (enter the customer's start code) → in progress; **Complete**; collect payment if pay on completion. |
+
+## Tax details (2026-11-01, R3)
+
+| Screen | Purpose / behaviour |
+| --- | --- |
+| Tax settings (registration and profile) | VAT registered yes/no, TIN, VAT certificate upload (admin verifies). Changes need admin re-approval. |
+| VAT statement | Per period: standard / zero-rated / exempt sales, VAT collected (for the vendor to remit), and VAT paid on WeGoDeliva commission (input VAT). |
