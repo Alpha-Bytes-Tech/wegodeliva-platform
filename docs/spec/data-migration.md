@@ -65,7 +65,7 @@ Status: **plan**, based on the old schema in the migration files only. No produc
 | `content_pages`, `faqs`, `onboardings`, `cancellation_reasons` | same | Review texts for template wording before load. |
 | `push_notifications` | `broadcasts` | Optional (history only). |
 | `fees`, `fee_vendor` | `fees`, `vendor_fees` | `for_admin` → beneficiary platform. |
-| `loyalty_points`, `loyalty_point_reports` | — / archived | If Q2 out, convert outstanding points to wallet credit **only if owner decides** (they may have been promised value). |
+| `loyalty_points`, `loyalty_point_reports` | — / archived | Loyalty is LATER (Q2): archive; convert outstanding points to wallet credit **only if owner decides** (they may have been promised value). |
 | `flash_sales`, `flash_sale_items` | — / archived | Q4. |
 | `subscriptions`, `subscription_vendor` | archived | Q1. |
 | `fleets`, `fleet_user`, `fleet_vehicle` | archived | O9. |

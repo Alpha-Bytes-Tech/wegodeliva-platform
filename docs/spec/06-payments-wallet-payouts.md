@@ -73,6 +73,6 @@ Triggered when a **paid** order is cancelled or fails, or when an admin issues a
 - When the referred user's **first order is delivered**, the referrer's wallet is credited the reward amount (setting) and the referral becomes `rewarded`. Reward for the new user too (SHOULD — owner decides).
 - Anti-abuse: one referral per phone number and device; self-referral blocked; admin can void.
 
-## 6.9 Loyalty points (LATER, if confirmed — Q2)
+## 6.9 Loyalty points (LATER — Q2; not built at launch)
 
 Old behaviour for reference: points = order total × rate on delivered+paid orders; points could be converted to wallet balance at a fixed rate when the feature was switched on.

@@ -36,7 +36,7 @@ Login: email + password + TOTP. All writes audited. Zone admins see only their z
 - Coupons: create/edit with all rules in [05](05-pricing-fees-commission.md) §5.4; usage report.
 - Referral programme settings and report (referrals, rewards paid, voids).
 - Broadcast push notifications by audience/zone with optional deep link; history.
-- Flash sales / loyalty — only if Q2/Q4 kept.
+- Flash sales / loyalty — LATER (Q2, Q4); not built at launch.
 
 ## 12.7 Finance
 - Payments: all gateway payments with verification status; webhook event log; mismatches.

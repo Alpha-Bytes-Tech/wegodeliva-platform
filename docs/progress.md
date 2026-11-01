@@ -12,11 +12,12 @@ Last updated: 2026-11-01
 - 2026-11-01 — Legacy code read once (backend, customer, vendor and rider apps in `../legacy/`) for Phase 0 only.
 - 2026-11-01 — Functional specification drafted in `docs/spec/` (scope, roles, entities, order lifecycle, pricing/commission, payments/wallet/payouts, dispatch, notifications, every screen of the 3 apps, admin panel, settings, API behaviour, data-migration plan, legacy defects, open questions).
 
+- 2026-11-01 — Owner confirmed the out-of-scope list as proposed (O1–O11 out; Q1–Q12 per team suggestion). Spec updated.
+
 ## In progress
 
-- Owner review of the spec, especially:
-  - Out-of-scope list → [spec/01-scope.md §1.4](spec/01-scope.md) (O1–O11 definitely out, Q1–Q12 owner decides).
-  - ★ questions in [spec/open-questions.md](spec/open-questions.md).
+- Owner review of the rest of the spec.
+- ★ questions in [spec/open-questions.md](spec/open-questions.md) (questions 1–2 answered).
 
 ## Next (Phase 1 — Foundations, after approval)
 

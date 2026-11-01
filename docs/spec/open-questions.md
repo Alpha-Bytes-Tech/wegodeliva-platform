@@ -3,8 +3,8 @@
 Answer inline (or in chat) and the team will update the spec. Items marked ★ block Phase 1–2 design; others can wait until the relevant phase.
 
 ## Scope
-1. ★ Confirm the **definitely-out** list O1–O11 in [01-scope.md](01-scope.md) §1.4.
-2. ★ Decide each **probably-out** item Q1–Q12 (subscriptions, loyalty, wallet transfers, flash sales, chat, languages, multi-vendor cart, vendor-owned riders, offline payment, Facebook login, rider prepaid wallet, barcode).
+1. ~~Confirm the definitely-out list O1–O11.~~ **Answered 2026-11-01: confirmed as proposed.**
+2. ~~Decide Q1–Q12.~~ **Answered 2026-11-01: team's suggestions accepted** (see [01-scope.md](01-scope.md) §1.4).
 3. Which vendor types are live today and roughly how many vendors/riders/customers are active? (Helps size the migration and the launch.)
 4. Is "fashion" really in scope at launch, or food / groceries / pharmacy / parcels first?
 5. Which campuses are first? We need their boundaries to draw campus zones.

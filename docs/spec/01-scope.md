@@ -41,9 +41,9 @@ The old system grouped vendors by a **vendor type**, and each type switched on a
 - Admin panel: dashboards, users, vendors, riders, approvals, orders, refunds, payouts, zones and fees, promos, content pages, FAQs, onboarding slides, settings, audit log, reports.
 - In-app support: WhatsApp link and an "report a problem with this order" form.
 
-## 1.4 Out of scope — NEEDS OWNER CONFIRMATION
+## 1.4 Out of scope — CONFIRMED by owner 2026-11-01
 
-The old system was a generic template that shipped many modules WeGoDeliva does not appear to use. The team proposes to **not build** the following. Nothing on this list will be built until the owner confirms each line (see also [open-questions.md](open-questions.md)).
+The old system was a generic template that shipped many modules WeGoDeliva does not use. The owner confirmed this whole section as proposed on 2026-11-01: everything in the first table is out, and every item in the second table follows the team's suggestion. Changing any line is a scope change and needs the owner's approval.
 
 ### Definitely out (template features unrelated to WeGoDeliva's business)
 
@@ -61,9 +61,9 @@ The old system was a generic template that shipped many modules WeGoDeliva does 
 | O10 | Digital products | Selling downloadable files with signed download links | WeGoDeliva delivers physical goods. |
 | O11 | Remote "custom web view" payment pages for gateways we drop | Hosted pages per gateway | Only Paystack/Flutterwave checkout remains. |
 
-### Probably out — owner decides
+### Decided by owner (team's suggestion accepted)
 
-| # | Module | What it did | Team's suggestion |
+| # | Module | What it did | Decision |
 | --- | --- | --- | --- |
 | Q1 | Vendor subscription plans | Vendors pay a recurring fee instead of (or as well as) commission; plan limits number of orders | Out for launch; commission only. |
 | Q2 | Loyalty points | Points earned per ₦ spent, redeemable into wallet | LATER. |

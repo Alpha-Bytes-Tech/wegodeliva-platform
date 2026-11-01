@@ -22,7 +22,7 @@ App name **WeGoDeliva Vendor** (keep the live package/bundle ID). The vendor web
 | Payouts (old web; new in app) | Request payout, history with statuses. |
 | Reviews (new in app) | Customer reviews and ratings; reply (LATER). |
 | Staff (new) | Owner invites/removes staff by phone. |
-| Own riders (old web: vendor drivers) | If Q8 kept: invite riders, see who's online. |
+| Own riders (old web: vendor drivers) | Invite riders, see who's online (Q8 confirmed). |
 | Promotions (SHOULD) | Create vendor-funded coupons within platform limits. |
 | Notifications inbox (old) | |
 | Profile / vendor details (old) | Logo, cover, description, contact, address (location change requires admin re-approval — SHOULD), delivery settings (pickup/delivery, min order, prep time, auto-accept, scheduled orders), payment methods accepted. |

@@ -61,7 +61,7 @@ Reassignment: admin can unassign a rider before pickup (reason required); the or
 - Auto-offline after 10 minutes without location updates.
 - Riders can't go offline while holding an active job (they can, but must hand it back via support).
 
-## 7.6 Vendor's own riders (if Q8 confirmed)
+## 7.6 Vendor's own riders (in scope — Q8 confirmed)
 
 - Vendor owner invites riders (by phone); they use the same rider app and see only that vendor's jobs.
 - Earnings for vendor-owned riders: delivery fee goes to the vendor, not the rider (owner to confirm).

@@ -29,7 +29,7 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 | Product details (old; two variants for food vs shop) | Images, description, price (with struck-through original price when on promo), option groups with required/optional rules and max selections, quantity, "Add to cart" with live line price, stock warning, prescription-required badge, reviews. |
 | Product reviews (old) | List + summary. |
 | Favourites (old) | Saved products (and vendors — new). |
-| Flash sale (old) | Only if Q4 kept. |
+| Flash sale (old) | LATER (Q4). Not built at launch. |
 | Coupon details (old) | Coupon terms; "Use" sets it on the cart. |
 
 ## 9.3 Cart and checkout
@@ -70,11 +70,11 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 | Screen | Purpose / behaviour |
 | --- | --- |
 | Wallet (old) | Balance, top-up (amount chips + custom, min/max), transaction history with filters. |
-| Wallet transfer (old) | **Removed** if Q3 confirmed out. |
-| Loyalty points (old) | Only if Q2 kept. |
+| Wallet transfer (old) | **Removed** (Q3 out). |
+| Loyalty points (old) | LATER (Q2). Not built at launch. |
 | Refer & earn (new screen; old had share in profile) | Code, share link (App Link), how it works, list of referrals and rewards. |
 | Notifications inbox (old) | List + details; mark read. |
-| Profile (old) | Name, photo, phone, email; links to addresses, wallet, referrals, favourites, support, FAQs, legal pages, language (if Q6), dark mode, logout. |
+| Profile (old) | Name, photo, phone, email; links to addresses, wallet, referrals, favourites, support, FAQs, legal pages, language (LATER, Q6 — English only at launch), dark mode, logout. |
 | Edit profile / change password (old) | Phone change requires OTP. |
 | Delete account (old, required by stores) | Explains consequences and blockers (open orders, wallet balance); confirm with OTP. |
 | Support (new) | WhatsApp button (number from settings), FAQ, "Report a problem" form (category, order, message, photos) → support ticket; list of my tickets with status. |
