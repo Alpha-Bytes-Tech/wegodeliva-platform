@@ -30,13 +30,13 @@ the seeded super admin comes from `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` i
 
 ## Scripts
 
-| Script | What |
-| --- | --- |
-| `npm run lint` | ESLint (Next.js rules) + Prettier check |
-| `npm run typecheck` | Generates route types, then `tsc --noEmit` |
-| `npm test` | Vitest unit/component tests (`tests/unit`) |
-| `npm run test:e2e` | Playwright smoke test (`e2e/`, runs against `npm run start`; run `npm run build` first) |
-| `npm run build` | Production build |
+| Script              | What                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `npm run lint`      | ESLint (Next.js rules) + Prettier check                                                 |
+| `npm run typecheck` | Generates route types, then `tsc --noEmit`                                              |
+| `npm test`          | Vitest unit/component tests (`tests/unit`)                                              |
+| `npm run test:e2e`  | Playwright smoke test (`e2e/`, runs against `npm run start`; run `npm run build` first) |
+| `npm run build`     | Production build                                                                        |
 
 ## Design tokens
 
@@ -46,9 +46,9 @@ orange buttons) with a dark-mode variant via `prefers-color-scheme`. They mirror
 
 ## Environment
 
-| Variable | Where | Purpose |
-| --- | --- | --- |
-| `API_BASE_URL` | server only | Laravel API base, e.g. `https://api-staging.wegodeliva.com/api/v1` |
-| `SESSION_COOKIE_NAME` | server only | Optional cookie name override |
+| Variable              | Where       | Purpose                                                            |
+| --------------------- | ----------- | ------------------------------------------------------------------ |
+| `API_BASE_URL`        | server only | Laravel API base, e.g. `https://api-staging.wegodeliva.com/api/v1` |
+| `SESSION_COOKIE_NAME` | server only | Optional cookie name override                                      |
 
 Set them in Vercel project settings; never commit `.env.local`.
