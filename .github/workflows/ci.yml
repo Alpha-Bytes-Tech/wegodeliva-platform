@@ -11,6 +11,8 @@ concurrency:
 
 permissions:
   contents: read
+  # dorny/paths-filter lists the PR's changed files through the API.
+  pull-requests: read
 
 jobs:
   changes:
@@ -46,7 +48,7 @@ jobs:
   backend:
     name: Backend (Laravel)
     needs: changes
-    if: needs.changes.outputs.backend == 'true' && hashFiles('backend/composer.json') != ''
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -94,7 +96,7 @@ jobs:
   web:
     name: Web (Next.js)
     needs: changes
-    if: needs.changes.outputs.web == 'true' && hashFiles('web/package.json') != ''
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -116,7 +118,7 @@ jobs:
   mobile:
     name: Mobile (Flutter)
     needs: changes
-    if: needs.changes.outputs.mobile == 'true' && hashFiles('mobile/pubspec.yaml') != ''
+    if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
