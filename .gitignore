@@ -1,0 +1,69 @@
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+key.properties
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+*service-account*.json
+*.p8
+*.p12
+*.mobileprovision
+*.pem
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# ---- Backend (Laravel) ----
+backend/vendor/
+backend/node_modules/
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*.php
+backend/public/hot
+backend/public/storage
+backend/.phpunit.result.cache
+backend/.phpunit.cache/
+
+# ---- Web (Next.js) ----
+web/node_modules/
+web/.next/
+web/out/
+web/coverage/
+web/playwright-report/
+web/test-results/
+web/next-env.d.ts
+web/*.tsbuildinfo
+.vercel
+
+# ---- Mobile (Flutter) ----
+mobile/**/.dart_tool/
+mobile/**/build/
+mobile/**/.flutter-plugins
+mobile/**/.flutter-plugins-dependencies
+mobile/**/pubspec_overrides.yaml
+mobile/**/ios/Pods/
+mobile/**/ios/.symlinks/
+mobile/**/android/.gradle/
+mobile/**/android/local.properties
+mobile/**/*.g.dart
+mobile/**/*.freezed.dart
+coverage/
+
+# ---- Supabase CLI ----
+supabase/.branches/
+supabase/.temp/
+
+# ---- Node at root ----
+node_modules/

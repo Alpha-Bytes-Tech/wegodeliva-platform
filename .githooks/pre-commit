@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Enable once per clone with:  git config core.hooksPath .githooks
+set -euo pipefail
+"$(git rev-parse --show-toplevel)/scripts/check-clean-room.sh"
