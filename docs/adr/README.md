@@ -12,3 +12,6 @@ One file per significant decision: context, decision, consequences. Status is Pr
 | [0006](0006-commission-at-withdrawal.md) | Earnings credited gross; commission and its VAT settled at withdrawal | Accepted |
 | [0007](0007-funds-held-at-gateways.md) | All funds held at Paystack/Flutterwave; daily ledger reconciliation | Accepted |
 | [0008](0008-email-otp.md) | One-time codes by email, no SMS at launch | Accepted |
+| [0009](0009-roles-table.md) | Roles in a plain table, permissions in policies | Accepted |
+| [0010](0010-api-auth-tokens.md) | App-scoped Sanctum tokens; admin web keeps its token in an httpOnly cookie | Accepted |
+| [0011](0011-melos-pub-workspace.md) | Flutter monorepo: pub workspace + Melos, shared auth package | Accepted |
