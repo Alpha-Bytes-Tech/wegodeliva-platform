@@ -14,11 +14,11 @@ Last updated: 2026-11-01
 - 2026-11-01 — Owner confirmed the out-of-scope list, then amended it: **services** and **in-app chat** are in scope at launch.
 - 2026-11-01 — Owner approved the rest of the spec and answered open questions 3–27. Applied to the spec: nine launch campuses across five cities (multi-city), all six verticals, 5% vendor / 3% delivery commission settled at withdrawal, VAT rules, vendor-funded coupons, per-additional-stop parcel fee, refund fault policy, CBN-tier closed-loop wallet, pay on delivery up to ₦20,000, payouts via gateway transfers, 5%/₦5,000 referral, handover code on every delivery, three rider types, email + phone required, Google + Apple sign-in, existing Firebase project kept, and old data treated as test data.
 - 2026-11-01 — CLAUDE.md updated: clean-room check excludes CLAUDE.md (owner approved); product description, Phase 0/3/7 wording aligned with the owner's decisions.
-- 2026-11-01 — Second round of answers (R1–R8) applied. App IDs are kept (Play App Signing is on; upload key reset needed). Vendors charge and remit their own VAT; WeGoDeliva charges VAT on its commission; default VAT table per category researched. Wallet licensing researched: recommend launching with "WeGoDeliva Credit" (no cash top-ups) pending owner approval. Riders are test accounts too.
+- 2026-11-01 — Second round of answers (R1–R8) applied. App IDs are kept (Play App Signing is on; upload key reset needed). Vendors charge and remit their own VAT; WeGoDeliva charges VAT on its commission; default VAT table per category researched. Wallet licensing researched; owner decided to keep cash top-ups with funds held at Paystack/Flutterwave (app shows balances only) and confirmed both gateways can hold earnings until withdrawal. Daily ledger-vs-gateway reconciliation added. Riders are test accounts too.
 
 ## In progress
 
-- Nothing. Waiting for the owner's go-ahead to start Phase 1, and the S2 wallet decision.
+- Nothing. Waiting for the owner's go-ahead to start Phase 1.
 
 ## Next (Phase 1 — Foundations)
 
@@ -33,9 +33,8 @@ Last updated: 2026-11-01
 ## Blockers / owner actions
 
 See [spec/open-questions.md](spec/open-questions.md) "Remaining questions":
-- ★ **S2 Wallet decision**: launch with WeGoDeliva Credit (no cash top-ups)? Doesn't block starting Phase 1.
+- **S3** before launch: written confirmation from Paystack and Flutterwave that their terms allow stored customer balances and held earnings; fintech-lawyer opinion; accountant sign-off on the VAT table.
 - **S1** Export the services categories from the live database (cPanel → phpMyAdmin).
-- **S3** Lawyer (wallet and earnings holding) and accountant (VAT table) sign-off before launch.
 - **S4** Create the Termii account and register a sender ID (owner, since only the owner can create accounts).
 - **S5** Support WhatsApp numbers.
 - Before the first store release (Phase 7): request an upload key reset in Play Console for each app, and give the team access to the Apple Developer account.

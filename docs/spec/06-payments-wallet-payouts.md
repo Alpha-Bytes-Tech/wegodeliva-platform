@@ -53,13 +53,17 @@ What the research found (see sources in the owner report). This is not legal adv
 - No source found a Nigerian equivalent of the EU/UK "limited network" exemption for closed-loop wallets. **Being closed-loop does not, on the evidence found, take a prepaid top-up wallet outside CBN rules.**
 - Collecting payments for vendors and paying them out after commission (the marketplace model) is common, and normally runs on licensed processors' settlement features (Paystack/Flutterwave). That is a different question from customers storing their own money with WeGoDeliva.
 
-**Recommendation, needs owner approval because it narrows the earlier decision:**
-1. **Launch without cash top-ups.** The wallet becomes **"WeGoDeliva Credit"**, holding only (a) refunds the customer chooses to take as credit (they can always choose a refund to their card or bank instead) and (b) referral rewards and promotional credit. Credit is closed-loop, can't be withdrawn or transferred, and is spent at checkout like today. No customer deposits means far lower regulatory exposure. The KYC tiers stay designed but switched off.
-2. **Add cash top-ups later** only through a **licensed partner**: a bank or MMO wallet-as-a-service provider, where each customer wallet is a sub-account the partner holds and the partner does KYC. Our ledger mirrors the partner's balances. This keeps the top-up UX and the CBN tier limits (the partner enforces them) without WeGoDeliva needing an MMO licence.
-3. **Vendor and rider earnings**: before launch, ask the Paystack/Flutterwave account managers whether holding earnings until a payout request (with commission deducted at withdrawal) is acceptable in a WeGoDeliva merchant balance. The alternative is the gateways' split-payment/subaccount features, which pay vendors automatically. That would change "commission at withdrawal" to "commission at payment".
-4. Get a short written opinion from a Nigerian fintech lawyer on 1–3 before go-live. Budget for it.
+**Owner decision 2026-11-01 (supersedes the team's "credit only" recommendation):**
+- **Cash top-ups stay in at launch**, with the CBN KYC tiers above.
+- **The money is never held by the app.** All customer top-ups, order payments and vendor/rider earnings sit in **WeGoDeliva's merchant balances at Paystack and Flutterwave**. The app's wallet and earnings screens only show each user's share, from WeGoDeliva's ledger. Withdrawals (vendors and riders only) go out through the gateways' Transfers API.
+- **Paystack and Flutterwave can hold earnings until withdrawal** (owner confirmed). Commission stays deducted at withdrawal (§5.8); no split payments.
 
-The ledger, KYC and limit design in this section stays as written. Only the **top-up feature flag** is off at launch, pending the owner's decision.
+Engineering consequences (MUST):
+- **Daily reconciliation job.** Σ customer wallet balances + Σ vendor/rider available earnings + Σ pending payouts + uncollected commission and VAT must equal the funds at Paystack + Flutterwave (from their balance APIs), give or take known in-flight items (pending settlements, transfers in progress). Any difference goes to an admin alert and a reconciliation report. The ledger is the only source of truth for user balances, and the gateway balance is the check on it.
+- Track settlement timing: card and transfer payments reach the gateway balance after its settlement delay. Payouts are only approved from settled funds; if not enough is settled, the payout waits as "processing".
+- Keep a per-gateway breakdown of the ledger (which gateway received the money), so payouts and refunds draw from the right balance.
+
+Remaining risk, kept on the pre-launch checklist (S3), not a blocker for building: the research suggests the licensing question depends on **who owes the customer the money**, not where it is physically held. A wallet balance is still WeGoDeliva's obligation to the customer even when the cash sits at Paystack. Before go-live, get (1) written confirmation from the Paystack and Flutterwave account managers that their merchant terms allow customer stored balances and held vendor earnings for this use, and (2) a short opinion from a Nigerian fintech lawyer. If either says no, the fallback is to turn off the top-up flag (credit-only wallet) or move the wallet to a licensed partner. Both are possible without redesign.
 
 - **Top-up** (when enabled): amount ≥ minimum (setting, default ₦100) and within the tier limits. Creates a pending top-up + gateway payment; credited only after server verification as in 6.2. Pending top-ups expire after 15 minutes.
 - **Paying for an order** with the wallet: debit `total` in the same transaction that creates the order.
