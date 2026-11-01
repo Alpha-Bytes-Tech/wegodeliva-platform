@@ -13,7 +13,7 @@
   ```
   HTTP 400 validation (`fields` filled), 401 unauthenticated, 403 forbidden, 404 not found (also used when the resource exists but isn't yours), 409 conflict (state changed / already taken), 422 business rule, 429 rate limited, 500 generic message only (details in logs). Messages are translatable.
 - Idempotency: `Idempotency-Key` header required on place-order, top-up, payout request, refund; replays return the original response.
-- Rate limits: login/OTP/password reset per phone and IP; checkout and wallet per user; search per IP.
+- Rate limits: login/OTP/password reset per email address and IP; checkout and wallet per user; search per IP.
 - OpenAPI document generated from code and published for the apps.
 - App version header `X-App-Version`; server can answer 426 "update required".
 
@@ -22,8 +22,8 @@
 | Group | Behaviour |
 | --- | --- |
 | Bootstrap | Public app config (feature flags, support contacts, min versions), onboarding slides, FAQs, content pages, cancellation reasons. |
-| Auth | Send OTP, verify OTP (login or sign-up), email login, register, social login (Google/Apple id-token verification server-side), password reset, logout, refresh profile, delete account. |
-| Profile & devices | Get/update profile, change phone (OTP), change password, register/unregister FCM token. |
+| Auth | Send OTP by email, verify OTP (login or sign-up), email login, register, social login (Google/Apple id-token verification server-side), password reset, logout, refresh profile, delete account. |
+| Profile & devices | Get/update profile, change email (OTP to the new address), change phone (password re-entry), change password, register/unregister FCM token. |
 | Addresses | CRUD own addresses; zone lookup for a point ("do you deliver here?"). |
 | Catalogue | Vendor types, categories, subcategories, tags, banners; vendors near a point (filters, sort, open state, delivery fee estimate); vendor details; vendor menu; product details; search (vendors + products); reviews. |
 | Favourites | Add/remove/list. |

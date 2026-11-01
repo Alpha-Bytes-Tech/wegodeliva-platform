@@ -7,13 +7,13 @@ Common to every table unless stated: `id` (bigint identity), `created_at`, `upda
 ## 3.1 People and access
 
 **users** — one row per person.
-`uuid` (public id), `name`, `phone` (E.164, unique — **required**; social sign-ups complete it before using the app), `email` (unique — **required**), `email_verified_at`, `phone_verified_at`, `password_hash` (nullable for OTP-only users), `status` (active / pending_approval / suspended / deleted), `avatar_path`, `referral_code` (unique, short, human-friendly), `referred_by_user_id`, `locale` (default `en`), `last_seen_at`, soft delete.
+`uuid` (public id), `name`, `phone` (E.164, unique — **required**; social sign-ups complete it before using the app), `email` (unique — **required**, verified by email OTP), `email_verified_at`, `phone_verified_at`, `password_hash` (nullable for OTP-only users), `status` (active / pending_approval / suspended / deleted), `avatar_path`, `referral_code` (unique, short, human-friendly), `referred_by_user_id`, `locale` (default `en`), `last_seen_at`, soft delete.
 
 **roles / user_roles** — role names from [02](02-roles-and-permissions.md). A user may hold several roles.
 
 **auth_identities** — social sign-in links: `user_id`, `provider` (google/apple), `provider_user_id`.
 
-**otp_challenges** — `phone`, `purpose` (login / verify / reset), `code_hash`, `expires_at`, `attempts`, `consumed_at`. Codes are stored hashed.
+**otp_challenges** — `channel` (email; sms LATER), `destination` (email address), `purpose` (login / verify / reset), `code_hash`, `expires_at`, `attempts`, `consumed_at`. Codes are stored hashed.
 
 **devices** — FCM tokens: `user_id`, `app` (customer/vendor/rider/admin), `platform`, `fcm_token` (unique), `last_active_at`.
 

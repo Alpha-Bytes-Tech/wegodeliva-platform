@@ -68,7 +68,7 @@ Order creation for online methods results in `awaiting_payment`; the order moves
 3. In one DB transaction with row locks: create order + items + fees snapshot, reserve stock (decrement; fail if it would go negative), record coupon redemption, and for wallet payments debit the wallet.
 4. Return order code and, for online payment, gateway checkout details.
 - Idempotency: the place-order request carries an `Idempotency-Key` header so a double tap does not create two orders.
-- Customer must have a verified phone number before placing an order (old behaviour kept).
+- Customer must have a **verified email** and a phone number on file before placing an order. Riders and vendors need the phone to reach the customer; it is unverified at launch.
 - A customer whose wallet is negative (owes money) cannot place orders until they top up (old behaviour kept; rare in the new design).
 
 ## 4.5 Scheduling rules

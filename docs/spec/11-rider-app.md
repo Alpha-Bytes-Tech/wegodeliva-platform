@@ -6,7 +6,7 @@ App name **WeGoDeliva Rider** (keep the live package/bundle ID). The old rider a
 | --- | --- |
 | Splash / onboarding / force-update (old) | Rider audience. |
 | Permissions (old) | Explains and requests location ("all the time" on Android for background tracking, with the Play-required prominent disclosure), notifications, battery-optimisation exemption (SHOULD). Blocks going online until granted. |
-| Login (old) | Phone OTP or email + password; rider role required. |
+| Login (old) | Email OTP or email + password; rider role required. |
 | Register (old) | Name, phone, email, password; rider type (independent by default; WeGoDeliva-managed set by admin; vendor-owned via invite); vehicle kind (bicycle / motorbike / car / on foot), plate number, colour; documents (ID, licence, vehicle papers, guarantor — count from settings), selfie (SHOULD). → Pending approval. |
 | Pending approval / document requests (old) | Status of documents, upload what admin requests. |
 | **Home** (old) | Big Online/Offline switch; today's earnings and jobs; COD cash balance and limit; current job card; map with own position; low-data mode toggle (new). |

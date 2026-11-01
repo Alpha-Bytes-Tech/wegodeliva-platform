@@ -56,8 +56,8 @@ Items 1–27 were answered on 2026-11-01. The answers have been applied to the s
 
 ## Remaining questions
 
-- **S1 Services list.** The old app reads its service categories from the live database on cPanel, not from code. Export the `categories` and `subcategories` tables (phpMyAdmin → Export → CSV), or send a screenshot of the Services screen in the old app.
+- ~~S1 Services list~~ **Answered 2026-11-01:** 14 categories, see [01](01-scope.md) §1.3.1.
 - ~~S2 Wallet decision~~ **Answered 2026-11-01:** cash top-ups stay in; money is held at Paystack/Flutterwave and the app only shows balances; both gateways can hold earnings until withdrawal. See [06](06-payments-wallet-payouts.md) §6.4.1.
 - **S3 Before launch (not before Phase 1):** written confirmation from the Paystack and Flutterwave account managers that their terms allow customer stored balances and held earnings; a short fintech-lawyer opinion on the wallet. Accountant: the default VAT table, VAT on platform service fees, and the CBN tier figures. Not needed before Phase 1.
-- **S4 Termii account.** Tell us when it exists. Also register a sender ID ("WeGoDeliva"); it takes a few days and is needed for the DND route.
+- ~~S4 Termii~~ **Answered 2026-11-01:** OTP goes by email instead of SMS. New item: choose a transactional email provider and set up SPF/DKIM/DMARC on wegodeliva.com (owner creates the account).
 - **S5 Support WhatsApp numbers**, when available.

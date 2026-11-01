@@ -45,7 +45,7 @@ Reassignment: admin can unassign a rider before pickup (reason required); the or
 4. **Navigate to drop-off** → full address, landmark, customer phone (masked/call button), notes.
 5. **Handover** → customer tells the rider the 4-digit handover code; rider enters it. Correct code → `delivered`. Three wrong attempts → rider must call support. The code is required on **every** delivery (owner decision 2026-11-01): there is no photo or signature fallback. If the customer cannot give the code, the rider contacts support, which verifies the customer by phone and can complete the delivery as an audited admin override.
 6. **Failed delivery** → rider picks a reason, takes a photo, and must have tried to call the customer (call attempt logged). Admin reviews.
-- Parcels: each stop has its own code (sent to that stop's contact by SMS) when the package type requires stop verification.
+- Parcels: each stop has its own code when the package type requires stop verification. The code is shown in the sender's app, with a "Share code" button (WhatsApp / copy) so the sender can pass it to each recipient. No SMS at launch.
 
 ## 7.4 Live tracking (MUST)
 

@@ -46,3 +46,6 @@ The old system had ~250 setting keys, many for template features or app theming.
 - Service booking: free-cancellation window [12 h before start], late-cancellation fee, provider acceptance timeout [2 h / 30 min if starting within 3 h], auto-confirm completion after [24 h], reminder times [24 h, 1 h].
 - Chat: max message length [1,000 chars], image size [5 MB], order chats close [24 h] after the order ends, support chat hours.
 - Support WhatsApp numbers [to be provided by owner].
+
+## Authentication (2026-11-01)
+- OTP channel [email]; SMS [off, LATER]; OTP validity [10 min]; resend delay [60 s]; max attempts [5]; per-email and per-IP hourly limits [5 / 20].

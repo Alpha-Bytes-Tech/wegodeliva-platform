@@ -40,7 +40,7 @@ The old system skipped the amount, currency and reference checks and accepted we
 
   | Tier | Verification needed | Daily top-up limit | Max wallet balance |
   | --- | --- | --- | --- |
-  | 1 (default) | Verified phone (OTP) + name + verified email | ₦50,000 | ₦300,000 |
+  | 1 (default) | Name + email verified by OTP + phone on file | ₦50,000 | ₦300,000 |
   | 2 | Tier 1 + **BVN and NIN** verified through a KYC provider | ₦200,000 | ₦500,000 |
   | 3 | Tier 2 + government ID document + verified address | ₦5,000,000 | No cap |
 

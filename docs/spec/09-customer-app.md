@@ -9,10 +9,10 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 | Splash (old) | Load settings (feature flags, support contacts, minimum app version). If the installed version is below the forced minimum → "Update required" screen with store link (old: per-app force-upgrade settings). |
 | Onboarding (old) | 3 slides from admin content; shown once. |
 | Welcome / location (old) | Ask for location permission; or pick an address / campus manually. Sets the delivery location used for vendor lists. |
-| Login (old) | Phone + OTP (primary); email + password; Google; Apple (iOS & Android). |
-| OTP entry (old) | 6-digit code, resend timer, auto-read on Android (SMS Retriever). |
-| Register (old) | Name, phone (verified by OTP), email (**required**), password (if email), referral code (pre-filled from link), accept terms. |
-| Forgot password (old) | Reset via OTP to phone or link to email. |
+| Login (old) | Email + OTP (primary; code sent by email); email + password; Google; Apple (iOS & Android). |
+| OTP entry (old) | 6-digit code from the email, resend timer, paste-from-clipboard detection, "Open mail app" button, "Check spam" hint after 60 s. |
+| Register (old) | Name, email (**required**, verified by OTP), phone (**required**, not verified at launch), password (if email), referral code (pre-filled from link), accept terms. |
+| Forgot password (old) | Reset with an OTP sent to the email address. |
 | Complete profile (new) | Shown when a social sign-in has no phone yet; phone is required before ordering (old rule). |
 
 ## 9.2 Discover
@@ -75,8 +75,8 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 | Refer & earn (new screen; old had share in profile) | Code, share link (App Link), how it works, list of referrals and rewards. |
 | Notifications inbox (old) | List + details; mark read. |
 | Profile (old) | Name, photo, phone, email; links to addresses, wallet, referrals, favourites, support, FAQs, legal pages, language (LATER, Q6 — English only at launch), dark mode, logout. |
-| Edit profile / change password (old) | Phone change requires OTP. |
-| Delete account (old, required by stores) | Explains consequences and blockers (open orders, wallet balance); confirm with OTP. |
+| Edit profile / change password (old) | Email change requires an OTP to the new address; phone change requires password re-entry. |
+| Delete account (old, required by stores) | Explains consequences and blockers (open orders, wallet balance); confirm with an email OTP. |
 | Support (new) | WhatsApp button (number from settings), FAQ, "Report a problem" form (category, order, message, photos) → support ticket; list of my tickets with status. |
 | Chat (in scope at launch) | Per order: chat with the vendor (from order placed until 24 h after it ends) and with the rider (from assignment until 24 h after delivery); text + images; read receipts; push for new messages. Support chat with WeGoDeliva from Profile → Support and from "Report a problem". Built on Supabase Realtime. |
 | Legal / content pages (old) | Terms, privacy, about. |

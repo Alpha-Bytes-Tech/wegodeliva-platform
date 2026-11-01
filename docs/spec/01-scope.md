@@ -37,9 +37,32 @@ Vendors are grouped by **vendor type**; each type switches on a shopping flow. A
 | Parcels | No catalogue. Customer enters pickup, one or more drop-offs, a package type and size/weight; price is computed from distance and size. The "vendor" here is a delivery operator (WeGoDeliva itself, or a partner courier). | Old system: "parcel"/"package". |
 | Services | Customer books a service from a provider (laundry, cleaning, hairdressing, repairs, tutoring…). A service has a price per unit of time or a fixed price, optional add-on options, and is performed at the customer's address or at the provider's location. No rider unless the service involves pickup (e.g. laundry pickup & return — LATER). See [04](04-order-lifecycle.md) §4.8. | Old system: "service"/"booking". Was proposed out (O2); **brought into scope by owner 2026-11-01**. |
 
+### 1.3.1 Service categories at launch (owner list, 2026-11-01)
+
+These are seed data for the Services vendor type. Admins can rename them or add subcategories.
+
+| # | Category | Typical services (examples, subcategories to refine) |
+| --- | --- | --- |
+| 1 | Fitness and personal training | Personal trainer sessions, group classes, yoga |
+| 2 | Travel and tours | Tour packages, airport pickup, visa assistance |
+| 3 | Fashion | Tailoring, alterations, styling (the **service** side; clothes for sale belong to the Fashion vendor type) |
+| 4 | Venues | Halls, event spaces, meeting rooms (booked by hour/day) |
+| 5 | Printing and signage | Printing, branding, banners, signage |
+| 6 | Photography and video | Shoots, event coverage, editing |
+| 7 | Automotive | Car wash, mechanic, servicing |
+| 8 | Health and beauty | Hair, barbing, makeup, nails, spa |
+| 9 | Laundry | Wash & fold, dry cleaning, ironing (pickup & return by rider is LATER) |
+| 10 | Party, catering and events | Catering, event planning, decoration, rentals |
+| 11 | DJ and entertainment | DJs, MCs, live bands, performers |
+| 12 | Computer and IT | Repairs, setup, software installation |
+| 13 | Janitorial and fumigation | Cleaning, deep cleaning, fumigation/pest control |
+| 14 | Childcare and educational | Babysitting, lessons, tutoring |
+
+VAT defaults ([05](05-pricing-fees-commission.md) §5.6): standard, except educational services and any medical-type services, which the accountant should confirm.
+
 ## 1.4 Platform features in scope
 
-- Customer accounts: **phone and email both required**; phone OTP and email/password login; **Sign in with Google and Apple at launch** (phone and email still collected).
+- Customer accounts: **phone and email both required**; **email OTP** (codes sent by email, not SMS — owner decision 2026-11-01) and email/password login; **Sign in with Google and Apple at launch** (phone and email still collected).
 - Vendor onboarding with document upload and admin approval.
 - Rider onboarding with documents and admin approval. Three rider types: **WeGoDeliva-managed, independent, vendor-owned**.
 - Cities and delivery zones (polygons), campus zones; zone-based or distance-based delivery fees.
@@ -57,7 +80,7 @@ Vendors are grouped by **vendor type**; each type switches on a shopping flow. A
 - Favourites, search, banners, categories, tags.
 - Referral reward: 5% of the referred user's first purchase, capped at ₦5,000, to the referrer's wallet.
 - **In-app chat at launch** (customer ↔ vendor, customer ↔ rider, user ↔ support) on Supabase Realtime. WhatsApp support link once the number is provided.
-- Push notifications (FCM, existing Firebase project), SMS OTP, transactional email.
+- Push notifications (FCM, existing Firebase project), transactional email (including OTP codes). No SMS at launch.
 - Admin panel: dashboards, users, vendors, riders, approvals, orders, bookings, refunds, payouts, cities and zones, fees, promos, content, settings, audit log, reports, chat/support inbox.
 
 ## 1.5 Out of scope — confirmed by owner 2026-11-01, amended the same day
@@ -71,7 +94,7 @@ Changing any line is a scope change and needs the owner's approval.
 | O1 | Taxi / ride-hailing | Book a car ride; vehicle types with base/distance/time fares; taxi zones; car makes & models; per-currency taxi pricing; driver switch between "taxi" and "delivery" modes; trip fare recalculation and outstanding balances | Not a delivery-marketplace feature. |
 | ~~O2~~ | ~~Service booking~~ | — | **Moved into scope** (§1.3). |
 | O3 | Payment gateways other than Paystack and Flutterwave | Stripe, PayPal, Razorpay, Paytm, PayU, Billplz, Abitmedia (iPay88, named in CLAUDE.md, was not present) | Not used in Nigeria. |
-| O4 | SMS gateways not needed | Twilio, Hubtel, Africa's Talking, GatewayAPI, Msg91, Firebase phone auth | Keep **one** Nigerian SMS provider (proposal: Termii, not yet set up) plus one fallback. |
+| O4 | SMS gateways not needed | Twilio, Hubtel, Africa's Talking, GatewayAPI, Msg91, Firebase phone auth | **No SMS at launch**: OTP codes go by email (owner decision 2026-11-01). An SMS provider (e.g. Termii) can be added LATER for phone verification. |
 | O5 | Multi-country / multi-currency | Countries/states/cities tables per vendor; currency table; per-order currency | Nigeria and NGN only. Cities within Nigeria **are** supported (§1.2) via a simple cities table + zones. |
 | O6 | Firebase Firestore, Dynamic Links, Firebase Auth | Rider locations, offers and chat in Firestore; share links via Dynamic Links | FCM only. Realtime and chat on Supabase Realtime; links via App Links / Universal Links. |
 | O7 | Template self-management | System upgrade runner, purchase-code licence check, extensions, backup/restore page, troubleshooting page, HTTP-triggered cron, dev data generators, auto-translator, server settings page | Replaced by CI/CD, hosting and Laravel scheduler. |

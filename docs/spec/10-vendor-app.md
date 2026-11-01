@@ -5,7 +5,7 @@ App name **WeGoDeliva Vendor** (keep the live package/bundle ID). The vendor web
 | Screen | Purpose / behaviour |
 | --- | --- |
 | Splash / onboarding / force-update (old) | As customer app, vendor audience. |
-| Login (old) | Phone OTP or email + password. Rejects users without a vendor role or without an assigned vendor. |
+| Login (old) | Email OTP or email + password. Rejects users without a vendor role or without an assigned vendor. |
 | Register vendor (old) | Owner name, phone, email, password; business name, type, phone, email, address with map pin; documents (CAC, licence for pharmacies, ID) — count and instructions from settings. Result: "Pending approval" screen. |
 | Pending approval / document requests (old) | Shows what admin asked for; upload more documents; status of each. |
 | Vendor switcher (old) | For staff linked to several vendors. |

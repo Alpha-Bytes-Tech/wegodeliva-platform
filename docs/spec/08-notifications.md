@@ -1,6 +1,6 @@
 # 8. Notifications
 
-Channels: **push** (FCM, per device token, per app), **in-app inbox** (stored notifications, read/unread), **SMS** (OTP and a few critical messages), **email** (receipts, account, admin alerts), **realtime** (Supabase Realtime for live screens). Message texts are editable by admins (template per event, with placeholders like `{order_code}`, `{vendor_name}`) — the old system had per-status editable messages for customers and for vendors.
+Channels: **push** (FCM, per device token, per app), **in-app inbox** (stored notifications, read/unread), **email** (OTP codes, receipts, account, admin alerts), **SMS** (none at launch; LATER), **realtime** (Supabase Realtime for live screens). Message texts are editable by admins (template per event, with placeholders like `{order_code}`, `{vendor_name}`) — the old system had per-status editable messages for customers and for vendors.
 
 ## 8.1 Events
 
@@ -37,9 +37,9 @@ Channels: **push** (FCM, per device token, per app), **in-app inbox** (stored no
 - Payloads carry only ids and short text — no addresses or phone numbers.
 - Invalid tokens reported by FCM are removed.
 - Vendor "new order" sound repeats until the order is opened; works with the app in background (Android notification channel with custom sound; iOS critical alert not available → time-sensitive notification).
-- Quiet failure: if push fails for a vendor on a new order, send SMS after 2 minutes (SHOULD).
-- OTP SMS via the chosen Nigerian provider (Termii proposed) with DND-route support; fallback provider configurable.
-- Email via a transactional provider (e.g. Postmark / Amazon SES / Mailgun — owner to choose); sender `no-reply@wegodeliva.com`, SPF/DKIM/DMARC set.
+- Quiet failure: if push fails for a vendor on a new order, email the vendor and alert ops after 2 minutes (SHOULD). SMS fallback LATER.
+- **OTP by email** (owner decision 2026-11-01). Send through a transactional email provider on a high-priority stream, separate from marketing mail, with SPF/DKIM/DMARC set up so codes don't land in spam. Target delivery under 30 s, monitored. The app shows "Check your spam folder" after 60 s.
+- Email provider (owner to choose; several have free tiers): e.g. Postmark, Amazon SES, Resend, Mailgun; sender `no-reply@wegodeliva.com`, SPF/DKIM/DMARC set.
 - Users can mute marketing broadcasts but not transactional order notifications.
 
 ## 8.3 Additions (2026-11-01)

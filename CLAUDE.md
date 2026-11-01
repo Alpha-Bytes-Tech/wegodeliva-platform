@@ -92,7 +92,7 @@ wegodeliva-platform/
 Produce `docs/spec/`: entities and fields, order lifecycle and states, pricing/fees/commission rules, payment and wallet flows, roles and permissions, notifications, every screen per app, admin functions. Mark modules WeGoDeliva doesn't use (taxi, Paytm, Razorpay, iPay88, etc.) as "out of scope" and confirm with the owner. (Service booking was brought into scope by the owner on 2026-11-01.) Also write `docs/spec/data-migration.md` mapping old MySQL tables to the new schema. *Done when the owner approves the spec.*
 
 **Phase 1 — Foundations.**
-Monorepo, CI on every PR, clean-room check, Laravel 12 skeleton on Supabase Postgres, auth (phone OTP + email, Sanctum), roles, health checks, staging environment, Next.js admin shell on Vercel with login, Flutter core + ui packages, flavours (dev/staging/prod). *Done when CI is green and staging is reachable.*
+Monorepo, CI on every PR, clean-room check, Laravel 12 skeleton on Supabase Postgres, auth (email OTP + password, Google/Apple sign-in, Sanctum; OTP codes go by email, not SMS — owner decision 2026-11-01), roles, health checks, staging environment, Next.js admin shell on Vercel with login, Flutter core + ui packages, flavours (dev/staging/prod). *Done when CI is green and staging is reachable.*
 
 **Phase 2 — Core marketplace backend.**
 Vendors, categories, products, stock, zones/delivery fees, cart, checkout, orders and state machine, payments (Paystack, Flutterwave, wallet, pay-on-delivery), refunds, payouts, ratings, notifications. *Done when feature tests cover every endpoint and payment tests include tampered-amount and replayed-transaction cases.*

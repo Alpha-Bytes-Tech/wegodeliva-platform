@@ -6,7 +6,7 @@ A person has one user account and one or more roles. Roles are assigned by the s
 
 | Role | Who | Created how |
 | --- | --- | --- |
-| `customer` | Anyone ordering | Self sign-up in the customer app (phone OTP; phone and email both required) |
+| `customer` | Anyone ordering | Self sign-up in the customer app (email OTP; phone and email both required) |
 | `vendor_owner` | Person who registered the vendor | Self sign-up in the vendor app/portal → inactive until admin approves the vendor |
 | `vendor_staff` | Cashier/kitchen staff for a vendor | Invited by the vendor owner or an admin |
 | `rider` | Delivery rider | Self sign-up in the rider app → inactive until admin approves documents |
@@ -42,10 +42,10 @@ A vendor can have several staff; a staff member can belong to several vendors an
 
 ## 2.4 Authentication rules
 
-- Customer: phone + OTP (primary), or email + password; Google and Apple sign-in (at launch). Phone and email are both required for every customer.
-- Vendor and rider: phone + OTP or email + password.
+- Customer: **email + OTP** (primary; code sent to the email address), or email + password; Google and Apple sign-in (at launch). Phone and email are both required for every customer.
+- Vendor and rider: email + OTP or email + password.
 - Admin: email + password + TOTP 2FA (MUST for admins).
 - Login with a role hint: an app only accepts users with the matching role (rider app rejects a pure customer). The old system did this too.
 - A vendor staff user with no vendor assigned cannot log into the vendor app (clear error).
 - Tokens: Sanctum personal access tokens for apps, stored in secure storage; cookie session for the Next.js admin/vendor portal. Logout revokes the token. Password change revokes all other tokens.
-- OTP: 6 digits, valid 5 minutes, max 5 attempts, resend after 60 s, rate-limited per phone and per IP.
+- OTP: sent **by email** (no SMS at launch). 6 digits, valid 10 minutes (email can be slower than SMS), max 5 attempts, resend after 60 s, rate-limited per email address and per IP. The email says which app requested it and never contains a login link. The phone number is collected and format-checked (E.164, Nigerian prefixes) but is **not verified by OTP** at launch. It is verified LATER, when an SMS or WhatsApp provider is added.
