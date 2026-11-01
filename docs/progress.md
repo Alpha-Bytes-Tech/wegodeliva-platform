@@ -2,7 +2,7 @@
 
 Read this at the start of every session; update it at the end.
 
-## Current phase: 0 — Specification · **approved by owner 2026-11-01** · Phase 1 not started (waiting for go-ahead)
+## Current phase: 1 — Foundations · **in progress** (started 2026-11-01)
 
 Last updated: 2026-11-01
 
@@ -19,7 +19,8 @@ Last updated: 2026-11-01
 
 ## In progress
 
-- Nothing. Waiting for the owner's go-ahead to start Phase 1.
+- Phase 1 step 1–2 done locally (scaffolding, clean-room check + pre-commit hook, CI workflow, Dependabot, PR template, ADRs 0001–0008).
+- Steps 4–6 (Laravel backend, Next.js admin, Flutter workspace) will run in a Claude **cloud session** (owner's choice): the local PC has only 3.4 GB free and no PHP/Composer/Flutter. **Blocked** until the owner adds a cloud environment for the GitHub repo (Claude app → New session → Cloud).
 
 ## Next (Phase 1 — Foundations)
 
