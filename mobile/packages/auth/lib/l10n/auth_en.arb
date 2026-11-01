@@ -1,0 +1,22 @@
+{
+  "@@locale": "en",
+  "loginTitle": "Sign in",
+  "loginSubtitle": "Enter your email address and we will send you a 6-digit code.",
+  "emailLabel": "Email address",
+  "emailInvalid": "Enter a valid email address.",
+  "continueButton": "Continue",
+  "sendingCode": "Sending code",
+  "otpTitle": "Enter your code",
+  "otpSentTo": "We sent a 6-digit code to {email}. It expires in 10 minutes.",
+  "@otpSentTo": { "placeholders": { "email": { "type": "String" } } },
+  "codeLabel": "6-digit code",
+  "verifyButton": "Verify",
+  "verifying": "Verifying code",
+  "resendIn": "You can request a new code in {seconds} s",
+  "@resendIn": { "placeholders": { "seconds": { "type": "int" } } },
+  "resendButton": "Send a new code",
+  "codeResent": "We sent you a new code.",
+  "spamHint": "Can't find the email? Check your spam or promotions folder.",
+  "changeEmail": "Use a different email",
+  "backLabel": "Back"
+}
