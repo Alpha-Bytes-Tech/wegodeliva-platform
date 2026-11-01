@@ -35,10 +35,20 @@ The old system skipped the amount, currency and reference checks and accepted we
 
 - Every user has one wallet (created at sign-up). Currency NGN.
 - **Balance changes only through the ledger**: each change creates a `wallet_transactions` row with `balance_after`, inside a DB transaction holding a row lock on the wallet. Wallet balance never goes below zero except through an explicit admin adjustment.
-- **Top-up**: amount ≥ minimum (setting, default ₦100) and ≤ maximum (setting, e.g. ₦200,000, KYC-dependent — open question). Creates a pending top-up + gateway payment; credited only after server verification as in 6.2. Pending top-ups expire after 15 minutes.
-- **Paying for an order** with the wallet: debit `total` in the same transaction that creates the order. (The old system had a setting to leave the delivery fee to be paid in cash; dropped unless the owner wants it.)
+- **Closed loop** (owner decision 2026-11-01): wallet money can only be spent on WeGoDeliva. **No withdrawal to a bank account** and no transfers between users. The only ways money leaves a wallet are order payments and admin adjustments. The terms of service must say so.
+- **KYC tiers following CBN's three-tier structure** (owner decision). Limits are settings so they can follow CBN changes; the defaults below must be **checked against the current CBN circular by the owner's legal adviser before launch**:
+
+  | Tier | Verification needed | Daily top-up limit | Max wallet balance |
+  | --- | --- | --- | --- |
+  | 1 (default) | Verified phone (OTP) + name + verified email | ₦50,000 | ₦300,000 |
+  | 2 | Tier 1 + BVN **or** NIN verified via a KYC provider (e.g. Paystack/Flutterwave identity, Dojah, Prembly/Smile ID) | ₦200,000 | ₦500,000 |
+  | 3 | Tier 2 + government ID document + verified address | ₦5,000,000 | No cap |
+
+  A top-up that would exceed the daily limit or the balance cap is refused with a message explaining how to upgrade. Refunds and referral rewards are allowed to exceed the daily top-up limit but not the balance cap (excess is refunded to the original payment method instead). Launch scope: Tiers 1 and 2; Tier 3 LATER.
+- ⚠ Regulatory note for the owner: holding customer balances can require a CBN licence (e.g. as a payment service provider) depending on how funds are held. A closed-loop wallet with funds sitting in WeGoDeliva's Paystack/Flutterwave balance is the common lower-risk pattern, but this needs a legal opinion before launch.
+- **Top-up**: amount ≥ minimum (setting, default ₦100) and within the tier limits. Creates a pending top-up + gateway payment; credited only after server verification as in 6.2. Pending top-ups expire after 15 minutes.
+- **Paying for an order** with the wallet: debit `total` in the same transaction that creates the order.
 - **History**: paginated list of transactions with kind, amount, date, related order.
-- **Wallet transfers between users**: proposed **out of scope** (Q3).
 - Admin manual credit/debit: requires a reason, written to the audit log, shown to the user as "Adjustment".
 
 ## 6.5 Pay on delivery
@@ -46,32 +56,53 @@ The old system skipped the amount, currency and reference checks and accepted we
 - Rider sees "Collect ₦X" on the job.
 - At handover the rider enters the handover code and confirms "Cash collected" or "Transfer received" (for transfers, SHOULD show WeGoDeliva's virtual account / rider's account details).
 - Order becomes paid; the amount is added to the rider's cash balance ([05](05-pricing-fees-commission.md) §5.8).
-- Riders with cash balance above a limit (setting) cannot accept new pay-on-delivery jobs until they remit. (Replaces the old "rider must hold wallet balance" rule — Q11.)
+- Pay on delivery is allowed for **all vendors and zones**, for orders up to **₦20,000** total (owner decision; setting). Above that, the option is shown disabled with the reason.
+- Riders whose cash balance reaches **₦20,000** (setting) cannot accept new pay-on-delivery jobs until they remit; they can still take prepaid jobs. (Replaces the old "rider must hold wallet balance" rule — Q11.)
+- Remitting: the rider transfers to WeGoDeliva's collection account with their rider reference (a dedicated virtual account per rider via Paystack/Flutterwave — SHOULD), or the cash owed is netted off their next withdrawal (§6.7).
 
 ## 6.6 Refunds
 
 Triggered when a **paid** order is cancelled or fails, or when an admin issues a partial refund (missing item, etc.).
-- Default destination: **customer wallet**, instant (old behaviour; controlled by an "auto-refund" setting). Optional: back to the original card via gateway refund API (admin action).
+- Destination: **customer wallet**, instant (auto-refund setting on). Admin can instead refund to the original card/account via the gateway refund API. Because wallets are closed-loop, a customer who asks for their money back (rather than wallet credit) gets it via the gateway refund, not a wallet withdrawal.
 - Refund amount = amount actually paid (or the partial amount set by admin, ≤ paid amount − already refunded).
 - Exactly one full refund per order; refunds are idempotent and ledgered.
 - Pay-on-delivery orders that were never paid have nothing to refund.
-- Who bears the cost (vendor fault vs customer fault vs rider fault) — open question; affects earnings reversal.
+
+### Who bears the cost (team recommendation, adopted per owner's "advise on best practice")
+
+Principle: the customer is made whole whenever they are not at fault; the party at fault absorbs the cost; WeGoDeliva absorbs platform failures. Every cancellation/failure records a `fault` (customer / vendor / rider / platform / none) chosen from preset reasons, editable by an admin with a note.
+
+| Situation | Customer gets | Vendor | Rider | Platform |
+| --- | --- | --- | --- | --- |
+| Customer cancels before vendor accepts | Full refund | Nothing owed | — | — |
+| Customer cancels after accept (via support, before pickup) | Refund minus a cancellation fee (setting, default: 50% of items for food already being prepared, ₦0 for non-perishables) | Paid the cancellation fee (minus commission) | — | — |
+| Vendor rejects, times out, or cancels after accepting | Full refund | No earnings; repeated cases flagged (acceptance-rate score, possible suspension) | — | Absorbs gateway fees |
+| Missing / wrong / damaged item (vendor fault) | Partial or full refund of affected items (+ delivery fee if the order was unusable) | Earnings for refunded items reversed | — | — |
+| No rider found / platform or payment-system failure | Full refund | Paid for items already prepared (platform cost) | — | Absorbs |
+| Rider fault (lost, damaged in transit, rider no-show after pickup) | Full refund | Paid in full | Delivery earning reversed; charged the item cost up to a cap (setting) after admin review; repeated cases → suspension | Absorbs the rest |
+| Customer unreachable / wrong address / refuses delivery (customer fault) | Items refunded **only if** the vendor can resell them (non-perishable, returned); delivery fee **not** refunded | Paid for perishable items | Paid the delivery fee (+ return trip fee if set) | — |
+| Pharmacy declines prescription | Full refund | — | — | — |
+
+- Reversals of vendor/rider earnings are ledger debits (never edits of past credits); if the balance is insufficient, the debt carries over and is netted at the next withdrawal.
+- Gateway transaction fees on refunded payments are absorbed by WeGoDeliva (not passed to customers).
+- Disputes: customer can contest via the order's "Report a problem"; admin decides within 48 h (SLA setting).
 
 ## 6.7 Earnings and payouts
 
-- Vendor owners and riders see their earnings balance, a ledger of credits (per order) and debits (payouts, COD settlements, adjustments), and downloadable statements (SHOULD).
+- Vendor owners and riders see gross earnings, commission due, cash owed (riders), available to withdraw (see [05](05-pricing-fees-commission.md) §5.8), a ledger, and downloadable statements (SHOULD).
 - **Payout accounts**: bank + account number, verified with the gateway's account-resolve API; the verified account name must reasonably match the vendor/rider name (admin reviews mismatches).
-- **Payout request**: amount ≤ available balance − outstanding cash balance (riders); minimum amount setting. Creates `requested`.
-- Admin approves/rejects. Approved payouts are sent via Paystack/Flutterwave **Transfers** API (or marked paid manually after an offline transfer — SHOULD support both). Balance is debited when the payout is **approved** (held), and re-credited if it fails or is rejected.
-- Transfer webhooks move payouts to `paid` / `failed`.
-- Optional automatic weekly payouts (LATER).
+- **Payouts on request** (owner decision): amount ≥ minimum (setting, ₦1,000) and ≤ available to withdraw. Creates `requested`.
+- Admin approves/rejects (auto-approval under a threshold for verified accounts — SHOULD). On approval, in one transaction: settle accrued commission and (riders) cash owed, debit the payout amount (held), then send through the **Paystack or Flutterwave Transfers API** (setting chooses the gateway; WeGoDeliva keeps a funded transfer balance). Transfer webhooks move payouts to `paid` / `failed`; failure or rejection re-credits the payout amount (commission settlement stays).
+- Transfer fees: paid by WeGoDeliva (default) or deducted from the payout (setting).
 
-## 6.8 Referrals
+## 6.8 Referrals (owner decision 2026-11-01)
 
 - Each user has a referral code and a share link (`https://wegodeliva.com/r/{code}` → App Link / Universal Link; falls back to store page).
-- New user signs up with a code (typed or from the link) → `referrals` row `pending`. Invalid codes are rejected with a clear message (old behaviour) — SHOULD instead ignore silently so sign-up isn't blocked.
-- When the referred user's **first order is delivered**, the referrer's wallet is credited the reward amount (setting) and the referral becomes `rewarded`. Reward for the new user too (SHOULD — owner decides).
-- Anti-abuse: one referral per phone number and device; self-referral blocked; admin can void.
+- New user signs up with a code (typed or from the link) → `referrals` row `pending`. An invalid code shows a message but does not block sign-up.
+- **Reward**: 5% of the referred user's **first purchase only**, capped at **₦5,000**, credited to the **referrer's wallet** after that purchase is complete (order `delivered`, or service booking `completed`). If 5% exceeds ₦5,000, the referrer gets ₦5,000.
+- "Purchase" amount = what the new customer paid for goods/services: subtotal − discount (excluding delivery fee, service fees, VAT and tip) — so the reward is not inflated by fees. If the first order is cancelled/refunded, the next completed order counts.
+- No reward for the new user (not requested). Funded by WeGoDeliva.
+- Anti-abuse: one referral per phone number, email and device; self-referral blocked; the reward is clawed back (wallet debit) if the qualifying order is refunded within 7 days; admin can void.
 
 ## 6.9 Loyalty points (LATER — Q2; not built at launch)
 

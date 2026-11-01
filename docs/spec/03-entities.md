@@ -7,7 +7,7 @@ Common to every table unless stated: `id` (bigint identity), `created_at`, `upda
 ## 3.1 People and access
 
 **users** — one row per person.
-`uuid` (public id), `name`, `phone` (E.164, unique, nullable for Apple-only sign-ups until completed), `email` (unique, nullable), `email_verified_at`, `phone_verified_at`, `password_hash` (nullable for OTP-only users), `status` (active / pending_approval / suspended / deleted), `avatar_path`, `referral_code` (unique, short, human-friendly), `referred_by_user_id`, `locale` (default `en`), `last_seen_at`, soft delete.
+`uuid` (public id), `name`, `phone` (E.164, unique — **required**; social sign-ups complete it before using the app), `email` (unique — **required**), `email_verified_at`, `phone_verified_at`, `password_hash` (nullable for OTP-only users), `status` (active / pending_approval / suspended / deleted), `avatar_path`, `referral_code` (unique, short, human-friendly), `referred_by_user_id`, `locale` (default `en`), `last_seen_at`, soft delete.
 
 **roles / user_roles** — role names from [02](02-roles-and-permissions.md). A user may hold several roles.
 
@@ -21,9 +21,11 @@ Common to every table unless stated: `id` (bigint identity), `created_at`, `upda
 
 ## 3.2 Places
 
-**zones** — delivery zones. `name` (e.g. "UNILAG main campus", "Surulere"), `polygon` (PostGIS polygon), `is_active`, `is_campus` (drives campus mode), `default_delivery_fee_kobo` (nullable), `rider_search_radius_m`, `notes`.
+**cities** — `name` (Lagos, Ibadan, Abeokuta, Ago-Iwoye, Ile-Ife, Benin City…), `state`, `is_active`, `centre_lat`, `centre_lng`.
 
-**addresses** — customer saved addresses and parcel stops. `user_id`, `label` (Home, Hostel…), `line1`, `landmark` (important in Lagos: "opposite the blue gate"), `area`, `city` (default Lagos), `lat`, `lng`, `zone_id` (computed), `campus_building` (nullable), `contact_name`, `contact_phone`, `is_default`, soft delete.
+**zones** — delivery zones. `city_id`, `name` (e.g. "UNILAG main campus", "Surulere"), `polygon` (PostGIS polygon), `is_active`, `is_campus` (drives campus mode), `default_delivery_fee_kobo` (nullable), `rider_search_radius_m`, `notes`.
+
+**addresses** — customer saved addresses and parcel stops. `user_id`, `label` (Home, Hostel…), `line1`, `landmark` (important in Lagos: "opposite the blue gate"), `area`, `city_id` (computed from the point), `lat`, `lng`, `zone_id` (computed), `campus_building` (nullable), `contact_name`, `contact_phone`, `is_default`, soft delete.
 
 ## 3.3 Vendors and catalogue
 
@@ -118,7 +120,7 @@ Parcel orders also carry: `package_type_id`, `weight_g`, `length_cm`, `width_cm`
 
 ## 3.7 Riders
 
-**rider_profiles** — `user_id`, `vehicle_kind` (bicycle / motorbike / car / on_foot), `plate_number`, `vehicle_colour`, `vendor_id` (nullable: vendor-owned rider), `is_online`, `max_active_orders`, `last_lat`, `last_lng`, `last_location_at`, `rating_avg`, `rating_count`, `approved_at`.
+**rider_profiles** — `user_id`, `rider_type` (wegodeliva_managed / independent / vendor_owned), `vehicle_kind` (bicycle / motorbike / car / on_foot), `plate_number`, `vehicle_colour`, `vendor_id` (set only for vendor_owned), `city_id`, `is_online`, `max_active_orders`, `last_lat`, `last_lng`, `last_location_at`, `rating_avg`, `rating_count`, `approved_at`.
 
 **rider_documents** — like vendor_documents (ID, licence, vehicle papers, guarantor form).
 
@@ -140,3 +142,26 @@ Parcel orders also carry: `package_type_id`, `weight_g`, `length_cm`, `width_cm`
 ## 3.10 Settings
 
 **settings** — key/value (jsonb) store for platform settings in [13-settings.md](13-settings.md). Every change is written to the audit log. Secrets never live here.
+
+## 3.11 Additions from owner decisions (2026-11-01)
+
+**Services** (vertical in scope):
+- **services** — `vendor_id`, `category_id`, `subcategory_id`, `name`, `description`, `images`, `pricing_unit` (fixed / hour / day / month), `price_kobo`, `compare_at_price_kobo`, `min_units`, `max_units`, `location_mode` (at_customer / at_provider / either), `callout_fee_mode` + `callout_fee_kobo`, `capacity` (simultaneous bookings), `duration_minutes` (for fixed services), `vat_treatment`, `is_active`, `sort_order`, rating fields, soft delete.
+- **service_option_groups** / **service_options** — like product option groups; options may be `per_unit`.
+- Orders of type `service` use `order_items` with `service_id` instead of `product_id`, plus order fields `units`, `starts_at`, `ends_at`, `service_location` (address snapshot or "at provider").
+
+**VAT**: `categories.vat_treatment`, `products.vat_treatment` (nullable override), `services.vat_treatment`; `order_items.vat_rate_bp`, `order_items.vat_kobo`; `orders.vat_kobo` replaces `tax_kobo`.
+
+**Wallet KYC**: `users.kyc_tier` (1–3), **kyc_verifications** — `user_id`, `kind` (bvn / nin / id_document / address), `provider`, `provider_reference`, `status`, `verified_at`, masked value only (never store full BVN/NIN in plain text; store a hash + last 4).
+
+**Faults and fees**: `orders.fault` (customer / vendor / rider / platform / none), `orders.cancellation_fee_kobo`; refunds carry `fault`.
+
+**Earnings**: `earnings_entries.kind` adds `commission_accrued`, `commission_settled`, `vendor_cash_owed`; `earnings_accounts` exposes gross, commission due, cash owed and available-to-withdraw (computed).
+
+**Referrals**: `referrals.reward_rate_bp` (500), `reward_cap_kobo` (500,000), `qualifying_amount_kobo`, `reward_kobo`, `clawed_back_at`.
+
+**Chat** (in scope at launch):
+- **conversations** — `kind` (order_customer_vendor / order_customer_rider / support), `order_id` (nullable), `status` (open / closed), `closed_at`. Order conversations close 24 h after the order ends (read-only afterwards).
+- **conversation_participants** — `conversation_id`, `user_id`, `role`, `last_read_at`.
+- **messages** — `conversation_id`, `sender_user_id`, `body` (text, length-limited), `attachment_path` (images only, private bucket), `created_at`, `deleted_at` (moderation). Phone numbers and links in messages are allowed but flagged for moderation (SHOULD).
+- Messages are written through Laravel (validated, rate-limited, stored in Postgres) and broadcast on Supabase Realtime channel `conversation:{uuid}` authorised by a Laravel-minted JWT; RLS limits reads to participants.

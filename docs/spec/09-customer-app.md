@@ -11,7 +11,7 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 | Welcome / location (old) | Ask for location permission; or pick an address / campus manually. Sets the delivery location used for vendor lists. |
 | Login (old) | Phone + OTP (primary); email + password; Google; Apple (iOS & Android). |
 | OTP entry (old) | 6-digit code, resend timer, auto-read on Android (SMS Retriever). |
-| Register (old) | Name, phone (verified by OTP), email (optional or required — open question), password (if email), referral code (pre-filled from link), accept terms. |
+| Register (old) | Name, phone (verified by OTP), email (**required**), password (if email), referral code (pre-filled from link), accept terms. |
 | Forgot password (old) | Reset via OTP to phone or link to email. |
 | Complete profile (new) | Shown when a social sign-in has no phone yet; phone is required before ordering (old rule). |
 
@@ -69,7 +69,7 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 
 | Screen | Purpose / behaviour |
 | --- | --- |
-| Wallet (old) | Balance, top-up (amount chips + custom, min/max), transaction history with filters. |
+| Wallet (old) | Balance, top-up (amount chips + custom, within KYC tier limits), transaction history with filters. Shows the current KYC tier and limits; "Raise my limits" verifies BVN or NIN (Tier 2). No withdraw button (closed loop). |
 | Wallet transfer (old) | **Removed** (Q3 out). |
 | Loyalty points (old) | LATER (Q2). Not built at launch. |
 | Refer & earn (new screen; old had share in profile) | Code, share link (App Link), how it works, list of referrals and rewards. |
@@ -78,7 +78,7 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 | Edit profile / change password (old) | Phone change requires OTP. |
 | Delete account (old, required by stores) | Explains consequences and blockers (open orders, wallet balance); confirm with OTP. |
 | Support (new) | WhatsApp button (number from settings), FAQ, "Report a problem" form (category, order, message, photos) → support ticket; list of my tickets with status. |
-| Chat (old) | Replaced at launch by call/WhatsApp (Q5). |
+| Chat (in scope at launch) | Per order: chat with the vendor (from order placed until 24 h after it ends) and with the rider (from assignment until 24 h after delivery); text + images; read receipts; push for new messages. Support chat with WeGoDeliva from Profile → Support and from "Report a problem". Built on Supabase Realtime. |
 | Legal / content pages (old) | Terms, privacy, about. |
 
 ## 9.8 Cross-cutting
@@ -87,3 +87,15 @@ App name **WeGoDeliva**. Android package and iOS bundle ID must stay the same as
 - Deep links (App Links / Universal Links): `/r/{code}` referral, `/v/{slug}` vendor, `/p/{id}` product, `/o/{code}` order (requires login).
 - Accessibility per CLAUDE.md; dark mode; dynamic text.
 - Analytics events (SHOULD): view vendor, add to cart, begin checkout, purchase — no personal data.
+
+## 9.9 Services (in scope from 2026-11-01)
+
+| Screen | Purpose / behaviour |
+| --- | --- |
+| Services landing | Service categories (laundry, cleaning, hair & beauty, repairs, tutoring…), providers near me / on my campus, featured services. |
+| Provider page | As vendor page, listing services with "from ₦X / hour". |
+| Service details | Images, description, pricing unit, options, where it happens (my address / provider location), reviews. |
+| Book a service | Choose units (hours/days) or fixed; options; date and time from available slots; location (address with landmark, or provider's); note. |
+| Booking summary & payment | Price breakdown (service, options, call-out fee, VAT, service fees, discount), payment method (same rules as goods), cancellation policy shown before paying. |
+| Booking details | Status timeline (requested → confirmed → in progress → completed), provider contact + chat, **start code** to give the provider, cancel (with fee preview), confirm completion / report a problem, rate. |
+| My bookings | In Orders with a "Bookings" tab. |

@@ -29,4 +29,13 @@ App name **WeGoDeliva Vendor** (keep the live package/bundle ID). The vendor web
 | Change password / delete account (old) | Owner deletion blocked while vendor has balance or open orders. |
 | Receipt printing (new, CLAUDE.md) | Bluetooth thermal printer (58/80 mm, ESC/POS): pair printer, auto-print on accept (toggle), reprint. Android 12+ runtime Bluetooth permissions. |
 | Support (new) | WhatsApp to vendor-support line, FAQ, report a problem. |
-| Chat (old) | Replaced at launch (Q5). |
+| Chat (in scope at launch) | Per-order chat with the customer (and with the assigned rider — SHOULD); support chat with WeGoDeliva. |
+
+## Services (in scope from 2026-11-01)
+
+| Screen | Purpose / behaviour |
+| --- | --- |
+| Services list / new / edit | Name, category, description, images, pricing unit and price, min/max units, location mode, call-out fee, capacity, duration, options, active toggle. |
+| Availability | Working hours per weekday, blocked dates, capacity per slot. |
+| Booking inbox | Requested / Confirmed / Today / Completed. Accept or decline (reason) requested bookings; calendar view (SHOULD). |
+| Booking details | Customer, location, time, options, note; chat; **Start** (enter the customer's start code) → in progress; **Complete**; collect payment if pay on completion. |

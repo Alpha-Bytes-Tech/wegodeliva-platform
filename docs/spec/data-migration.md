@@ -1,6 +1,17 @@
 # Data migration: old MySQL → new Postgres (Supabase)
 
-Status: **plan**, based on the old schema in the migration files only. No production data has been seen yet. Phase 7 rehearses this on staging with a copy of production data; the reconciliation rules at the end are the acceptance test.
+## M.0 Owner decision 2026-11-01 — the old data is test data
+
+All vendors and customers on the old system are **test/demo users**. So:
+
+- **No customer, vendor, order, wallet or earnings data is migrated.** The new platform starts with an empty production database (plus seed data: vendor types, categories, cities, campus zones, content pages, FAQs, settings).
+- The Phase 7 wallet "reconciliation to the kobo" from CLAUDE.md does not apply to customers/vendors because no balances carry over. Before cut-over we still take a **read-only snapshot** of the old database from cPanel and confirm no real money is involved (any non-zero wallet/earnings balance, any successful real Paystack/Flutterwave payment). If real balances turn up, the owner decides case by case and §M.4 below applies to those accounts only.
+- Loyalty points: the owner chose to convert points to wallet credit, but since all holders are test users there is nothing to convert. If the snapshot shows real holders, convert at the old rate.
+- Riders: the owner's answer covered vendors and customers. ⚠ **Owner to confirm riders are also test accounts.** If there are real riders, re-onboard them in the new rider app (fresh documents and approval) rather than migrating.
+- Old production is on **cPanel**. It stays up, read-only, until the new apps are live, then is switched off (files and DB dump archived privately for 1 year).
+- What still matters from the old system: the **app store identities** (§M.7), the Firebase project (kept, so FCM continues), the domain, and the Google Maps keys (restrict/rotate).
+
+The table mapping below is kept **for reference only**, in case the snapshot shows real data that must be carried over.
 
 ## M.1 Principles
 
@@ -109,3 +120,12 @@ The same method applies to vendor/rider earnings balances and rider cash balance
 ## M.7 App identity continuity
 
 Keep `com.wegodeliva.customerapp`, `com.wegodeliva.vendorapp`, `com.wegodeliva.riderapp` (Android `applicationId` and iOS bundle id) and sign with the existing upload keys / Play App Signing, so the new apps install as updates. Version codes must be higher than the live ones.
+
+**Owner answer 2026-11-01: the keystore passwords are not available, Play App Signing status is unknown, and there is no Apple certificate access.** Options, in order of preference:
+
+1. **Play App Signing is on** (check: Play Console → app → Test and release → App integrity). Then the lost upload key can be replaced: request an **upload key reset** in Play Console, register a new upload key, and keep the same package IDs. Usually takes a few days.
+2. **Play App Signing is off and the key passwords can't be recovered.** The existing Android listings can never be updated. Publish new listings with new package IDs (e.g. `com.wegodeliva.app`, `com.wegodeliva.vendor`, `com.wegodeliva.rider`) and unpublish the old ones. Because all current users are test users, nobody is lost.
+3. **iOS**: bundle IDs belong to the Apple Developer account, not to a certificate. Whoever owns that account can create new certificates. If the account is lost, use new bundle IDs under a new account.
+4. **Not on the stores at all**: choose fresh IDs now (same as option 2).
+
+Decision needed before Phase 1 sets up app flavours (package IDs are set there). Until then, Phase 1 uses the existing IDs with `.dev` / `.staging` suffixes for non-production flavours, which works with either outcome.

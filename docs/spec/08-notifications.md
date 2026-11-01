@@ -41,3 +41,19 @@ Channels: **push** (FCM, per device token, per app), **in-app inbox** (stored no
 - OTP SMS via the chosen Nigerian provider (Termii proposed) with DND-route support; fallback provider configurable.
 - Email via a transactional provider (e.g. Postmark / Amazon SES / Mailgun — owner to choose); sender `no-reply@wegodeliva.com`, SPF/DKIM/DMARC set.
 - Users can mute marketing broadcasts but not transactional order notifications.
+
+## 8.3 Additions (2026-11-01)
+
+| Event | Customer | Vendor / provider | Rider | Admin |
+| --- | --- | --- | --- | --- |
+| New chat message | push (unless the chat is open) | push | push | support inbox realtime |
+| Service booking requested | push: "Request sent" | **loud push** | | |
+| Booking confirmed / declined | push | | | |
+| Booking reminder (24 h, 1 h before) | push | push | | |
+| Booking started / completed | push (confirm or report a problem) | | | |
+| Booking disputed | push | push | | alert |
+| Referral reward credited (5%, max ₦5,000) | push to referrer | | | |
+| KYC tier upgraded / verification failed | push | | | |
+| Commission settled at withdrawal | | statement email | statement email | |
+
+The support WhatsApp number is added to settings when the owner provides it; until then support runs through in-app chat.

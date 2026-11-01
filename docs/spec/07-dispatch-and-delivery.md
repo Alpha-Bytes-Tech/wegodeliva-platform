@@ -43,7 +43,7 @@ Reassignment: admin can unassign a rider before pickup (reason required); the or
 2. **At pickup** → "Arrived" (SHOULD; notifies vendor). Vendor marks ready if not already.
 3. **Picked up** → rider confirms items (and shows pickup code to vendor — SHOULD). Status `picked_up`; customer gets "Your order is on the way" + live tracking.
 4. **Navigate to drop-off** → full address, landmark, customer phone (masked/call button), notes.
-5. **Handover** → customer tells the rider the 4-digit handover code; rider enters it. Correct code → `delivered`. Three wrong attempts → rider must call support. Fallback when the customer can't give the code: photo of the handover + admin approval (or signature), per settings.
+5. **Handover** → customer tells the rider the 4-digit handover code; rider enters it. Correct code → `delivered`. Three wrong attempts → rider must call support. The code is required on **every** delivery (owner decision 2026-11-01): there is no photo or signature fallback. If the customer cannot give the code, the rider contacts support, which verifies the customer by phone and can complete the delivery as an audited admin override.
 6. **Failed delivery** → rider picks a reason, takes a photo, and must have tried to call the customer (call attempt logged). Admin reviews.
 - Parcels: each stop has its own code (sent to that stop's contact by SMS) when the package type requires stop verification.
 
@@ -63,5 +63,8 @@ Reassignment: admin can unassign a rider before pickup (reason required); the or
 
 ## 7.6 Vendor's own riders (in scope — Q8 confirmed)
 
+All three rider types are in scope (owner decision 2026-11-01): **WeGoDeliva-managed** (recruited and supervised by WeGoDeliva ops; may get guaranteed minimums or shifts — LATER), **independent** (self-signed-up freelancers, paid per job), and **vendor-owned** (below). Matching treats managed and independent riders the same; admins can prioritise managed riders per zone (setting).
+
+
 - Vendor owner invites riders (by phone); they use the same rider app and see only that vendor's jobs.
-- Earnings for vendor-owned riders: delivery fee goes to the vendor, not the rider (owner to confirm).
+- Earnings for vendor-owned riders: the delivery fee is credited to the vendor (minus the 3% delivery commission); the vendor pays its riders off-platform.

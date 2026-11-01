@@ -64,3 +64,12 @@ Login: email + password + TOTP. All writes audited. Zone admins see only their z
 - Queue/job health and failed jobs (read-only; retry button for safe jobs).
 - Scheduler heartbeat (last run of each job).
 - Old template pages for backups, upgrades, server config, translations editor, purchase-code, cron URL — **not built** (O7).
+
+## 12.12 Additions from owner decisions (2026-11-01)
+- **Cities**: create cities (Lagos, Ibadan, Abeokuta, Ago-Iwoye, Ile-Ife, Benin City…); zones and campus zones belong to a city; dashboards and reports filter by city/campus; zone admins can be scoped to a city or a campus.
+- **Services**: service categories, services moderation, bookings list/details with the same actions as orders (cancel, refund, resolve disputes).
+- **Chat & support inbox**: support conversations from all apps in one inbox (assign, reply, close, link to an order/refund); read-only access to order chats when a problem is reported (access audited); message moderation (hide abusive messages, block a user from chat).
+- **KYC**: view a customer's KYC tier and verification results (masked), manually downgrade/suspend a tier.
+- **Faults**: set/adjust the fault on cancelled/failed orders; earnings reversals and rider charges from fault decisions.
+- **Rider types**: filter riders by type; mark riders as WeGoDeliva-managed.
+- **Commission settlement**: per vendor/rider, commission accrued vs settled; VAT reports (VAT collected on goods, VAT on commission) for the accountant.

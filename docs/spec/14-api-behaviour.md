@@ -47,3 +47,12 @@
 
 ## 14.4 Behaviours deliberately changed
 See [legacy-notes.md](legacy-notes.md) for the defects behind each: order listing by arbitrary vendor/driver id, order details without ownership check, client-settable payment status, mass assignment on update, role chosen at sign-up, wallet transfers without re-authentication, unauthenticated webhooks, totals trusted from the client on parcel orders.
+
+## 14.5 Additions (2026-11-01)
+
+| Group | Behaviour |
+| --- | --- |
+| Services | Service categories; providers near a point; service details; available slots for a date range; booking quote; place booking; booking actions (customer: cancel, confirm completion, dispute; provider: accept/decline, start with code, complete). |
+| Chat | List my conversations; open/create the conversation for an order (participants derived from the order — clients can't choose arbitrary participants); send message (text/image, rate-limited); mark read; realtime token for `conversation:{uuid}`; support conversation create. |
+| KYC | Current tier and limits; start BVN/NIN verification (server calls the KYC provider; the full number is never returned or logged). |
+| Cities & campuses | List active cities and campus zones; "which city/campus am I in". |

@@ -25,7 +25,7 @@ Statuses:
 | `accepted` | Vendor accepted and gave a prep time (and is preparing). Rider matching starts here (configurable: at accept, or N minutes before ready). |
 | `ready` | Ready for pickup (or for the customer, if self-pickup). |
 | `picked_up` | Rider has collected it (pickup code checked, SHOULD). Live tracking active. |
-| `delivered` | Handover code verified (or photo/signature fallback). Final. |
+| `delivered` | Handover code verified — **required on every delivery** (owner decision 2026-11-01). Final. |
 | `cancelled` | Stopped before pickup. Final. |
 | `failed` | Could not be delivered after pickup (customer unreachable, address wrong…). Final; needs admin review for returns/refunds. |
 
@@ -102,5 +102,27 @@ On `delivered`, in one transaction and exactly once per order (idempotent):
 
 On `cancelled` or `failed`:
 - return reserved stock;
-- refund per [06](06-payments-wallet-payouts.md) §6.6;
+- record the `fault` and refund per [06](06-payments-wallet-payouts.md) §6.6;
 - void coupon redemption so the customer can reuse it (SHOULD).
+
+## 4.8 Service bookings (in scope from 2026-11-01)
+
+A service booking is an order of type `service` with one service line instead of product lines, no stock, and usually no rider.
+
+Extra fields: `service_id`, `units` (hours/days/months or 1 for fixed), `starts_at`, `ends_at`, `location` (customer address or provider location), chosen options.
+
+Statuses:
+
+| Status | Meaning |
+| --- | --- |
+| `awaiting_payment` | As for goods (online payment). |
+| `requested` | Waiting for the provider to accept the slot. |
+| `confirmed` | Provider accepted. Reminder notifications 24 h and 1 h before. |
+| `in_progress` | Provider started the service (at the slot time). The customer gives the provider the **handover code** to start — proves the provider showed up. |
+| `completed` | Provider marked done; the customer confirms or it auto-confirms after 24 h (setting). Triggers earnings, commission and referral reward. |
+| `cancelled` | Before start, with the same fault rules as goods ([06](06-payments-wallet-payouts.md) §6.6). Free customer cancellation until X hours before start (setting, default 12 h); after that a late-cancellation fee (setting). |
+| `disputed` | Customer reported a problem within 24 h of completion; admin resolves (refund, partial refund, or release). |
+
+- Provider capacity: each service has a max number of simultaneous bookings (default 1); slots are offered only inside the vendor's hours and not clashing with confirmed bookings.
+- Pay on delivery for services = pay the provider at completion (same ₦20,000 limit); the provider's cash collected is posted as owed by the vendor (netted at withdrawal).
+- Provider acceptance timeout: 2 h, or 30 min for bookings starting within 3 h (settings).

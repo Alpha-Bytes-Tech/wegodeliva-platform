@@ -1,7 +1,7 @@
 # WeGoDeliva Platform — Project Instructions
 
 Owner: **Alpha Bytes Technologies Ltd** (6, Bank Olemoh Embankment, Surulere, Lagos).
-Product: WeGoDeliva, a multivendor on-demand delivery marketplace for Lagos (food, groceries, pharmacy, fashion, parcels), with a campus-focused rollout.
+Product: WeGoDeliva, a multivendor on-demand delivery and services marketplace in Nigeria (food, groceries, pharmacy, fashion, parcels, services), starting with Lagos and a campus-focused rollout (campus list in `docs/spec/01-scope.md`).
 
 You are acting as the full development team: tech lead, backend engineer, mobile engineer, web engineer, QA and security reviewer. Work in phases, keep the owner informed, and never make irreversible changes without asking.
 
@@ -15,7 +15,7 @@ This is a **clean rewrite**. The old system was built on a third-party template 
 - You may read legacy code **only** in Phase 0, and only to write the functional specification in `docs/spec/` (what the system does: entities, fields, flows, business rules, API behaviour), in your own words.
 - From Phase 1 onward, build from `docs/spec/`, not from legacy code. Do not reproduce legacy file structures, class names, comments, or code.
 - Names, package names, strings, assets, icons and copy must contain no reference to Glover, Fuodz, Edentech or the template author.
-- Before every commit, run `scripts/check-clean-room.sh` (create it in Phase 1). It fails the commit if it finds `glover`, `fuodz`, `edentech`, `ambrosethebuild` (case-insensitive) anywhere outside `docs/spec/legacy-notes.md`.
+- Before every commit, run `scripts/check-clean-room.sh` (create it in Phase 1). It fails the commit if it finds `glover`, `fuodz`, `edentech`, `ambrosethebuild` (case-insensitive) anywhere outside `docs/spec/legacy-notes.md` and this `CLAUDE.md` (which has to name them to state the rule; exclusion approved by the owner 2026-11-01).
 - Third-party open-source packages are fine; respect their licences.
 
 ## 2. Architecture (hybrid)
@@ -89,7 +89,7 @@ wegodeliva-platform/
 ## 5. Phases and acceptance criteria
 
 **Phase 0 — Specification (read legacy, write spec).**
-Produce `docs/spec/`: entities and fields, order lifecycle and states, pricing/fees/commission rules, payment and wallet flows, roles and permissions, notifications, every screen per app, admin functions. Mark modules WeGoDeliva doesn't use (taxi, service booking, Paytm, Razorpay, iPay88, etc.) as "out of scope" and confirm with the owner. Also write `docs/spec/data-migration.md` mapping old MySQL tables to the new schema. *Done when the owner approves the spec.*
+Produce `docs/spec/`: entities and fields, order lifecycle and states, pricing/fees/commission rules, payment and wallet flows, roles and permissions, notifications, every screen per app, admin functions. Mark modules WeGoDeliva doesn't use (taxi, Paytm, Razorpay, iPay88, etc.) as "out of scope" and confirm with the owner. (Service booking was brought into scope by the owner on 2026-11-01.) Also write `docs/spec/data-migration.md` mapping old MySQL tables to the new schema. *Done when the owner approves the spec.*
 
 **Phase 1 — Foundations.**
 Monorepo, CI on every PR, clean-room check, Laravel 12 skeleton on Supabase Postgres, auth (phone OTP + email, Sanctum), roles, health checks, staging environment, Next.js admin shell on Vercel with login, Flutter core + ui packages, flavours (dev/staging/prod). *Done when CI is green and staging is reachable.*
@@ -98,7 +98,7 @@ Monorepo, CI on every PR, clean-room check, Laravel 12 skeleton on Supabase Post
 Vendors, categories, products, stock, zones/delivery fees, cart, checkout, orders and state machine, payments (Paystack, Flutterwave, wallet, pay-on-delivery), refunds, payouts, ratings, notifications. *Done when feature tests cover every endpoint and payment tests include tampered-amount and replayed-transaction cases.*
 
 **Phase 3 — Customer app.**
-Home, search, store, cart, checkout (3 steps), live tracking, order history and reorder, wallet, addresses with landmarks and pin-drop, campus mode, referral via App Links, support (WhatsApp + in-app issue report).
+Home, search, store, cart, checkout (3 steps), live tracking, order history and reorder, wallet, addresses with landmarks and pin-drop, campus mode, referral via App Links, service booking, in-app chat, support (WhatsApp + in-app issue report).
 
 **Phase 4 — Vendor app + vendor web portal.**
 Order inbox with sound and accept/reject/prep time, open/closed/busy, menu and stock, earnings and statements, receipt printing.
@@ -110,7 +110,7 @@ Online/offline, job offers, step-by-step delivery with handover code, background
 Dashboards, users/vendors/riders, approvals and documents, orders, refunds, payouts, zones and fees, promos, content, settings, audit log.
 
 **Phase 7 — Data migration and launch.**
-Rehearse the MySQL → Postgres migration on staging with a copy of production data; reconcile user counts, order counts and every wallet balance to the kobo. Release apps under the **existing** Play Store/App Store package IDs and signing keys so current users get an update, not a new app. Cut over with a written rollback plan. *Done when reconciliation passes and the owner signs off.*
+The owner confirmed (2026-11-01) that all old vendors and customers are test users, so no user data is migrated by default: snapshot the old database, confirm no real balances or payments exist, and only if some do, migrate and reconcile those accounts to the kobo (`docs/spec/data-migration.md`). Release apps under the **existing** Play Store/App Store package IDs and signing keys so current users get an update, not a new app. Cut over with a written rollback plan. *Done when reconciliation passes and the owner signs off.*
 
 ## 6. Working rules for Claude
 

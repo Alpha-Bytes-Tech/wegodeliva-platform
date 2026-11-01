@@ -6,13 +6,13 @@ A person has one user account and one or more roles. Roles are assigned by the s
 
 | Role | Who | Created how |
 | --- | --- | --- |
-| `customer` | Anyone ordering | Self sign-up in the customer app (phone OTP or email) |
+| `customer` | Anyone ordering | Self sign-up in the customer app (phone OTP; phone and email both required) |
 | `vendor_owner` | Person who registered the vendor | Self sign-up in the vendor app/portal → inactive until admin approves the vendor |
 | `vendor_staff` | Cashier/kitchen staff for a vendor | Invited by the vendor owner or an admin |
 | `rider` | Delivery rider | Self sign-up in the rider app → inactive until admin approves documents |
 | `admin` | WeGoDeliva operations staff | Created by a super admin |
 | `super_admin` | Owner / tech lead | Seeded; can manage admins and settings |
-| `zone_admin` (SHOULD) | Ops staff limited to some delivery zones (e.g. one campus) | Created by super admin. Replaces the old "city admin" role. |
+| `zone_admin` (SHOULD) | Ops staff limited to some cities or zones (e.g. one campus) | Created by super admin. Replaces the old "city admin" role. |
 
 A vendor can have several staff; a staff member can belong to several vendors and switch between them in the vendor app (old behaviour: "my vendors" + "switch vendor").
 
@@ -42,7 +42,7 @@ A vendor can have several staff; a staff member can belong to several vendors an
 
 ## 2.4 Authentication rules
 
-- Customer: phone + OTP (primary), or email + password; Google and Apple sign-in (see open questions).
+- Customer: phone + OTP (primary), or email + password; Google and Apple sign-in (at launch). Phone and email are both required for every customer.
 - Vendor and rider: phone + OTP or email + password.
 - Admin: email + password + TOTP 2FA (MUST for admins).
 - Login with a role hint: an app only accepts users with the matching role (rider app rejects a pure customer). The old system did this too.
