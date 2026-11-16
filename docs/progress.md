@@ -2,7 +2,7 @@
 
 Read this at the start of every session; update it at the end.
 
-## Current phase: 1 — Foundations · **in review** (PR "Phase 1: foundations", branch `phase-1/foundations`)
+## Current phase: 1 — Foundations · **code merged, staging pending** (PR #5 merged into `main` 2026-11-16)
 
 Last updated: 2026-11-16
 
@@ -25,17 +25,19 @@ Last updated: 2026-11-16
   - Owner decision applied: riders and vendor owners/staff get the `customer` role automatically when they sign in to the customer app (spec 02 §2.4 updated; admin-only accounts excluded).
   - ADRs 0009 (roles table), 0010 (app-scoped tokens, cookie session for admin), 0011 (pub workspace + shared auth package).
 - 2026-11-16 — Code-review fixes on the Phase 1 PR (all 9 findings, each with regression tests): account pre-hijacking via email code and social sign-in (ADR 0012: first email proof drops password + tokens, phone re-confirmed via `POST /auth/phone/confirm`), account-wide login limit (10/15 min), OTP send limits keyed per email+IP with a 20/h email ceiling (spec 13 updated), OTP mail queued only after the challenge commits, real app version in `X-App-Version`, offline session state with retry instead of a false sign-out, global 401/`account_suspended` sign-out, admin cookie expiry from the token's `expires_at`. CI Flutter pinned to 3.47.9 (3.48 deprecates `material.dart`).
+- 2026-11-16 — Owner approved; PR #5 "Phase 1: foundations" merged into `main` (merge commit `ad09b82`) with all CI jobs green. Phase 1 is "done" once staging is reachable (CLAUDE.md §5).
 
 ## In progress
 
-- Owner review of the Phase 1 PR.
+- Nothing in flight. Waiting on the owner for branch protection and staging accounts (below).
 
 ## Next
 
-1. Merge Phase 1 after review; turn on branch protection requiring the CI jobs.
+1. Turn on branch protection for `main` requiring the CI jobs (needs a GitHub admin).
 2. Staging (needs the owner, see below): Supabase project, Laravel host, Vercel project for `web/`, email provider, then deploy and point the staging flavour at it.
-3. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check.
-4. Phase 2 — core marketplace backend (vendors, catalogue, zones/fees, cart, checkout, orders, payments).
+3. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
+4. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
+5. Phase 2 — core marketplace backend (vendors, catalogue, zones/fees, cart, checkout, orders, payments).
 
 ## Blockers / owner actions
 
