@@ -15,3 +15,4 @@ One file per significant decision: context, decision, consequences. Status is Pr
 | [0009](0009-roles-table.md) | Roles in a plain table, permissions in policies | Accepted |
 | [0010](0010-api-auth-tokens.md) | App-scoped Sanctum tokens; admin web keeps its token in an httpOnly cookie | Accepted |
 | [0011](0011-melos-pub-workspace.md) | Flutter monorepo: pub workspace + Melos, shared auth package | Accepted |
+| [0012](0012-distrust-unverified-sign-up-data.md) | Distrust everything an unverified sign-up chose (pre-hijack fix) | Accepted |

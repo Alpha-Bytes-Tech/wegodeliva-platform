@@ -26,6 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $email
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $phone_verified_at
+ * @property bool $phone_confirmation_required
  * @property string|null $password
  * @property UserStatus $status
  * @property string|null $avatar_path
@@ -58,6 +59,7 @@ class User extends Authenticatable
         'status' => 'active',
         'kyc_tier' => 1,
         'locale' => 'en',
+        'phone_confirmation_required' => false,
     ];
 
     /** @return list<string> */
@@ -90,6 +92,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'phone_confirmation_required' => 'boolean',
             'last_seen_at' => 'datetime',
             'password' => 'hashed',
             'status' => UserStatus::class,

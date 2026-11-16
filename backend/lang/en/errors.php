@@ -25,5 +25,6 @@ return [
     'social_token_invalid' => 'We could not confirm your sign-in. Please try again.',
     'social_email_unverified' => 'Your account with this provider has no verified email address.',
     'phone_required' => 'Please add your phone number to finish signing up.',
+    'phone_already_confirmed' => 'Your phone number is already confirmed.',
     'account_exists' => 'An account with this email already exists. Sign in with your email to link it.',
 ];

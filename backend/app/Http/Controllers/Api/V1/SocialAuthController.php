@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\SocialLoginRequest;
 use App\Models\AuthIdentity;
 use App\Models\User;
+use App\Services\Auth\EmailVerification;
 use App\Services\Auth\TokenIssuer;
 use App\Services\Social\SocialIdentity;
 use App\Services\Social\SocialTokenVerifier;
@@ -25,6 +26,7 @@ class SocialAuthController extends Controller
     public function __construct(
         private readonly SocialTokenVerifier $verifier,
         private readonly TokenIssuer $tokens,
+        private readonly EmailVerification $emailVerification,
     ) {}
 
     public function __invoke(SocialLoginRequest $request, SocialProvider $provider): JsonResponse
@@ -48,10 +50,11 @@ class SocialAuthController extends Controller
         $existing = User::query()->where('email', $email)->first();
         if ($existing !== null) {
             // The provider vouches for the email, so the person controls it: link the accounts.
+            // If the email was never verified, whoever registered it may not be this person:
+            // drop their password and tokens and re-confirm the phone first (ADR 0012).
             $this->tokens->assertCanSignIn($existing, ClientApp::Customer);
+            $this->emailVerification->markVerified($existing);
             $this->link($existing, $identity, $email);
-            $existing->email_verified_at ??= now();
-            $existing->save();
 
             return $this->respond($existing, $deviceName, false);
         }

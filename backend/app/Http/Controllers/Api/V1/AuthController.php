@@ -8,6 +8,7 @@ use App\Enums\RoleName;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\AdminLoginRequest;
+use App\Http\Requests\Auth\ConfirmPhoneRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
@@ -16,6 +17,7 @@ use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\Auth\EmailVerification;
 use App\Services\Auth\OtpService;
 use App\Services\Auth\TokenIssuer;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +34,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly OtpService $otp,
         private readonly TokenIssuer $tokens,
+        private readonly EmailVerification $emailVerification,
     ) {}
 
     /** Customer sign-up. The role is always `customer`; the email is verified by OTP next. */
@@ -71,7 +74,10 @@ class AuthController extends Controller
         return response()->json(['data' => ['otp' => $this->otpTiming()]], 202);
     }
 
-    /** Verifies a sign-in code: signs the user in and marks the email as verified. */
+    /**
+     * Verifies a sign-in code: signs the user in and marks the email as verified. The first
+     * verification also drops the sign-up password and every older token (ADR 0012).
+     */
     public function verifyOtp(VerifyOtpRequest $request): JsonResponse
     {
         $this->otp->verify($request->email(), OtpPurpose::Login, $request->string('code')->toString());
@@ -80,9 +86,7 @@ class AuthController extends Controller
             ?? throw new ApiException('otp_invalid', 422);
 
         $this->tokens->assertCanSignIn($user, $request->app());
-        if ($user->email_verified_at === null) {
-            $user->forceFill(['email_verified_at' => now()])->save();
-        }
+        $this->emailVerification->markVerified($user);
 
         return response()->json(['data' => $this->tokens->issue($user, $request->app(), $request->input('device_name'))]);
     }
@@ -127,9 +131,11 @@ class AuthController extends Controller
         $user = User::query()->where('email', $request->email())->first()
             ?? throw new ApiException('otp_invalid', 422);
 
+        // First proof of the email? Distrust whatever the unverified sign-up set (ADR 0012).
+        $this->emailVerification->markVerified($user);
+
         DB::transaction(function () use ($user, $request): void {
             $user->password = $request->string('password')->toString();
-            $user->email_verified_at ??= now();
             $user->save();
             $user->tokens()->delete();
         });
@@ -141,6 +147,23 @@ class AuthController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        return new UserResource($user->load('roles'));
+    }
+
+    /** Re-confirms the phone number after the first email verification (ADR 0012). */
+    public function confirmPhone(ConfirmPhoneRequest $request): UserResource
+    {
+        /** @var User $user */
+        $user = $request->user();
+        if (! $user->phone_confirmation_required) {
+            throw new ApiException('phone_already_confirmed', 409);
+        }
+
+        $user->forceFill([
+            'phone' => $request->string('phone')->toString(),
+            'phone_confirmation_required' => false,
+        ])->save();
 
         return new UserResource($user->load('roles'));
     }

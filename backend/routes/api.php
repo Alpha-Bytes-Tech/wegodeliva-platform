@@ -25,6 +25,7 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function (): void {
             Route::get('me', [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
+            Route::post('phone/confirm', [AuthController::class, 'confirmPhone']);
         });
     });
 

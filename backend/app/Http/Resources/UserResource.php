@@ -19,6 +19,9 @@ class UserResource extends JsonResource
             'email_verified' => $this->email_verified_at !== null,
             'phone' => $this->phone,
             'phone_verified' => $this->phone_verified_at !== null,
+            // ADR 0012: the app must ask the user to re-enter their phone number before going on.
+            'phone_confirmation_required' => $this->phone_confirmation_required,
+            'has_password' => $this->password !== null,
             'status' => $this->status->value,
             'roles' => $this->roleNames(),
             'referral_code' => $this->referral_code,
