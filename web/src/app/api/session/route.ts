@@ -5,7 +5,7 @@ import { GENERIC_ERROR } from "@/lib/api-error";
 import { backendFetch, type AdminUser } from "@/lib/backend";
 import { SESSION_COOKIE, getSessionToken, sessionCookieOptions } from "@/lib/session";
 
-type LoginResponse = { token: string; user: AdminUser };
+type LoginResponse = { token: string; expires_at?: string; user: AdminUser };
 
 function errorResponse(status: number, error = GENERIC_ERROR) {
   return NextResponse.json({ error }, { status });
@@ -34,7 +34,12 @@ export async function POST(request: Request) {
     return errorResponse(result.status, result.error);
   }
 
-  (await cookies()).set(SESSION_COOKIE, result.data.token, sessionCookieOptions());
+  // The cookie lives exactly as long as the backend token (spec 14 "Auth": `expires_at`).
+  (await cookies()).set(
+    SESSION_COOKIE,
+    result.data.token,
+    sessionCookieOptions(result.data.expires_at),
+  );
   const { uuid, name, roles } = result.data.user;
   // Only non-secret profile fields go back to the browser; never the token.
   return NextResponse.json({ data: { user: { uuid, name, roles } } });

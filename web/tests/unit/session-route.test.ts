@@ -11,6 +11,7 @@ vi.mock("next/headers", () => ({
 }));
 
 import { DELETE, POST } from "@/app/api/session/route";
+import { SESSION_FALLBACK_MAX_AGE_SECONDS, sessionMaxAgeSeconds } from "@/lib/session";
 
 function jsonRequest(body: unknown) {
   return new Request("http://localhost/api/session", {
@@ -27,6 +28,7 @@ describe("/api/session", () => {
   });
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it("stores the token in an httpOnly cookie and never returns it", async () => {
@@ -52,6 +54,63 @@ describe("/api/session", () => {
     const cookie = store.get("wgd_admin_session");
     expect(cookie?.value).toBe("1|secret-token");
     expect(cookie?.options).toMatchObject({ httpOnly: true, sameSite: "strict", path: "/" });
+  });
+
+  it("expires the cookie when the backend token expires", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-16T10:00:00Z"));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: {
+              token: "1|secret-token",
+              expires_at: "2026-11-16T12:30:00+00:00",
+              user: { uuid: "u-1", name: "Ada", email: "a@x.test", roles: ["admin"] },
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    await POST(jsonRequest({ email: "a@x.test", password: "pw" }));
+
+    expect(store.get("wgd_admin_session")?.options?.maxAge).toBe(2.5 * 60 * 60);
+  });
+
+  it("falls back to a short cookie lifetime when expires_at is missing or invalid", async () => {
+    for (const expiresAt of [undefined, "not-a-date"]) {
+      store.clear();
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              data: {
+                token: "1|secret-token",
+                expires_at: expiresAt,
+                user: { uuid: "u-1", name: "Ada", email: "a@x.test", roles: ["admin"] },
+              },
+            }),
+            { status: 200 },
+          ),
+        ),
+      );
+
+      await POST(jsonRequest({ email: "a@x.test", password: "pw" }));
+
+      expect(store.get("wgd_admin_session")?.options?.maxAge).toBe(
+        SESSION_FALLBACK_MAX_AGE_SECONDS,
+      );
+    }
+  });
+
+  it("never gives an already-expired token a live cookie", () => {
+    const now = Date.parse("2026-11-16T10:00:00Z");
+    expect(sessionMaxAgeSeconds("2026-11-16T09:00:00Z", now)).toBe(0);
+    expect(sessionMaxAgeSeconds("2026-11-16T10:00:30Z", now)).toBe(30);
   });
 
   it("passes backend errors through without setting a cookie", async () => {
