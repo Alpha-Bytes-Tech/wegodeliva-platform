@@ -4,7 +4,7 @@ Read this at the start of every session; update it at the end.
 
 ## Current phase: 1 — Foundations · **in review** (PR "Phase 1: foundations", branch `phase-1/foundations`)
 
-Last updated: 2026-11-01
+Last updated: 2026-11-16
 
 ## Done
 
@@ -24,6 +24,7 @@ Last updated: 2026-11-01
   - **mobile/**: Melos 8 pub workspace: `core`, `ui`, `auth` packages; customer/vendor/rider shells (splash → email → code → home), dev/staging/prod flavours, Android IDs kept, target SDK 36. 44 unit/widget tests, analyze clean.
   - Owner decision applied: riders and vendor owners/staff get the `customer` role automatically when they sign in to the customer app (spec 02 §2.4 updated; admin-only accounts excluded).
   - ADRs 0009 (roles table), 0010 (app-scoped tokens, cookie session for admin), 0011 (pub workspace + shared auth package).
+- 2026-11-16 — Code-review fixes on the Phase 1 PR (all 9 findings, each with regression tests): account pre-hijacking via email code and social sign-in (ADR 0012: first email proof drops password + tokens, phone re-confirmed via `POST /auth/phone/confirm`), account-wide login limit (10/15 min), OTP send limits keyed per email+IP with a 20/h email ceiling (spec 13 updated), OTP mail queued only after the challenge commits, real app version in `X-App-Version`, offline session state with retry instead of a false sign-out, global 401/`account_suspended` sign-out, admin cookie expiry from the token's `expires_at`. CI Flutter pinned to 3.47.9 (3.48 deprecates `material.dart`).
 
 ## In progress
 

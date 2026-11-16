@@ -127,7 +127,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          # Pinned so a new stable release cannot turn CI red overnight (3.48 deprecates
+          # package:flutter/material.dart). Bump deliberately, together with any code changes.
           channel: stable
+          flutter-version: 3.47.9
           cache: true
       - run: dart pub global activate melos
       - run: melos bootstrap
