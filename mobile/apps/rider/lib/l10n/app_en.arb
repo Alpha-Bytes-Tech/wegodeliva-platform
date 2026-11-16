@@ -1,0 +1,8 @@
+{
+  "@@locale": "en",
+  "appTitle": "WeGoDeliva Rider",
+  "homeGreeting": "Hello, {name}",
+  "@homeGreeting": { "placeholders": { "name": { "type": "String" } } },
+  "homePlaceholder": "Going online, job offers and earnings arrive in Phase 5.",
+  "signOut": "Sign out"
+}

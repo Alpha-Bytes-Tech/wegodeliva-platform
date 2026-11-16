@@ -1,0 +1,10 @@
+include: ../../analysis_options.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - lib/l10n/generated/**
+    - android/**
+    - ios/**

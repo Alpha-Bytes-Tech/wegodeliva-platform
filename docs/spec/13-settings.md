@@ -48,4 +48,6 @@ The old system had ~250 setting keys, many for template features or app theming.
 - Support WhatsApp numbers [to be provided by owner].
 
 ## Authentication (2026-11-01)
-- OTP channel [email]; SMS [off, LATER]; OTP validity [10 min]; resend delay [60 s]; max attempts [5]; per-email and per-IP hourly limits [5 / 20].
+- OTP channel [email]; SMS [off, LATER]; OTP validity [10 min]; resend delay [60 s per email address]; max attempts [5].
+- OTP sends per hour (changed 2026-11-16 after the code review): per email address from one IP [5]; per email address from all IPs together [20]; per IP across all addresses [20]. The per-email allowance is counted per IP so a stranger cannot use up someone else's codes; the email-wide ceiling stops mail-bombing.
+- Password sign-in (app and admin): per email address from one IP [5 per minute]; per account from all IPs together [10 per 15 minutes]; per IP [30 per minute]. When the account-wide limit is reached, email-code sign-in still works.

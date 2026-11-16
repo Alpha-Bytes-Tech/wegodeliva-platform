@@ -1,0 +1,133 @@
+/*
+ * Design tokens (mirror mobile/packages/ui/lib/src/tokens.dart).
+ * Brand: navy #0B1220 base, orange #FF6B1A accent. Text on orange is navy (white fails contrast).
+ */
+:root {
+  --brand-navy: #0b1220;
+  --brand-orange: #ff6b1a;
+  --brand-orange-hover: #e85d10;
+
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef0f4;
+  --color-text: #0b1220;
+  --color-text-muted: #4a5468;
+  --color-border: #d6dae3;
+  --color-primary: var(--brand-orange);
+  --color-on-primary: var(--brand-navy);
+  --color-sidebar: var(--brand-navy);
+  --color-on-sidebar: #e8ebf2;
+  --color-error: #b3261e;
+  --color-error-bg: #fdecea;
+  --color-focus: #2f6fed;
+
+  --radius: 10px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --tap-target: 44px;
+  --font-sans:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #070b14;
+    --color-surface: #0b1220;
+    --color-surface-muted: #151d2e;
+    --color-text: #e8ebf2;
+    --color-text-muted: #a3acc0;
+    --color-border: #263049;
+    --color-sidebar: #050912;
+    --color-error: #ffb4ab;
+    --color-error-bg: #3b1412;
+    --color-focus: #8ab4ff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-6);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--brand-orange-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.btn-ghost {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-4);
+  border: 1px solid currentColor;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field input {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.alert-error {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.card {
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}

@@ -1,0 +1,34 @@
+name: wegodeliva_workspace
+description: WeGoDeliva mobile apps and shared packages (Melos + pub workspaces).
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+workspace:
+  - packages/core
+  - packages/ui
+  - packages/auth
+  - apps/customer
+  - apps/vendor
+  - apps/rider
+
+dev_dependencies:
+  melos: ^8.0.0
+
+melos:
+  name: wegodeliva
+  scripts:
+    generate:
+      description: Code generation (freezed/json_serializable) and gen-l10n.
+      run: >-
+        melos exec --depends-on=build_runner -- dart run build_runner build --delete-conflicting-outputs &&
+        melos exec --file-exists=l10n.yaml -- flutter gen-l10n
+    analyze:
+      description: flutter analyze with warnings and infos as errors.
+      run: melos exec -- flutter analyze --fatal-infos --fatal-warnings
+    test:
+      description: Unit and widget tests for every package that has tests.
+      run: melos exec --dir-exists=test -- flutter test
+    format:
+      run: dart format .

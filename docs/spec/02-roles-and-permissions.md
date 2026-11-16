@@ -46,6 +46,7 @@ A vendor can have several staff; a staff member can belong to several vendors an
 - Vendor and rider: email + OTP or email + password.
 - Admin: email + password + TOTP 2FA (MUST for admins).
 - Login with a role hint: an app only accepts users with the matching role (rider app rejects a pure customer). The old system did this too.
+- Exception (owner decision 2026-11-01): riders, vendor owners and vendor staff may also order as customers. When one of them signs in to the customer app (OTP, password or Google/Apple) and is not suspended, the server adds the `customer` role. Admin-only accounts are not upgraded, and customers never gain rider or vendor roles this way.
 - A vendor staff user with no vendor assigned cannot log into the vendor app (clear error).
 - Tokens: Sanctum personal access tokens for apps, stored in secure storage; cookie session for the Next.js admin/vendor portal. Logout revokes the token. Password change revokes all other tokens.
 - OTP: sent **by email** (no SMS at launch). 6 digits, valid 10 minutes (email can be slower than SMS), max 5 attempts, resend after 60 s, rate-limited per email address and per IP. The email says which app requested it and never contains a login link. The phone number is collected and format-checked (E.164, Nigerian prefixes) but is **not verified by OTP** at launch. It is verified LATER, when an SMS or WhatsApp provider is added.

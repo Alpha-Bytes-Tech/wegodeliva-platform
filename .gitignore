@@ -67,3 +67,7 @@ supabase/.temp/
 
 # ---- Node at root ----
 node_modules/
+
+# Generated localisations (melos run generate)
+mobile/**/lib/l10n/generated/
+*.iml
