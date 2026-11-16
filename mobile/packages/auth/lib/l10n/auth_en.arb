@@ -18,5 +18,8 @@
   "codeResent": "We sent you a new code.",
   "spamHint": "Can't find the email? Check your spam or promotions folder.",
   "changeEmail": "Use a different email",
-  "backLabel": "Back"
+  "backLabel": "Back",
+  "offlineTitle": "Can't connect",
+  "offlineMessage": "We couldn't reach WeGoDeliva. Check your connection; we'll keep trying.",
+  "retryButton": "Try again"
 }

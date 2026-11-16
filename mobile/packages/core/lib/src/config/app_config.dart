@@ -1,3 +1,5 @@
+import 'package:package_info_plus/package_info_plus.dart';
+
 import 'client_app.dart';
 import 'flavor.dart';
 
@@ -16,17 +18,44 @@ class AppConfig {
   factory AppConfig.forFlavor({
     required Flavor flavor,
     required ClientApp app,
-    String appVersion = '0.1.0',
+    required String appVersion,
     String? apiBaseUrlOverride,
   }) {
     const fromEnvironment = String.fromEnvironment('API_BASE_URL');
-    final override = apiBaseUrlOverride ?? (fromEnvironment.isEmpty ? null : fromEnvironment);
+    final override =
+        apiBaseUrlOverride ??
+        (fromEnvironment.isEmpty ? null : fromEnvironment);
     final url = override ?? defaultBaseUrls[flavor]!;
     final uri = Uri.parse(url);
     if (uri.scheme != 'https' && flavor != Flavor.dev) {
-      throw ArgumentError.value(url, 'apiBaseUrl', 'Only HTTPS is allowed outside dev builds');
+      throw ArgumentError.value(
+        url,
+        'apiBaseUrl',
+        'Only HTTPS is allowed outside dev builds',
+      );
     }
-    return AppConfig(flavor: flavor, app: app, apiBaseUrl: url, appVersion: appVersion);
+    return AppConfig(
+      flavor: flavor,
+      app: app,
+      apiBaseUrl: url,
+      appVersion: appVersion,
+    );
+  }
+
+  /// Builds the configuration with the installed app's real version (from the platform's
+  /// package info), which the API receives as `X-App-Version`.
+  static Future<AppConfig> load({
+    required Flavor flavor,
+    required ClientApp app,
+    String? apiBaseUrlOverride,
+  }) async {
+    final info = await PackageInfo.fromPlatform();
+    return AppConfig.forFlavor(
+      flavor: flavor,
+      app: app,
+      appVersion: info.version,
+      apiBaseUrlOverride: apiBaseUrlOverride,
+    );
   }
 
   /// Placeholder hosts until staging/production are deployed (see docs/progress.md).

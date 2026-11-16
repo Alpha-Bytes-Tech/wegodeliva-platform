@@ -68,19 +68,31 @@ GoRouter createAuthRouter(
           ),
         ],
       ),
-      GoRoute(path: AuthRoutes.home, builder: (context, state) => homeBuilder(context)),
+      GoRoute(
+        path: AuthRoutes.home,
+        builder: (context, state) => homeBuilder(context),
+      ),
       ...extraRoutes,
     ],
   );
 }
 
 /// The guard, separated for unit tests.
-String? authRedirect(AuthState auth, String location, {bool hasOtpArgs = true}) {
+String? authRedirect(
+  AuthState auth,
+  String location, {
+  bool hasOtpArgs = true,
+}) {
   final inLogin = location.startsWith(AuthRoutes.login);
   return switch (auth) {
     AuthUnknown() => location == AuthRoutes.splash ? null : AuthRoutes.splash,
-    SignedOut() when location == AuthRoutes.otp && !hasOtpArgs => AuthRoutes.login,
+    // Token kept but not confirmed yet: wait on the splash screen, which offers a retry.
+    SessionOffline() =>
+      location == AuthRoutes.splash ? null : AuthRoutes.splash,
+    SignedOut() when location == AuthRoutes.otp && !hasOtpArgs =>
+      AuthRoutes.login,
     SignedOut() => inLogin ? null : AuthRoutes.login,
-    SignedIn() => (inLogin || location == AuthRoutes.splash) ? AuthRoutes.home : null,
+    SignedIn() =>
+      (inLogin || location == AuthRoutes.splash) ? AuthRoutes.home : null,
   };
 }

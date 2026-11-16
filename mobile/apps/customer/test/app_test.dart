@@ -23,28 +23,41 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> logout() async => logouts++;
 
   @override
-  Future<OtpTiming> sendOtp(String email) async => const OtpTiming(expiresIn: 600, resendIn: 60);
+  Future<OtpTiming> sendOtp(String email) async =>
+      const OtpTiming(expiresIn: 600, resendIn: 60);
 
   @override
-  Future<AuthSession> verifyOtp(String email, String code, {String? deviceName}) =>
-      throw UnimplementedError();
+  Future<AuthSession> verifyOtp(
+    String email,
+    String code, {
+    String? deviceName,
+  }) => throw UnimplementedError();
 }
 
-Widget appWith(TokenStorage storage, AuthRepository repository) => ProviderScope(
-  overrides: [
-    appConfigProvider.overrideWithValue(
-      AppConfig.forFlavor(flavor: Flavor.dev, app: ClientApp.customer),
-    ),
-    tokenStorageProvider.overrideWithValue(storage),
-    authRepositoryProvider.overrideWithValue(repository),
-    loggerProvider.overrideWithValue(AppLogger(enabled: false)),
-  ],
-  child: const CustomerApp(),
-);
+Widget appWith(TokenStorage storage, AuthRepository repository) =>
+    ProviderScope(
+      overrides: [
+        appConfigProvider.overrideWithValue(
+          AppConfig.forFlavor(
+            flavor: Flavor.dev,
+            app: ClientApp.customer,
+            appVersion: '1.0.0',
+          ),
+        ),
+        tokenStorageProvider.overrideWithValue(storage),
+        authRepositoryProvider.overrideWithValue(repository),
+        loggerProvider.overrideWithValue(AppLogger(enabled: false)),
+      ],
+      child: const CustomerApp(),
+    );
 
 void main() {
-  testWidgets('goes from splash to the email login when signed out', (tester) async {
-    await tester.pumpWidget(appWith(InMemoryTokenStorage(), FakeAuthRepository()));
+  testWidgets('goes from splash to the email login when signed out', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      appWith(InMemoryTokenStorage(), FakeAuthRepository()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Sign in'), findsOneWidget);
@@ -52,7 +65,9 @@ void main() {
   });
 
   testWidgets('opens the code screen after requesting a code', (tester) async {
-    await tester.pumpWidget(appWith(InMemoryTokenStorage(), FakeAuthRepository()));
+    await tester.pumpWidget(
+      appWith(InMemoryTokenStorage(), FakeAuthRepository()),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField), 'ada@example.com');
@@ -65,7 +80,9 @@ void main() {
     expect(find.text('Sign in'), findsOneWidget);
   });
 
-  testWidgets('restores a stored session to the home screen and signs out', (tester) async {
+  testWidgets('restores a stored session to the home screen and signs out', (
+    tester,
+  ) async {
     final repository = FakeAuthRepository();
     final storage = InMemoryTokenStorage('1|token');
     await tester.pumpWidget(appWith(storage, repository));

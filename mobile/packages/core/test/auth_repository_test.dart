@@ -43,7 +43,11 @@ void main() {
       }
     });
     final client = ApiClient(
-      config: AppConfig.forFlavor(flavor: Flavor.dev, app: ClientApp.vendor),
+      config: AppConfig.forFlavor(
+        flavor: Flavor.dev,
+        app: ClientApp.vendor,
+        appVersion: '1.0.0',
+      ),
       tokenStorage: InMemoryTokenStorage(),
       logger: AppLogger(enabled: false),
       dio: Dio()..httpClientAdapter = adapter,
@@ -52,18 +56,27 @@ void main() {
   });
 
   Map<String, Object?> body(int index) =>
-      jsonDecode(jsonEncode(adapter.requests[index].data)) as Map<String, Object?>;
+      jsonDecode(jsonEncode(adapter.requests[index].data))
+          as Map<String, Object?>;
 
   test('sendOtp posts the email and app and returns the timing', () async {
     final timing = await repository.sendOtp('  ada@example.com ');
 
     expect(timing.resendIn, 60);
     expect(timing.expiresIn, 600);
-    expect(body(0), {'email': 'ada@example.com', 'app': 'vendor', 'purpose': 'login'});
+    expect(body(0), {
+      'email': 'ada@example.com',
+      'app': 'vendor',
+      'purpose': 'login',
+    });
   });
 
   test('verifyOtp returns a session for this app', () async {
-    final session = await repository.verifyOtp('ada@example.com', '123456', deviceName: 'Pixel');
+    final session = await repository.verifyOtp(
+      'ada@example.com',
+      '123456',
+      deviceName: 'Pixel',
+    );
 
     expect(session.token, '1|abc');
     expect(session.user.roles, ['vendor_owner']);
