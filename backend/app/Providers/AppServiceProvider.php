@@ -36,8 +36,11 @@ class AppServiceProvider extends ServiceProvider
         $email = fn (Request $request): string => mb_strtolower(trim((string) $request->input('email')));
         $cfg = fn (string $key): int => (int) config("wegodeliva.{$key}");
 
+        // The per-email allowance is keyed by email + IP, so a stranger cannot use up someone
+        // else's sends; a higher email-wide ceiling still stops mail-bombing an address.
         RateLimiter::for('otp-send', fn (Request $request) => [
-            Limit::perHour($cfg('otp.per_email_per_hour'))->by('email:'.$email($request)),
+            Limit::perHour($cfg('otp.per_email_per_hour'))->by('email-ip:'.$email($request).'|'.$request->ip()),
+            Limit::perHour($cfg('otp.per_email_global_per_hour'))->by('email:'.$email($request)),
             Limit::perHour($cfg('otp.per_ip_per_hour'))->by('ip:'.$request->ip()),
         ]);
 
@@ -45,8 +48,12 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour($cfg('rate_limits.verify_per_ip_per_hour'))->by('ip:'.$request->ip()),
         ]);
 
+        // Applies to /auth/login and /admin/auth/login. The account-wide limit stops password
+        // guessing spread across many IPs; OTP sign-in still works while it is in force.
         RateLimiter::for('login', fn (Request $request) => [
-            Limit::perMinute($cfg('rate_limits.login_per_email_per_minute'))->by('email:'.$email($request).'|'.$request->ip()),
+            Limit::perMinute($cfg('rate_limits.login_per_email_per_minute'))->by('email-ip:'.$email($request).'|'.$request->ip()),
+            Limit::perMinutes($cfg('rate_limits.login_per_account_decay_minutes'), $cfg('rate_limits.login_per_account_max_attempts'))
+                ->by('account:'.$email($request)),
             Limit::perMinute($cfg('rate_limits.login_per_ip_per_minute'))->by('ip:'.$request->ip()),
         ]);
 

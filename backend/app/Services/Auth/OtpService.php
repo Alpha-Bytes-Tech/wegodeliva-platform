@@ -12,10 +12,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Throwable;
 
 /**
  * Email one-time codes (spec 02 §2.4, ADR 0008): 6 digits, stored hashed, valid 10 minutes,
- * at most 5 attempts, one send per 60 seconds per address and purpose.
+ * at most 5 attempts, one send per 60 seconds per address and purpose. The challenge is
+ * committed before the email is queued; if either step fails, nothing usable is left behind
+ * and the resend cooldown is not spent.
  */
 final class OtpService
 {
@@ -33,6 +36,7 @@ final class OtpService
             $retryAfter = RateLimiter::availableIn($cooldownKey);
             throw new ApiException('otp_resend_too_soon', 429, meta: ['retry_after' => $retryAfter], headers: ['Retry-After' => (string) $retryAfter]);
         }
+        // Taken up front so parallel requests cannot both pass; given back below on failure.
         RateLimiter::hit($cooldownKey, $resendSeconds);
 
         if (! User::query()->where('email', $email)->exists()) {
@@ -41,23 +45,34 @@ final class OtpService
 
         $code = $this->generateCode();
         $ttl = (int) config('wegodeliva.otp.ttl_minutes');
+        $challenge = null;
 
-        DB::transaction(function () use ($email, $purpose, $app, $ip, $code, $ttl): void {
-            // A new code replaces any older one for the same purpose.
-            OtpChallenge::query()->openFor($email, $purpose)->update(['consumed_at' => now()]);
+        try {
+            // Commit the challenge first; the email goes out only once it is stored.
+            $challenge = DB::transaction(function () use ($email, $purpose, $app, $ip, $code, $ttl): OtpChallenge {
+                // A new code replaces any older one for the same purpose.
+                OtpChallenge::query()->openFor($email, $purpose)->update(['consumed_at' => now()]);
 
-            OtpChallenge::query()->create([
-                'channel' => 'email',
-                'destination' => $email,
-                'purpose' => $purpose,
-                'app' => $app,
-                'code_hash' => Hash::make($code),
-                'expires_at' => now()->addMinutes($ttl),
-                'ip' => $ip,
-            ]);
+                return OtpChallenge::query()->create([
+                    'channel' => 'email',
+                    'destination' => $email,
+                    'purpose' => $purpose,
+                    'app' => $app,
+                    'code_hash' => Hash::make($code),
+                    'expires_at' => now()->addMinutes($ttl),
+                    'ip' => $ip,
+                ]);
+            });
 
-            Mail::to($email)->send(new OtpCodeMail($code, $purpose, $app, $ttl));
-        });
+            Mail::to($email)->queue(new OtpCodeMail($code, $purpose, $app, $ttl));
+        } catch (Throwable $e) {
+            // Never leave a stored code that was not sent, nor a spent cooldown the user cannot
+            // retry through: retire the code and give the cooldown back.
+            $challenge?->forceFill(['consumed_at' => now()])->save();
+            RateLimiter::clear($cooldownKey);
+
+            throw $e;
+        }
     }
 
     /**

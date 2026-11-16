@@ -127,3 +127,35 @@ it('accepts zone admins in the admin panel', function () {
 
     $this->postJson('/api/v1/admin/auth/login', ['email' => $zoneAdmin->email, 'password' => 'password123'])->assertOk();
 });
+
+it('limits password attempts per account across different IPs', function (string $url, array $extra) {
+    config(['wegodeliva.rate_limits.login_per_account_max_attempts' => 3]);
+    $user = makeUser(RoleName::Admin, RoleName::Customer);
+    $attempt = fn (int $i) => $this->withServerVariables(['REMOTE_ADDR' => "203.0.113.{$i}"])
+        ->postJson($url, ['email' => $user->email, 'password' => 'wrong-pass1'] + $extra);
+
+    foreach (range(1, 3) as $i) {
+        $attempt($i)->assertStatus(401);
+    }
+    expectApiError($attempt(4), 429, 'rate_limited');
+
+    // Another account from the same IPs is not affected.
+    $other = makeUser(RoleName::Admin, RoleName::Customer);
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.4'])
+        ->postJson($url, ['email' => $other->email, 'password' => 'password123'] + $extra)
+        ->assertOk();
+
+    // The window is 15 minutes by default.
+    $this->travel(16)->minutes();
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.5'])
+        ->postJson($url, ['email' => $user->email, 'password' => 'password123'] + $extra)
+        ->assertOk();
+})->with([
+    'app login' => ['/api/v1/auth/login', ['app' => 'customer']],
+    'admin login' => ['/api/v1/admin/auth/login', []],
+]);
+
+it('allows ten attempts per account in fifteen minutes by default', function () {
+    expect(config('wegodeliva.rate_limits.login_per_account_max_attempts'))->toBe(10)
+        ->and(config('wegodeliva.rate_limits.login_per_account_decay_minutes'))->toBe(15);
+});

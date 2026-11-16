@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ClientApp;
+use App\Enums\OtpPurpose;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Mail\OtpCodeMail;
@@ -221,4 +222,70 @@ it('uses the app ability helper for every client app', function () {
     expect(ClientApp::Vendor->ability())->toBe('app:vendor')
         ->and(ClientApp::Admin->tokenLifetimeMinutes())->toBe(720)
         ->and(ClientApp::Customer->displayName())->toBe('WeGoDeliva');
+});
+
+it('keeps the hourly per-email limit per IP, so a stranger cannot use up the owner\'s sends', function () {
+    $user = makeUser();
+    $send = fn (string $ip) => $this->withServerVariables(['REMOTE_ADDR' => $ip])
+        ->postJson('/api/v1/auth/otp/send', ['email' => $user->email, 'app' => 'customer']);
+
+    foreach (range(1, 5) as $i) {
+        $send('198.51.100.66')->assertStatus(202);
+        $this->travel(61)->seconds();
+    }
+    expectApiError($send('198.51.100.66'), 429, 'rate_limited');
+
+    // The owner, on another network, can still get a code.
+    $send('203.0.113.10')->assertStatus(202);
+});
+
+it('caps sends per email address across all IPs to stop mail-bombing', function () {
+    config(['wegodeliva.otp.per_email_global_per_hour' => 3]);
+    $user = makeUser();
+    $send = fn (int $i) => $this->withServerVariables(['REMOTE_ADDR' => "198.51.100.{$i}"])
+        ->postJson('/api/v1/auth/otp/send', ['email' => $user->email, 'app' => 'customer']);
+
+    foreach (range(1, 3) as $i) {
+        $send($i)->assertStatus(202);
+        $this->travel(61)->seconds();
+    }
+
+    expectApiError($send(4), 429, 'rate_limited');
+    expect(config('wegodeliva.otp.per_email_per_hour'))->toBe(5);
+});
+
+it('defaults the email-wide ceiling to 20 sends an hour', function () {
+    expect(config('wegodeliva.otp.per_email_global_per_hour'))->toBe(20);
+});
+
+it('stores the code before queueing the email', function () {
+    $user = makeUser();
+    $stored = null;
+    Mail::shouldReceive('to')->once()->andReturnUsing(function () use (&$stored) {
+        $stored = OtpChallenge::query()->whereNull('consumed_at')->count();
+
+        return new class
+        {
+            public function queue(): void {}
+        };
+    });
+
+    $this->postJson('/api/v1/auth/otp/send', ['email' => $user->email, 'app' => 'customer'])->assertStatus(202);
+
+    expect($stored)->toBe(1);
+});
+
+it('leaves no unsent code and no spent cooldown when the email cannot be queued', function () {
+    $user = makeUser();
+    $fake = Mail::getFacadeRoot();
+    Mail::shouldReceive('to')->once()->andThrow(new RuntimeException('queue down'));
+
+    expectApiError($this->postJson('/api/v1/auth/otp/send', ['email' => $user->email, 'app' => 'customer']), 500, 'server_error');
+
+    expect(OtpChallenge::query()->openFor($user->email, OtpPurpose::Login)->count())->toBe(0);
+
+    // The user can retry straight away and gets a working code.
+    Mail::swap($fake);
+    $code = requestCode($user->email);
+    $this->postJson('/api/v1/auth/otp/verify', ['email' => $user->email, 'code' => $code, 'app' => 'customer'])->assertOk();
 });
