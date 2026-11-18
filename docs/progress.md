@@ -2,9 +2,9 @@
 
 Read this at the start of every session; update it at the end.
 
-## Current phase: 1 — Foundations · **code merged, staging pending** (PR #5 merged into `main` 2026-11-16)
+## Current phase: 1 — Foundations · **done** (staging reachable 2026-11-18) · next: Phase 2
 
-Last updated: 2026-11-16
+Last updated: 2026-11-18
 
 ## Done
 
@@ -26,15 +26,17 @@ Last updated: 2026-11-16
   - ADRs 0009 (roles table), 0010 (app-scoped tokens, cookie session for admin), 0011 (pub workspace + shared auth package).
 - 2026-11-16 — Code-review fixes on the Phase 1 PR (all 9 findings, each with regression tests): account pre-hijacking via email code and social sign-in (ADR 0012: first email proof drops password + tokens, phone re-confirmed via `POST /auth/phone/confirm`), account-wide login limit (10/15 min), OTP send limits keyed per email+IP with a 20/h email ceiling (spec 13 updated), OTP mail queued only after the challenge commits, real app version in `X-App-Version`, offline session state with retry instead of a false sign-out, global 401/`account_suspended` sign-out, admin cookie expiry from the token's `expires_at`. CI Flutter pinned to 3.47.9 (3.48 deprecates `material.dart`).
 - 2026-11-16 — Owner approved; PR #5 "Phase 1: foundations" merged into `main` (merge commit `ad09b82`) with all CI jobs green. Phase 1 is "done" once staging is reachable (CLAUDE.md §5).
+- 2026-11-16 — Vercel project `wegodeliva-platform` set to build `web/` (Next.js, Node 22). Supabase staging project `WeGoDeliva` (eu-central-1, free plan) prepared: no Data API access to Laravel's tables, RLS on every new table, PostGIS in `extensions` (PR #7, `supabase/migrations/`).
+- 2026-11-18 — **Staging is up**: API on Laravel Cloud (`wegodeliva-platform-production-p9jmsm.laravel.cloud`, health ready), admin panel on Vercel (`wegodeliva-platform.vercel.app`, `API_BASE_URL` set), migrations and seeders run, super admin signed in. Runbook: `docs/runbooks/staging.md`. Added `php artisan admin:reset-password` and pinned the audit-log trigger function's search_path (Supabase advisor).
 
 ## In progress
 
-- Nothing in flight. Waiting on the owner for branch protection and staging accounts (below).
+- Owner: queue worker on Laravel Cloud, Brevo (domain DNS + SMTP key), removing Supabase secrets from the Vercel project, deleting `SUPER_ADMIN_PASSWORD` from Laravel Cloud.
 
 ## Next
 
 1. Turn on branch protection for `main` requiring the CI jobs (needs a GitHub admin).
-2. Staging (needs the owner, see below): Supabase project, Laravel host, Vercel project for `web/`, email provider, then deploy and point the staging flavour at it.
+2. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 3. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 4. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
 5. Phase 2 — core marketplace backend (vendors, catalogue, zones/fees, cart, checkout, orders, payments).
