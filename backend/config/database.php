@@ -95,7 +95,9 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            // Supabase keeps extensions such as PostGIS in the `extensions` schema; Laravel's own
+            // tables stay in `public`. A schema that doesn't exist (local/CI) is simply skipped.
+            'search_path' => env('DB_SEARCH_PATH', 'public,extensions'),
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
