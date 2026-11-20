@@ -6,6 +6,20 @@
  */
 return [
 
+    // Vendor opening hours and order times are read in this timezone.
+    'timezone' => env('PLATFORM_TIMEZONE', 'Africa/Lagos'),
+
+    'catalogue' => [
+        // How far from the customer vendors are listed (delivery or pickup), in metres.
+        'browse_radius_m' => (int) env('CATALOGUE_BROWSE_RADIUS_M', 15000),
+        // A point counts as being in a city when within this distance of its centre.
+        'city_radius_m' => (int) env('CATALOGUE_CITY_RADIUS_M', 40000),
+        'max_page_size' => 50,
+        // Product image limit per product (spec 13 "Ordering").
+        'max_product_images' => (int) env('MAX_PRODUCT_IMAGES', 5),
+        'max_addresses' => 20,
+    ],
+
     'otp' => [
         'length' => 6,
         'ttl_minutes' => (int) env('OTP_TTL_MINUTES', 10),

@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Enums\RoleName;
+use App\Enums\VendorMemberRole;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Services\Social\JwksSocialTokenVerifier;
 use App\Services\Social\SocialTokenVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -28,6 +30,12 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimits();
 
         Gate::define('view-audit-log', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
+
+        // Vendor members manage their own store's catalogue, hours and status; only owners change
+        // business settings and staff (spec 02 §2.2). Admin tools use 'manage-vendors'.
+        Gate::define('work-at-vendor', fn (User $user, Vendor $vendor) => $vendor->memberRole($user) !== null);
+        Gate::define('own-vendor', fn (User $user, Vendor $vendor) => $vendor->memberRole($user) === VendorMemberRole::Owner);
+        Gate::define('manage-vendors', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
     }
 
     /** Rate limits from spec 13 "Authentication" and spec 14 §14.1 (read per request). */
@@ -60,6 +68,8 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('register', fn (Request $request) => Limit::perHour($cfg('rate_limits.register_per_ip_per_hour'))->by($request->ip()));
 
         RateLimiter::for('social', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
+
+        RateLimiter::for('catalogue', fn (Request $request) => Limit::perMinute(120)->by('catalogue:'.$request->ip()));
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }

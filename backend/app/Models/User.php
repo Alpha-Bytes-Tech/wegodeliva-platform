@@ -112,6 +112,24 @@ class User extends Authenticatable
         return $this->hasMany(Device::class);
     }
 
+    /** @return HasMany<Address, $this> */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /** @return HasMany<Favourite, $this> */
+    public function favourites(): HasMany
+    {
+        return $this->hasMany(Favourite::class);
+    }
+
+    /** @return BelongsToMany<Vendor, $this> */
+    public function vendors(): BelongsToMany
+    {
+        return $this->belongsToMany(Vendor::class, 'vendor_members')->withPivot('role')->withTimestamps();
+    }
+
     /** @return HasMany<AuthIdentity, $this> */
     public function authIdentities(): HasMany
     {
