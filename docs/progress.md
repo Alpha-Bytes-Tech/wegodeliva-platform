@@ -2,9 +2,9 @@
 
 Read this at the start of every session; update it at the end.
 
-## Current phase: 1 — Foundations · **done** (staging reachable 2026-11-18) · next: Phase 2
+## Current phase: 2 — Core marketplace backend · in progress (plan: [plans/phase-2.md](plans/phase-2.md))
 
-Last updated: 2026-11-18
+Last updated: 2026-11-20
 
 ## Done
 
@@ -28,6 +28,8 @@ Last updated: 2026-11-18
 - 2026-11-16 — Owner approved; PR #5 "Phase 1: foundations" merged into `main` (merge commit `ad09b82`) with all CI jobs green. Phase 1 is "done" once staging is reachable (CLAUDE.md §5).
 - 2026-11-16 — Vercel project `wegodeliva-platform` set to build `web/` (Next.js, Node 22). Supabase staging project `WeGoDeliva` (eu-central-1, free plan) prepared: no Data API access to Laravel's tables, RLS on every new table, PostGIS in `extensions` (PR #7, `supabase/migrations/`).
 - 2026-11-18 — **Staging is up**: API on Laravel Cloud (`wegodeliva-platform-production-p9jmsm.laravel.cloud`, health ready), admin panel on Vercel (`wegodeliva-platform.vercel.app`, `API_BASE_URL` set), migrations and seeders run, super admin signed in. Runbook: `docs/runbooks/staging.md`. Added `php artisan admin:reset-password` and pinned the audit-log trigger function's search_path (Supabase advisor).
+- 2026-11-20 — Phase 2 started; plan and owner decisions in `docs/plans/phase-2.md` (straight-line distance ×1.3, gateway test keys from the owner, automatic rider offers in Phase 5, chat in Phase 3).
+- 2026-11-20 — **Milestone 2.1, vendors and catalogue** (branch `claude/lucid-maxwell-86gh1d`): vendors with members (owner/staff), opening hours in Africa/Lagos time with manual open/busy/closed override, delivery zones with fee overrides; menus, products (kobo prices, promo price, stock, VAT treatment), images, tags, option groups and options; customer addresses (landmark, campus building, server-side zone/city) and favourites. Public catalogue API (vendor types, categories, zone lookup, vendors near a point with distance and deliverability, vendor, products, search; rate-limited). Vendor API (stores, settings, status, hours, menus, option groups, products, stock). Admin API (create vendor with owner account, approve, suspend with reason, zones; all audited). 214 Pest tests, Pint, PHPStan, composer audit clean.
 
 ## In progress
 
@@ -35,11 +37,10 @@ Last updated: 2026-11-18
 
 ## Next
 
-1. Turn on branch protection for `main` requiring the CI jobs (needs a GitHub admin).
-2. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
-3. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
-4. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-5. Phase 2 — core marketplace backend (vendors, catalogue, zones/fees, cart, checkout, orders, payments).
+1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
+2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
+3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
+4. Phase 2 — milestone 2.2, pricing engine, after 2.1 is merged.
 
 ## Blockers / owner actions
 
@@ -50,7 +51,6 @@ Last updated: 2026-11-18
 - **Transactional email provider (S4)**: account + API key; SPF/DKIM/DMARC on wegodeliva.com. Until then OTP emails only work locally (Mailpit).
 - **Firebase**: add the team as editor on the existing project (FCM only).
 - **Google / Apple sign-in**: OAuth client IDs (Google Cloud console; Apple Services ID) — set `GOOGLE_CLIENT_IDS` / `APPLE_CLIENT_IDS`.
-- **GitHub admin**: branch protection on `main` requiring the four CI jobs.
 
 **Questions for the owner**
 - Admin "permissions per role" (spec 12.2): fixed in code (ADR 0009) unless you want admins to edit them at runtime.
