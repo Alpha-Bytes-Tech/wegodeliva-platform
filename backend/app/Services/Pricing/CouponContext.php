@@ -18,9 +18,4 @@ final readonly class CouponContext
         public int $usesByCustomer,
         public Carbon $now,
     ) {}
-
-    public function subtotalKobo(): int
-    {
-        return array_sum(array_map(fn (PricedLine $l) => $l->lineTotalKobo, $this->lines));
-    }
 }
