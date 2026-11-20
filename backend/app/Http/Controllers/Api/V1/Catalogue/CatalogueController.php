@@ -15,7 +15,9 @@ use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\VendorType;
 use App\Services\Catalogue\ZoneLocator;
+use App\Services\Pricing\DeliveryQuoter;
 use App\Support\Geo;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,6 +86,22 @@ class CatalogueController extends Controller
         }
 
         return new VendorResource($vendor->load('vendorType', 'hours', 'menus'));
+    }
+
+    /** Whether the vendor delivers to a point, the fee and a delivery time range (spec 05 §5.2, §5.10). */
+    public function deliveryQuote(PointRequest $request, Vendor $vendor, DeliveryQuoter $quoter): JsonResponse
+    {
+        $vendor = $this->activeVendor($vendor);
+        [$lat, $lng] = $request->point() ?? [0.0, 0.0];
+        $quote = $quoter->quote($vendor, $lat, $lng);
+
+        return response()->json(['data' => [
+            'deliverable' => $quote->deliverable,
+            'reason' => $quote->reason,
+            'fee' => $quote->deliverable ? Money::of($quote->feeKobo) : null,
+            'distance_m' => $quote->distanceM,
+            'eta_minutes' => $quote->deliverable ? ['min' => $quote->etaMinMinutes, 'max' => $quote->etaMaxMinutes] : null,
+        ]]);
     }
 
     /** A vendor's active products, optionally filtered by menu section or name. */

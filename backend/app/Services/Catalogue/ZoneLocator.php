@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
  * campus zones win over the wider zones they sit in. The city falls back to the nearest active
  * city centre within `catalogue.city_radius_m`.
  */
-final class ZoneLocator
+class ZoneLocator
 {
     private ?bool $hasPolygons = null;
 

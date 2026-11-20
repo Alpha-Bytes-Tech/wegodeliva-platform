@@ -30,6 +30,8 @@ Last updated: 2026-11-20
 - 2026-11-18 — **Staging is up**: API on Laravel Cloud (`wegodeliva-platform-production-p9jmsm.laravel.cloud`, health ready), admin panel on Vercel (`wegodeliva-platform.vercel.app`, `API_BASE_URL` set), migrations and seeders run, super admin signed in. Runbook: `docs/runbooks/staging.md`. Added `php artisan admin:reset-password` and pinned the audit-log trigger function's search_path (Supabase advisor).
 - 2026-11-20 — Phase 2 started; plan and owner decisions in `docs/plans/phase-2.md` (straight-line distance ×1.3, gateway test keys from the owner, automatic rider offers in Phase 5, chat in Phase 3).
 - 2026-11-20 — **Milestone 2.1, vendors and catalogue** (branch `claude/lucid-maxwell-86gh1d`): vendors with members (owner/staff), opening hours in Africa/Lagos time with manual open/busy/closed override, delivery zones with fee overrides; menus, products (kobo prices, promo price, stock, VAT treatment), images, tags, option groups and options; customer addresses (landmark, campus building, server-side zone/city) and favourites. Public catalogue API (vendor types, categories, zone lookup, vendors near a point with distance and deliverability, vendor, products, search; rate-limited). Vendor API (stores, settings, status, hours, menus, option groups, products, stock). Admin API (create vendor with owner account, approve, suspend with reason, zones; all audited). 214 Pest tests, Pint, PHPStan, composer audit clean.
+- 2026-11-20 — Milestone 2.1 merged (PR #11).
+- 2026-11-20 — **Milestone 2.2, pricing engine**: line prices with per-unit options and option rules; coupons (percent/fixed, caps, scope by vendor type/vendors/products, dates, usage limits, first order, vendor- or platform-funded, delivery-fee coupons) spread over lines; VAT per line on the discounted base for VAT-registered vendors; service fees; totals; commission and earnings split with VAT on commission. The spec 05 worked example (₦6,137.50) is reproduced to the kobo, and shares are tested to add up to the total. Delivery fee rule (campus → vendor zone → vendor flat/per-km → platform default; straight-line × 1.3) and public `GET /catalogue/vendors/{slug}/delivery-quote`. Admin endpoints for coupons, service fees and per-vendor commission and fees (audited). CI now requires 100% coverage of the pricing code. Rules chosen where the spec was open are listed in `docs/plans/phase-2.md`.
 
 ## In progress
 
@@ -40,7 +42,7 @@ Last updated: 2026-11-20
 1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 — milestone 2.2, pricing engine, after 2.1 is merged.
+4. Phase 2 — milestone 2.3, wallet and earnings ledgers, after 2.2 is merged.
 
 ## Blockers / owner actions
 

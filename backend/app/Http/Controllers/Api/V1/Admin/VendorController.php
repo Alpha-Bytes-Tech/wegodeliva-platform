@@ -8,8 +8,10 @@ use App\Enums\VendorStatus;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateVendorRequest;
+use App\Http\Requests\Admin\VendorPricingRequest;
 use App\Http\Requests\Admin\VendorZonesRequest;
 use App\Http\Resources\VendorStoreResource;
+use App\Models\Fee;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorType;
@@ -118,6 +120,30 @@ class VendorController extends Controller
         $this->audit->record($admin, 'vendor.zones_updated', 'vendor', $vendor->uuid, ['zones' => $before], ['zones' => array_column($zones, 'zone_id')]);
 
         return new VendorStoreResource($vendor->load('vendorType', 'hours', 'zones'));
+    }
+
+    /** Commission rate override and service fees (spec 12 "Vendors"). */
+    public function pricing(VendorPricingRequest $request, Vendor $vendor): VendorStoreResource
+    {
+        Gate::authorize('manage-vendors');
+        /** @var User $admin */
+        $admin = $request->user();
+        $data = $request->validated();
+
+        $before = ['commission_rate_bp' => $vendor->commission_rate_bp, 'fees' => $vendor->fees()->pluck('fees.uuid')->all()];
+        DB::transaction(function () use ($vendor, $data): void {
+            if (array_key_exists('commission_rate_bp', $data)) {
+                $vendor->forceFill(['commission_rate_bp' => $data['commission_rate_bp']])->save();
+            }
+            if (array_key_exists('fee_ids', $data)) {
+                $vendor->fees()->sync(Fee::query()->whereIn('uuid', $data['fee_ids'])->pluck('id')->all());
+            }
+        });
+
+        $after = ['commission_rate_bp' => $vendor->commission_rate_bp, 'fees' => $vendor->fees()->pluck('fees.uuid')->all()];
+        $this->audit->record($admin, 'vendor.pricing_updated', 'vendor', $vendor->uuid, $before, $after);
+
+        return new VendorStoreResource($vendor->load('vendorType', 'hours', 'fees'));
     }
 
     private function setStatus(Request $request, Vendor $vendor, VendorStatus $status, string $action): VendorStoreResource

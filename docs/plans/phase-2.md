@@ -27,3 +27,14 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
 - Vendor documents moved from 2.1 to 2.7, where approval needs them.
 - Zones are matched with PostGIS polygons when the `polygon` column exists (staging, CI); without PostGIS the city falls back to the nearest city centre within `catalogue.city_radius_m`.
 - Image fields hold storage paths under `vendors/{vendor uuid}/…`; signed upload/download URLs for Supabase Storage come with the vendor portal work.
+
+## Notes from 2.2
+
+- The pricing classes live in `backend/app/Services/Pricing` and take no database input except `DeliveryQuoter` (zones). Checkout (2.4) prices lines with `LinePricer`, applies a coupon with `CouponRules`, totals with `PriceCalculator`, and on delivery (2.6) splits with `CommissionCalculator`.
+- CI fails unless every line of `app/Services/Pricing` and `app/Support/Money.php` is covered (`backend/tools/coverage-gate.php`).
+- Rules applied where the spec left a choice (change them if the owner disagrees):
+  - Percentage service fees are charged on the subtotal before any coupon.
+  - A product with no VAT treatment of its own takes its categories' treatment when they agree, otherwise standard 7.5%. The vendor can set the product's treatment.
+  - Vendors on "zone" fee mode whose drop-off is outside their zones pay the platform default (₦500 base + ₦100/km, both settings). The vendor's own radius and a platform maximum of 20 km (setting) limit delivery outside its zones.
+  - The vendor radius is checked on straight-line distance; fees and time estimates use straight-line × 1.3.
+  - Delivery time estimate = prep time + road distance at 20 km/h, shown as a 10-minute range.
