@@ -33,6 +33,9 @@ Last updated: 2026-11-20
 - 2026-11-20 — Milestone 2.1 merged (PR #11).
 - 2026-11-20 — **Milestone 2.2, pricing engine**: line prices with per-unit options and option rules; coupons (percent/fixed, caps, scope by vendor type/vendors/products, dates, usage limits, first order, vendor- or platform-funded, delivery-fee coupons) spread over lines; VAT per line on the discounted base for VAT-registered vendors; service fees; totals; commission and earnings split with VAT on commission. The spec 05 worked example (₦6,137.50) is reproduced to the kobo, and shares are tested to add up to the total. Delivery fee rule (campus → vendor zone → vendor flat/per-km → platform default; straight-line × 1.3) and public `GET /catalogue/vendors/{slug}/delivery-quote`. Admin endpoints for coupons, service fees and per-vendor commission and fees (audited). CI now requires 100% coverage of the pricing code. Rules chosen where the spec was open are listed in `docs/plans/phase-2.md`.
 
+- 2026-11-20 — Milestone 2.2 merged (PR #12).
+- 2026-11-20 — **Milestone 2.3, wallet and earnings ledgers**: append-only `wallet_transactions` and `earnings_entries` (database triggers refuse edits and deletes); balances change only through `WalletLedger` / `EarningsLedger` under row locks with idempotent references. Customer wallet with CBN-style tier limits (balance cap enforced, daily top-up count ready for 2.5); vendor and rider earnings with commission and VAT accrual, cash owed, payout hold/settle/pay/release, reversals that can leave a debt. Endpoints: `GET /me/wallet` (+ transactions), `GET /vendor/stores/{id}/earnings` (+ entries), `GET /rider/earnings` (+ entries), admin wallet/earnings views, adjustments and rider cash remittances (audited, idempotency key, rate-limited). Coverage gate extended to the ledger code.
+
 ## In progress
 
 - Owner: queue worker on Laravel Cloud, Brevo (domain DNS + SMTP key), removing Supabase secrets from the Vercel project, deleting `SUPER_ADMIN_PASSWORD` from Laravel Cloud.
@@ -42,7 +45,7 @@ Last updated: 2026-11-20
 1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 — milestone 2.3, wallet and earnings ledgers, after 2.2 is merged.
+4. Phase 2 — milestone 2.4, cart, checkout and the order state machine, after 2.3 is merged.
 
 ## Blockers / owner actions
 

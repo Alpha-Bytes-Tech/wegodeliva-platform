@@ -3,14 +3,18 @@
 use App\Http\Controllers\Api\V1\Admin\AuditLogController;
 use App\Http\Controllers\Api\V1\Admin\CouponController;
 use App\Http\Controllers\Api\V1\Admin\FeeController;
+use App\Http\Controllers\Api\V1\Admin\LedgerController;
 use App\Http\Controllers\Api\V1\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
 use App\Http\Controllers\Api\V1\Customer\AddressController;
 use App\Http\Controllers\Api\V1\Customer\FavouriteController;
+use App\Http\Controllers\Api\V1\Customer\WalletController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\Rider\EarningsController as RiderEarningsController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
+use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsController;
 use App\Http\Controllers\Api\V1\Vendor\MenuController;
 use App\Http\Controllers\Api\V1\Vendor\OptionGroupController;
 use App\Http\Controllers\Api\V1\Vendor\ProductController;
@@ -69,6 +73,17 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('favourites/vendors/{uuid}', [FavouriteController::class, 'removeVendor'])->whereUuid('uuid');
         Route::put('favourites/products/{uuid}', [FavouriteController::class, 'addProduct'])->whereUuid('uuid');
         Route::delete('favourites/products/{uuid}', [FavouriteController::class, 'removeProduct'])->whereUuid('uuid');
+
+        Route::middleware('throttle:wallet')->group(function (): void {
+            Route::get('wallet', [WalletController::class, 'show']);
+            Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+        });
+    });
+
+    // Rider app: own earnings and cash owed. Jobs and deliveries arrive with milestone 2.6.
+    Route::prefix('rider')->middleware(['auth:sanctum', 'active', 'abilities:app:rider', 'throttle:api', 'throttle:wallet'])->group(function (): void {
+        Route::get('earnings', [RiderEarningsController::class, 'show']);
+        Route::get('earnings/entries', [RiderEarningsController::class, 'entries']);
     });
 
     // Vendor app: stores the user works at. Nested resources are scoped to their store.
@@ -93,6 +108,9 @@ Route::prefix('v1')->group(function (): void {
             Route::post('option-groups/{optionGroup}/options', [OptionGroupController::class, 'storeOption']);
             Route::patch('option-groups/{optionGroup}/options/{option}', [OptionGroupController::class, 'updateOption']);
             Route::delete('option-groups/{optionGroup}/options/{option}', [OptionGroupController::class, 'destroyOption']);
+
+            Route::get('earnings', [VendorEarningsController::class, 'show']);
+            Route::get('earnings/entries', [VendorEarningsController::class, 'entries']);
 
             Route::get('products', [ProductController::class, 'index']);
             Route::post('products', [ProductController::class, 'store']);
@@ -122,6 +140,19 @@ Route::prefix('v1')->group(function (): void {
             Route::post('coupons', [CouponController::class, 'store']);
             Route::get('coupons/{coupon}', [CouponController::class, 'show'])->whereUuid('coupon');
             Route::patch('coupons/{coupon}', [CouponController::class, 'update'])->whereUuid('coupon');
+
+            Route::middleware('throttle:wallet')->group(function (): void {
+                Route::get('users/{user}/wallet', [LedgerController::class, 'wallet'])->whereUuid('user');
+                Route::get('users/{user}/wallet/transactions', [LedgerController::class, 'walletTransactions'])->whereUuid('user');
+                Route::post('users/{user}/wallet/adjustments', [LedgerController::class, 'adjustWallet'])->whereUuid('user');
+                Route::get('vendors/{vendor}/earnings', [LedgerController::class, 'vendorEarnings'])->whereUuid('vendor');
+                Route::get('vendors/{vendor}/earnings/entries', [LedgerController::class, 'vendorEntries'])->whereUuid('vendor');
+                Route::post('vendors/{vendor}/earnings/adjustments', [LedgerController::class, 'adjustVendor'])->whereUuid('vendor');
+                Route::get('riders/{rider}/earnings', [LedgerController::class, 'riderEarnings'])->whereUuid('rider');
+                Route::get('riders/{rider}/earnings/entries', [LedgerController::class, 'riderEntries'])->whereUuid('rider');
+                Route::post('riders/{rider}/earnings/adjustments', [LedgerController::class, 'adjustRider'])->whereUuid('rider');
+                Route::post('riders/{rider}/cash-remittances', [LedgerController::class, 'remitCash'])->whereUuid('rider');
+            });
 
             Route::get('fees', [FeeController::class, 'index']);
             Route::post('fees', [FeeController::class, 'store']);

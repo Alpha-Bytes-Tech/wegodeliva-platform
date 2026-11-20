@@ -40,6 +40,17 @@ return [
         'campus_mode' => (bool) env('FEATURE_CAMPUS_MODE', true),
     ],
 
+    // Closed-loop wallet (spec 06 §6.4). CBN-style KYC tiers; confirm the figures against the
+    // CBN circular before launch. A null max balance means no cap.
+    'wallet' => [
+        'min_topup_kobo' => (int) env('WALLET_MIN_TOPUP_KOBO', 10000),
+        'tiers' => [
+            1 => ['daily_topup_kobo' => (int) env('WALLET_TIER1_DAILY_KOBO', 5000000), 'max_balance_kobo' => (int) env('WALLET_TIER1_MAX_KOBO', 30000000)],
+            2 => ['daily_topup_kobo' => (int) env('WALLET_TIER2_DAILY_KOBO', 20000000), 'max_balance_kobo' => (int) env('WALLET_TIER2_MAX_KOBO', 50000000)],
+            3 => ['daily_topup_kobo' => (int) env('WALLET_TIER3_DAILY_KOBO', 500000000), 'max_balance_kobo' => null],
+        ],
+    ],
+
     'otp' => [
         'length' => 6,
         'ttl_minutes' => (int) env('OTP_TTL_MINUTES', 10),
