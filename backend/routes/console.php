@@ -1,8 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Background jobs (spec 04 §4.6). Laravel Cloud runs the scheduler.
+Schedule::command('orders:release-scheduled')->everyMinute()->withoutOverlapping();

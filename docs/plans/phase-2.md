@@ -47,3 +47,15 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
 - Credits are refused above the KYC tier's balance cap (`wallet_balance_cap`); debits never take a wallet below zero, except admin adjustments. Daily top-up limits are checked by the top-up flow in 2.5 (`topUpsToday`).
 - Admin wallet and earnings adjustments and rider cash remittances need a client `idempotency_key`; reusing it with a different amount answers 409.
 - The daily reconciliation against Paystack and Flutterwave balances (spec 06 §6.4.1) comes with 2.5, which adds the gateway clients.
+
+## Notes from 2.4
+
+- The cart lives in the app; the server prices it (`POST /me/cart/quote`) and stores the quote for 10 minutes, bound to the customer. `POST /me/orders` (with an `Idempotency-Key` header) re-checks and re-prices the cart on fresh data; if anything changed it answers 409 `quote_changed` with a new quote instead of placing.
+- Placement is one transaction: order with price, option and address snapshots, stock taken under row locks (in product id order), coupon use recorded, and wallet payments debited. A repeated key returns the first order; the same key with a different quote answers 409.
+- Statuses only change through `OrderStateMachine`, which applies the spec 04 transition table per actor (customer, vendor, rider, system, admin), locks the order and writes the append-only status history. Vendor, rider and admin actions arrive with 2.6.
+- Customers can cancel in awaiting payment, scheduled and placed; stock and the coupon use are returned and whatever was paid goes back to the wallet in full (fault-based partial refunds come with 2.6).
+- Scheduled orders are released by `orders:release-scheduled` every minute, at scheduled time − prep time − 10-minute buffer. **Laravel Cloud must run the scheduler** for this to work.
+- Paystack and Flutterwave are switched off in config until 2.5 adds checkout and verification; until then customers pay by wallet or on delivery.
+- Products that need a prescription are refused at checkout (`prescription_required`) until the prescription upload and pharmacy review flow is built.
+- The handover code is stored encrypted rather than hashed, because the customer's app must show it until delivery. Riders' code attempts will be rate-limited in 2.6.
+- Not yet: reorder (returns a new quote) and the order chat; both come with the customer app work.

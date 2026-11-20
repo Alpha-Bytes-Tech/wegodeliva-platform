@@ -51,6 +51,30 @@ return [
         ],
     ],
 
+    // Checkout and order rules (spec 04, spec 13 "Ordering").
+    'orders' => [
+        'quote_ttl_minutes' => (int) env('QUOTE_TTL_MINUTES', 10),
+        'max_lines' => 50,
+        'max_quantity' => 50,
+        'min_subtotal_kobo' => (int) env('ORDER_MIN_SUBTOTAL_KOBO', 0),
+        // null = no platform maximum.
+        'max_subtotal_kobo' => env('ORDER_MAX_SUBTOTAL_KOBO') === null ? null : (int) env('ORDER_MAX_SUBTOTAL_KOBO'),
+        'min_schedule_lead_minutes' => (int) env('MIN_SCHEDULE_LEAD_MINUTES', 120),
+        'max_schedule_days' => (int) env('MAX_SCHEDULE_DAYS', 3),
+        // Scheduled orders reach the vendor at: scheduled time − prep time − this buffer.
+        'schedule_release_buffer_minutes' => (int) env('SCHEDULE_RELEASE_BUFFER_MINUTES', 10),
+        'customer_cancellable' => ['awaiting_payment', 'awaiting_review', 'scheduled', 'placed'],
+    ],
+
+    'payments' => [
+        // Gateways are switched on in milestone 2.5, once payments can be started and verified.
+        'paystack' => (bool) env('PAYMENT_PAYSTACK_ENABLED', false),
+        'flutterwave' => (bool) env('PAYMENT_FLUTTERWAVE_ENABLED', false),
+        'wallet' => (bool) env('PAYMENT_WALLET_ENABLED', true),
+        'pay_on_delivery' => (bool) env('PAYMENT_POD_ENABLED', true),
+        'pay_on_delivery_max_kobo' => (int) env('POD_MAX_ORDER_KOBO', 2000000),
+    ],
+
     'otp' => [
         'length' => 6,
         'ttl_minutes' => (int) env('OTP_TTL_MINUTES', 10),
