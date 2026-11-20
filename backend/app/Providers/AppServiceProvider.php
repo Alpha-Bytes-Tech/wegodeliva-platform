@@ -6,6 +6,7 @@ use App\Enums\RoleName;
 use App\Enums\VendorMemberRole;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\Pricing\PricingSettings;
 use App\Services\Social\JwksSocialTokenVerifier;
 use App\Services\Social\SocialTokenVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -20,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(SocialTokenVerifier::class, JwksSocialTokenVerifier::class);
+        $this->app->bind(PricingSettings::class, fn () => PricingSettings::fromConfig());
     }
 
     public function boot(): void
@@ -36,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('work-at-vendor', fn (User $user, Vendor $vendor) => $vendor->memberRole($user) !== null);
         Gate::define('own-vendor', fn (User $user, Vendor $vendor) => $vendor->memberRole($user) === VendorMemberRole::Owner);
         Gate::define('manage-vendors', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
+        // Coupons: admins write all (spec 02 §2.2); zone admins do not.
+        Gate::define('manage-promotions', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
     }
 
     /** Rate limits from spec 13 "Authentication" and spec 14 §14.1 (read per request). */

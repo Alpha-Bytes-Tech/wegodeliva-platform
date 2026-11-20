@@ -89,7 +89,9 @@ jobs:
       - name: Static analysis (PHPStan)
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
       - name: Tests (Pest)
-        run: vendor/bin/pest --coverage --min=80
+        run: vendor/bin/pest --coverage --min=80 --coverage-clover build/clover.xml
+      - name: Full coverage of money logic
+        run: php tools/coverage-gate.php build/clover.xml app/Services/Pricing app/Support/Money.php
       - name: Dependency audit
         run: composer audit
 

@@ -26,5 +26,9 @@ return [
     'social_email_unverified' => 'Your account with this provider has no verified email address.',
     'phone_required' => 'Please add your phone number to finish signing up.',
     'phone_already_confirmed' => 'Your phone number is already confirmed.',
+    'address_limit_reached' => 'You have reached the maximum number of saved addresses.',
+    'vendor_status_unchanged' => 'The vendor already has that status.',
+    'invalid_options' => 'Please check the options you chose.',
+    'coupon_invalid' => 'This code cannot be used on this order.',
     'account_exists' => 'An account with this email already exists. Sign in with your email to link it.',
 ];

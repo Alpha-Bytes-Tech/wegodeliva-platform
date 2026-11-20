@@ -20,6 +20,26 @@ return [
         'max_addresses' => 20,
     ],
 
+    // Pricing defaults (spec 05, spec 13 "Fees and commission"). Rates are basis points.
+    'pricing' => [
+        'vat_rate_bp' => (int) env('VAT_RATE_BP', 750),
+        // VAT WeGoDeliva charges on its own commission.
+        'commission_vat_rate_bp' => (int) env('COMMISSION_VAT_RATE_BP', 750),
+        'vendor_commission_bp' => (int) env('VENDOR_COMMISSION_BP', 500),
+        'delivery_commission_bp' => (int) env('DELIVERY_COMMISSION_BP', 300),
+        // Straight-line distance × this factor stands in for road distance (owner decision 2026-11-20).
+        'road_factor_permille' => (int) env('ROAD_FACTOR_PERMILLE', 1300),
+        // Used when a vendor follows zone fees but the drop-off is in none of its zones.
+        'default_base_delivery_fee_kobo' => (int) env('DEFAULT_BASE_DELIVERY_FEE_KOBO', 50000),
+        'default_per_km_fee_kobo' => (int) env('DEFAULT_PER_KM_FEE_KOBO', 10000),
+        // Hard ceiling on delivery distance whatever the vendor's own radius.
+        'max_delivery_distance_m' => (int) env('MAX_DELIVERY_DISTANCE_M', 20000),
+        // Average rider speed for delivery time estimates (spec 05 §5.10).
+        'average_speed_kmh' => (int) env('AVERAGE_RIDER_SPEED_KMH', 20),
+        'max_tip_kobo' => (int) env('MAX_TIP_KOBO', 500000),
+        'campus_mode' => (bool) env('FEATURE_CAMPUS_MODE', true),
+    ],
+
     'otp' => [
         'length' => 6,
         'ttl_minutes' => (int) env('OTP_TTL_MINUTES', 10),

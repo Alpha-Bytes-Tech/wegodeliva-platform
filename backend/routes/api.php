@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\AuditLogController;
+use App\Http\Controllers\Api\V1\Admin\CouponController;
+use App\Http\Controllers\Api\V1\Admin\FeeController;
 use App\Http\Controllers\Api\V1\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
@@ -49,6 +51,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('zones/lookup', [CatalogueController::class, 'zoneLookup']);
         Route::get('vendors', [CatalogueController::class, 'vendors']);
         Route::get('vendors/{vendor:slug}', [CatalogueController::class, 'vendor']);
+        Route::get('vendors/{vendor:slug}/delivery-quote', [CatalogueController::class, 'deliveryQuote']);
         Route::get('vendors/{vendor:slug}/products', [CatalogueController::class, 'products']);
         Route::get('products/{product}', [CatalogueController::class, 'product']);
         Route::get('search', [CatalogueController::class, 'search']);
@@ -113,6 +116,16 @@ Route::prefix('v1')->group(function (): void {
             Route::post('vendors/{vendor}/approve', [AdminVendorController::class, 'approve'])->whereUuid('vendor');
             Route::post('vendors/{vendor}/suspend', [AdminVendorController::class, 'suspend'])->whereUuid('vendor');
             Route::put('vendors/{vendor}/zones', [AdminVendorController::class, 'zones'])->whereUuid('vendor');
+            Route::patch('vendors/{vendor}/pricing', [AdminVendorController::class, 'pricing'])->whereUuid('vendor');
+
+            Route::get('coupons', [CouponController::class, 'index']);
+            Route::post('coupons', [CouponController::class, 'store']);
+            Route::get('coupons/{coupon}', [CouponController::class, 'show'])->whereUuid('coupon');
+            Route::patch('coupons/{coupon}', [CouponController::class, 'update'])->whereUuid('coupon');
+
+            Route::get('fees', [FeeController::class, 'index']);
+            Route::post('fees', [FeeController::class, 'store']);
+            Route::patch('fees/{fee}', [FeeController::class, 'update'])->whereUuid('fee');
         });
     });
 });

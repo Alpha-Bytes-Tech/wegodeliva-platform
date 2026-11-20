@@ -67,6 +67,7 @@ class VendorStoreResource extends JsonResource
                 'opens_at' => substr($h->opens_at, 0, 5),
                 'closes_at' => substr($h->closes_at, 0, 5),
             ])->all()),
+            'fees' => FeeResource::collection($this->whenLoaded('fees')),
             'zones' => $this->whenLoaded('zones', fn () => $this->zones->map(fn (Zone $z) => [
                 'id' => $z->uuid,
                 'name' => $z->name,

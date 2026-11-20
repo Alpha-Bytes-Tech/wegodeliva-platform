@@ -197,6 +197,12 @@ class Vendor extends Model
         return $this->hasMany(OptionGroup::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /** @return BelongsToMany<Fee, $this> */
+    public function fees(): BelongsToMany
+    {
+        return $this->belongsToMany(Fee::class);
+    }
+
     public function memberRole(User $user): ?VendorMemberRole
     {
         $role = $this->members()->whereKey($user->getKey())->value('vendor_members.role');
