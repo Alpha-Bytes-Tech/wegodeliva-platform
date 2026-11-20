@@ -30,5 +30,9 @@ return [
     'vendor_status_unchanged' => 'The vendor already has that status.',
     'invalid_options' => 'Please check the options you chose.',
     'coupon_invalid' => 'This code cannot be used on this order.',
+    'insufficient_wallet_balance' => 'Your wallet balance is not enough for this.',
+    'wallet_balance_cap' => 'This would take your wallet above its limit. Verify your identity to raise it.',
+    'insufficient_earnings' => 'That is more than you can withdraw right now.',
+    'remittance_exceeds_cash_owed' => 'That is more than the rider owes.',
     'account_exists' => 'An account with this email already exists. Sign in with your email to link it.',
 ];

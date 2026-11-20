@@ -38,3 +38,12 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
   - Vendors on "zone" fee mode whose drop-off is outside their zones pay the platform default (₦500 base + ₦100/km, both settings). The vendor's own radius and a platform maximum of 20 km (setting) limit delivery outside its zones.
   - The vendor radius is checked on straight-line distance; fees and time estimates use straight-line × 1.3.
   - Delivery time estimate = prep time + road distance at 20 km/h, shown as a 10-minute range.
+
+## Notes from 2.3
+
+- `backend/app/Services/Ledger`: `WalletLedger` (customers) and `EarningsLedger` (vendors and riders) are the only code that changes a balance. Each posting locks the balance row, writes ledger entries carrying the figure after the change, and is idempotent on a reference (e.g. `order:{id}:vendor`). The database refuses updates and deletes on both ledger tables.
+- One earnings account per vendor or rider holds five figures: gross balance, commission due, VAT on commission due, cash owed (riders) and held for payouts. Available to withdraw = balance − commission − VAT − cash owed − held. The payout steps (hold, settle commission and cash owed, pay or release) exist and are tested; 2.7 wires them to payout requests and transfers.
+- Wallets are created on first use rather than at sign-up; same effect, fewer moving parts.
+- Credits are refused above the KYC tier's balance cap (`wallet_balance_cap`); debits never take a wallet below zero, except admin adjustments. Daily top-up limits are checked by the top-up flow in 2.5 (`topUpsToday`).
+- Admin wallet and earnings adjustments and rider cash remittances need a client `idempotency_key`; reusing it with a different amount answers 409.
+- The daily reconciliation against Paystack and Flutterwave balances (spec 06 §6.4.1) comes with 2.5, which adds the gateway clients.

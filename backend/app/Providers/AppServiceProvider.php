@@ -39,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('own-vendor', fn (User $user, Vendor $vendor) => $vendor->memberRole($user) === VendorMemberRole::Owner);
         Gate::define('manage-vendors', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
         // Coupons: admins write all (spec 02 §2.2); zone admins do not.
+        // Wallets, earnings and adjustments (spec 02 §2.2: admins only, not zone admins).
+        Gate::define('manage-money', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
         Gate::define('manage-promotions', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
     }
 
@@ -74,6 +76,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('social', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
 
         RateLimiter::for('catalogue', fn (Request $request) => Limit::perMinute(120)->by('catalogue:'.$request->ip()));
+
+        // Money-moving admin actions and wallet reads (CLAUDE.md §4 "rate-limit wallet endpoints").
+        RateLimiter::for('wallet', fn (Request $request) => Limit::perMinute(30)->by('wallet:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }
