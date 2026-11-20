@@ -113,7 +113,13 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm audit --audit-level=high
+      # ADR 0013: high-severity advisories in shipped (production) dependencies block the merge.
+      - name: Dependency audit (production, blocking)
+        run: npm audit --omit=dev --audit-level=high
+      # Dev tooling (lint, test, build) is reported on every run but does not block: an advisory
+      # with no released fix there would otherwise block every web PR.
+      - name: Dependency audit (all, report only)
+        run: npm audit || echo "::warning title=npm audit (dev tooling)::Advisories in dev dependencies; see this step's log."
 
   mobile:
     name: Mobile (Flutter)
