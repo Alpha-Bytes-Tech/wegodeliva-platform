@@ -51,19 +51,20 @@ final class WalletLedger
 
     /**
      * Credits a top-up, refund or referral reward. Refused when it would take the wallet above
-     * its tier's balance cap (`wallet_balance_cap`).
+     * its tier's balance cap (`wallet_balance_cap`), unless `$enforceCap` is false: an order
+     * refund returns the customer's own money and is never refused.
      *
      * @param  array{order_id?: int|null, gateway?: string|null, note?: string|null}  $context
      */
-    public function credit(User $user, int $amount, WalletKind $kind, string $reference, array $context = []): WalletTransaction
+    public function credit(User $user, int $amount, WalletKind $kind, string $reference, array $context = [], bool $enforceCap = true): WalletTransaction
     {
         if (! $kind->isCredit() || $amount <= 0) {
             throw new \InvalidArgumentException('A credit needs a credit kind and a positive amount.');
         }
 
-        return $this->post($user, $amount, $kind, $reference, $context, function (Wallet $wallet) use ($amount): void {
+        return $this->post($user, $amount, $kind, $reference, $context, function (Wallet $wallet) use ($amount, $enforceCap): void {
             $cap = $this->limits($wallet)->maxBalanceKobo;
-            if ($cap !== null && $wallet->balance_kobo + $amount > $cap) {
+            if ($enforceCap && $cap !== null && $wallet->balance_kobo + $amount > $cap) {
                 throw new ApiException('wallet_balance_cap', 422, meta: [
                     'max_balance' => Money::of($cap),
                     'room' => Money::of(max(0, $cap - $wallet->balance_kobo)),

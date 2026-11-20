@@ -80,6 +80,9 @@ class AppServiceProvider extends ServiceProvider
         // Money-moving admin actions and wallet reads (CLAUDE.md §4 "rate-limit wallet endpoints").
         RateLimiter::for('wallet', fn (Request $request) => Limit::perMinute(30)->by('wallet:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
+        // Checkout (quote, place, cancel) per user (CLAUDE.md §4).
+        RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(30)->by('checkout:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }
 }
