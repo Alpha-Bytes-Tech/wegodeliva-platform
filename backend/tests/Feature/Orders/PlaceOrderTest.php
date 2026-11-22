@@ -164,6 +164,24 @@ it('takes stock under a lock even if it ran out after the cart was checked', fun
         ->and(Order::query()->count())->toBe(0);
 });
 
+it('snapshots the store\'s service fees on the order', function () {
+    $fee = App\Models\Fee::query()->create(['name' => 'Packaging', 'type' => 'fixed', 'value' => 10000, 'beneficiary' => 'vendor']);
+    $this->vendor->fees()->attach($fee->id);
+    $quote = quoteId(Checkout::cart($this->vendor, [[$this->product]], $this->address));
+
+    Checkout::place($this->token, $quote)
+        ->assertCreated()
+        ->assertJsonPath('data.fees.0.name', 'Packaging')
+        ->assertJsonPath('data.fees.0.amount.amount_kobo', 10000)
+        ->assertJsonPath('data.service_fee.amount_kobo', 10000)
+        ->assertJsonPath('data.total.amount_kobo', 150000 + 50000 + 10000);
+
+    // Changing the fee later does not change the order.
+    $fee->update(['name' => 'Bags', 'value' => 99999]);
+    $row = Order::query()->sole()->fees()->sole();
+    expect([$row->name, $row->amount_kobo, $row->beneficiary->value, $row->fee_id])->toBe(['Packaging', 10000, 'vendor', $fee->id]);
+});
+
 it('records the coupon use with the order', function () {
     Coupon::query()->create(['code' => 'ONCE', 'discount_type' => 'fixed', 'value' => 20000, 'max_uses_per_user' => 1]);
     $quote = quoteId(Checkout::cart($this->vendor, [[$this->product]], $this->address, ['coupon_code' => 'ONCE']));
