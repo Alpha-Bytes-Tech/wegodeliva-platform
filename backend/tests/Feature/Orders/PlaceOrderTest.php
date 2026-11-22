@@ -3,6 +3,7 @@
 use App\Enums\WalletKind;
 use App\Models\Coupon;
 use App\Models\CouponRedemption;
+use App\Models\Fee;
 use App\Models\Order;
 use App\Models\OrderQuote;
 use App\Models\Product;
@@ -165,7 +166,7 @@ it('takes stock under a lock even if it ran out after the cart was checked', fun
 });
 
 it('snapshots the store\'s service fees on the order', function () {
-    $fee = App\Models\Fee::query()->create(['name' => 'Packaging', 'type' => 'fixed', 'value' => 10000, 'beneficiary' => 'vendor']);
+    $fee = Fee::query()->create(['name' => 'Packaging', 'type' => 'fixed', 'value' => 10000, 'beneficiary' => 'vendor']);
     $this->vendor->fees()->attach($fee->id);
     $quote = quoteId(Checkout::cart($this->vendor, [[$this->product]], $this->address));
 
