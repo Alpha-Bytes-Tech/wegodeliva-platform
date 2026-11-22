@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
 use App\Http\Controllers\Api\V1\Customer\AddressController;
 use App\Http\Controllers\Api\V1\Customer\FavouriteController;
+use App\Http\Controllers\Api\V1\Customer\OrderController;
 use App\Http\Controllers\Api\V1\Customer\WalletController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -73,6 +74,14 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('favourites/vendors/{uuid}', [FavouriteController::class, 'removeVendor'])->whereUuid('uuid');
         Route::put('favourites/products/{uuid}', [FavouriteController::class, 'addProduct'])->whereUuid('uuid');
         Route::delete('favourites/products/{uuid}', [FavouriteController::class, 'removeProduct'])->whereUuid('uuid');
+
+        Route::middleware('throttle:checkout')->group(function (): void {
+            Route::post('cart/quote', [OrderController::class, 'quote']);
+            Route::post('orders', [OrderController::class, 'place']);
+            Route::post('orders/{code}/cancel', [OrderController::class, 'cancel']);
+        });
+        Route::get('orders', [OrderController::class, 'index']);
+        Route::get('orders/{code}', [OrderController::class, 'show']);
 
         Route::middleware('throttle:wallet')->group(function (): void {
             Route::get('wallet', [WalletController::class, 'show']);

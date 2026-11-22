@@ -91,7 +91,7 @@ jobs:
       - name: Tests (Pest)
         run: vendor/bin/pest --coverage --min=80 --coverage-clover build/clover.xml
       - name: Full coverage of money logic
-        run: php tools/coverage-gate.php build/clover.xml app/Services/Pricing app/Services/Ledger app/Support/Money.php
+        run: php tools/coverage-gate.php build/clover.xml app/Services/Pricing app/Services/Ledger app/Services/Orders app/Support/Money.php app/Support/OrderCodes.php
       - name: Dependency audit
         run: composer audit
 
