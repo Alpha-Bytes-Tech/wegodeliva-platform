@@ -69,3 +69,25 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
 - Wallet top-ups: Idempotency-Key, minimum ₦100, tier daily limit and balance cap, counting top-ups still in flight. Once paid, a top-up is always credited even if the wallet filled up meanwhile.
 - `payments:reconcile` (daily, 06:00 Lagos) checks that gateway balances cover positive wallet balances plus vendor and rider earnings net of commission, VAT and cash owed; a shortfall or an unreadable gateway is logged as critical and audited. Exact ledger-to-gateway equality needs the platform's own revenue ledger and in-flight settlements, which come with payouts (2.7).
 - Not yet: gateway IP allow-listing for webhooks (SHOULD), admin alerts beyond logs and the audit log (notifications, 2.8).
+
+## Notes from 2.6
+
+- Vendor app: inbox tabs (new, preparing, ready, out, done, scheduled), accept with a prep time (5–180 min), reject or cancel with a reason (full refund, vendor at fault), mark ready, and hand pickup orders over against the customer's code. Vendors see the customer's first name and delivery area only; orders still awaiting payment stay hidden.
+- Riders: an admin turns an existing account into an approved rider (`POST /admin/riders`) and assigns them to delivery orders before pickup. Vendor-owned riders can only take their vendor's orders, and riders are limited to `max_active_orders` (default 1). Offers, matching, online status and live tracking come with the rider app (Phase 5); so does vendors assigning their own riders.
+- Delivery always needs the customer's 4-digit code: three wrong codes lock it (423) until support completes the delivery as an audited admin override. Code tries are also rate-limited per user (10 a minute). Pay-on-delivery handovers must say whether the customer paid by cash or transfer.
+- At delivery, once per order and in the same transaction (`DeliverySettlement`):
+  - pay-on-delivery becomes paid, and the cash is owed by whoever collected it: the rider, or the vendor for pickups and its own riders;
+  - commission is recorded in `commission_records`;
+  - the vendor's earnings and the deliverer's earnings are credited.
+  
+  The referral reward on a first delivered order comes with referrals (2.7).
+- Failed deliveries need a reason, a photo under `orders/{order uuid}/` and a call to the customer. Refunds for them are an admin decision.
+- Admin refunds go to the wallet: full or partial, never more than was paid and not refunded, with optional reversals of the vendor's or rider's earnings when the fault is theirs, keyed by an idempotency key and audited.
+- Admin cancellation takes a fault. A cancellation fee applies only when the customer is at fault; it is kept from the refund and paid to the vendor less commission.
+- `orders:monitor` (every minute):
+  - alerts when a store has not accepted after 5 minutes and cancels with a full refund at 10;
+  - alerts at 10 and 30 minutes for delivery orders without a rider;
+  - flags orders still open after 24 hours.
+  
+  Alerts go to the log and the audit log until notifications arrive (2.8). Store open/close needs no job: the open state is computed from hours when read.
+- Not yet: zone-scoped access for zone admins (admin panel, Phase 6), pharmacy prescription review, signed upload URLs for delivery photos (rider app).

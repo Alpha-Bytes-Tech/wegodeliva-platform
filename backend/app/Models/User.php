@@ -183,4 +183,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Wallet::class);
     }
+
+    /** @return HasOne<RiderProfile, $this> */
+    public function riderProfile(): HasOne
+    {
+        return $this->hasOne(RiderProfile::class);
+    }
 }
