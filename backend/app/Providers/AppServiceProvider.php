@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\RoleName;
 use App\Enums\VendorMemberRole;
+use App\Listeners\NotificationRouter;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Services\Pricing\PricingSettings;
@@ -12,6 +13,7 @@ use App\Services\Social\SocialTokenVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -26,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Event::subscribe(NotificationRouter::class);
+
         // Catch lazy loading and silently discarded attributes during development and tests.
         Model::shouldBeStrict(! $this->app->isProduction());
 

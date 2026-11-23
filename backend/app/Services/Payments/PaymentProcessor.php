@@ -9,6 +9,8 @@ use App\Enums\PaymentAttemptStatus;
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentStatus;
 use App\Enums\WalletKind;
+use App\Events\PaymentFailed;
+use App\Events\WalletCredited;
 use App\Exceptions\ApiException;
 use App\Models\Order;
 use App\Models\Payment;
@@ -114,6 +116,7 @@ final class PaymentProcessor
             if (! $result->successful) {
                 if ($result->final) {
                     $locked->forceFill(['status' => PaymentAttemptStatus::Failed, 'failure_reason' => 'gateway_'.$result->status, 'raw_verification' => $result->toArray(), 'verified_at' => now()])->save();
+                    event(new PaymentFailed($locked->id));
                 }
 
                 return $payment->setRawAttributes($locked->getAttributes(), true);
@@ -244,10 +247,11 @@ final class PaymentProcessor
         $topup->forceFill(['status' => 'succeeded'])->save();
 
         // Money that has arrived always lands, even if the wallet filled up meanwhile.
-        $this->wallets->credit($payment->user()->firstOrFail(), $payment->amount_kobo, WalletKind::TopUp, "topup:{$topup->uuid}", [
+        $credit = $this->wallets->credit($payment->user()->firstOrFail(), $payment->amount_kobo, WalletKind::TopUp, "topup:{$topup->uuid}", [
             'gateway' => $payment->gateway->value,
             'note' => 'Wallet top-up',
         ], enforceCap: false);
+        event(new WalletCredited($credit->id));
     }
 
     private function assertTopUpAllowed(User $user, int $amount): void

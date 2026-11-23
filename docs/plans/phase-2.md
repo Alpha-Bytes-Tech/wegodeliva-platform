@@ -116,3 +116,29 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
   - One referral per new account; self-referral is ignored. Device-based limits come with the apps.
 - **Reviews** (`App\Services\Orders\Reviews`): after delivery, within 30 days (setting), the customer rates the vendor, the rider and the order's products, once each. Averages and counts on vendors, products and riders are recomputed from visible reviews. Admins can hide or show a review. Stores' visible reviews are public in the catalogue and shown to their staff, with the author's first name only.
 - **Documents** (`App\Services\Documents`): store owners and riders submit documents of set kinds, with paths that must sit in their own folder (`vendors/{uuid}/documents/…`, `riders/{uuid}/documents/…`). Admins can ask for a kind, then approve or reject with a note; resubmitting replaces a request or a rejection. Signed URLs for viewing come with the admin panel; approval does not yet gate going live (admins approve vendors and riders separately).
+
+## Notes from 2.8 (notifications)
+
+- Built on Laravel notifications. Each message goes to the user's inbox for one app (customer, vendor or rider), to push on that user's devices for that app, and, where spec 08 asks, to email.
+- Messages are queued and sent only after the database change commits, so a rolled-back change notifies nobody. **The queue worker must run in production.**
+- Domain events (`App\Events`) are raised where things happen (status changes, rider assignment, refunds, wallet credits, failed payments, payouts, document requests, order alerts). `App\Listeners\NotificationRouter` decides who hears what:
+
+  | Who | What they hear about | Email too |
+  | --- | --- | --- |
+  | Customer | Order placed or scheduled, accepted with prep time, ready for pickup, rider assigned, on the way, delivered, cancelled (with reason), failed; still finding a rider; failed payment; refund; wallet top-up; referral reward | Receipt on delivery; refund |
+  | Store (owner and staff) | New order (urgent, Android channel `new_orders`, iOS time-sensitive), acceptance reminder, rider coming, picked up, delivered, cancelled by someone else, failed, still finding a rider | — |
+  | Store owners only | Payouts, document requests | Yes |
+  | Rider | Job assigned (urgent), order ready, job cancelled, delivered | — |
+  | Rider | Payouts, document requests | Yes |
+
+- Push uses FCM HTTP v1 with a service account from `FIREBASE_CREDENTIALS_BASE64` (base64 JSON, environment only). Messages go to each device token, never shared topics, and carry only ids and short text. Tokens FCM reports as unregistered or invalid are deleted. Without credentials push is off and the inbox and email still work.
+- Inbox endpoints: `GET /me/notifications`, `/vendor/notifications`, `/rider/notifications` (unread count, filter), and `POST …/notifications/read` (some or all).
+- Texts live in `lang/en/notifications.php` with placeholders; admin-editable templates come with the admin panel (Phase 6).
+- Not yet:
+  - Admin alerts beyond the log and audit log (email or realtime dashboard).
+  - The email fallback when a store's new-order push fails (SHOULD).
+  - Broadcasts and muting marketing messages.
+  - Chat, booking and KYC messages (with those features).
+  - Realtime updates (Phase 3/5).
+  - "Rider nearby" (Phase 5).
+- **Owner:** create a Firebase service-account key (Firebase console → Project settings → Service accounts → Generate new private key), base64-encode the JSON, and add it to Laravel Cloud as `FIREBASE_CREDENTIALS_BASE64`. Emails need the Brevo sender set up.

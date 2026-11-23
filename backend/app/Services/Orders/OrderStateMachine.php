@@ -4,6 +4,7 @@ namespace App\Services\Orders;
 
 use App\Enums\ActorRole;
 use App\Enums\OrderStatus as S;
+use App\Events\OrderStatusChanged;
 use App\Exceptions\ApiException;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
@@ -114,5 +115,10 @@ final class OrderStateMachine
             'actor_role' => $actor,
             'reason' => $reason,
         ])->save();
+
+        // Status changes (not notes such as rider assignment, which keep the status) notify people.
+        if ($from !== $to) {
+            event(new OrderStatusChanged($order->id, $from?->value, $to->value, $actor->value, $reason));
+        }
     }
 }

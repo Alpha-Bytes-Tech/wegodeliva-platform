@@ -7,6 +7,7 @@ use App\Enums\Fault;
 use App\Enums\Fulfilment;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Events\RiderAssigned;
 use App\Exceptions\ApiException;
 use App\Models\Order;
 use App\Models\RiderProfile;
@@ -73,6 +74,7 @@ final class OrderFulfilment
 
             $locked->forceFill(['rider_id' => $rider->id, 'assigned_at' => now(), 'rider_escalation_level' => 0])->save();
             $this->machine->record($locked, $locked->status, $locked->status, ActorRole::Admin, $admin, "Assigned rider {$rider->name}");
+            event(new RiderAssigned($locked->id));
             $order->setRawAttributes($locked->getAttributes(), true);
 
             return $order;

@@ -44,20 +44,23 @@ Last updated: 2026-11-20
 - 2026-11-23 — **Milestone 2.7a, payouts**: bank accounts checked with the gateway's account-resolve API (name match or admin review, masked numbers); payout requests with Idempotency-Key and a ₦1,000 minimum; admin approve (settle commission, VAT and cash owed, then transfer via Paystack or Flutterwave Transfers), reject, sync and account approval; transfer results from signed webhooks or `payouts:sync`; failures release the hold. Referrals, reviews and documents follow in 2.7b.
 - 2026-11-23 — Milestone 2.7a merged (PR #29).
 - 2026-11-23 — **Milestone 2.7b, referrals, reviews and documents**: referral reward (5%, max ₦5,000) on the referred customer's first delivered order, clawed back on a full refund within 7 days, admin void; unknown codes no longer block sign-up. Reviews of vendor, rider and products after delivery with recomputed ratings, admin hide/show, public store reviews. Vendor and rider documents with admin request, approve and reject.
+- 2026-11-23 — Milestone 2.7b merged (PR #30).
+- 2026-11-23 — **Milestone 2.8, notifications**: in-app inbox per app, FCM HTTP v1 push (service account from the environment, per-device tokens, invalid tokens removed, urgent new-order push on the `new_orders` channel) and email (receipt, refund, payouts, document requests), sent after commit through the queue. Domain events for order status, rider assignment, refunds, wallet credits, failed payments, payouts, documents and order alerts, routed to customers, store members or owners, and riders.
 
 ## In progress
 
 - Owner: turn on the scheduler in Laravel Cloud (needed from 2.4 for scheduled orders; from 2.5 for payment timeouts and reconciliation; from 2.6 for store timeouts and order alerts).
 - Owner (to test payments on staging): add Paystack and Flutterwave **test** keys to Laravel Cloud (`PAYSTACK_SECRET_KEY`, `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_SECRET_HASH`), set `PAYMENT_PAYSTACK_ENABLED=true` / `PAYMENT_FLUTTERWAVE_ENABLED=true`, and set the webhook URLs on both dashboards to `<API URL>/api/v1/webhooks/paystack` and `/api/v1/webhooks/flutterwave`.
 - Owner (before real payouts): enable Paystack Transfers and turn off the transfer OTP, get Flutterwave Transfers approved, and fund the transfer balance.
-- Owner: queue worker on Laravel Cloud, Brevo (domain DNS + SMTP key), removing Supabase secrets from the Vercel project, deleting `SUPER_ADMIN_PASSWORD` from Laravel Cloud.
+- Owner (push notifications): add the Firebase service-account key, base64-encoded, to Laravel Cloud as `FIREBASE_CREDENTIALS_BASE64`.
+- Owner: queue worker on Laravel Cloud (needed from 2.8: every notification goes through the queue), Brevo (domain DNS + SMTP key), removing Supabase secrets from the Vercel project, deleting `SUPER_ADMIN_PASSWORD` from Laravel Cloud.
 
 ## Next
 
 1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 — milestone 2.8, notifications (push, in-app inbox, email), after 2.7b is merged.
+4. Phase 2 — milestone 2.9, parcels and service bookings, after 2.8 is merged.
 
 ## Blockers / owner actions
 
