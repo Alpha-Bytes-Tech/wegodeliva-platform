@@ -73,5 +73,9 @@ return [
     'payouts_disabled' => 'Payouts are not available right now.',
     'payout_below_minimum' => 'That is below the minimum payout.',
     'payout_status_conflict' => 'This payout has moved on. Please refresh.',
+    'order_not_reviewable' => 'You can rate an order once it has been delivered.',
+    'review_window_closed' => 'It is too late to rate this order.',
+    'already_reviewed' => 'You have already rated this.',
+    'document_status_conflict' => 'This document has already been reviewed.',
     'account_exists' => 'An account with this email already exists. Sign in with your email to link it.',
 ];

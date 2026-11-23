@@ -14,9 +14,13 @@ use App\Http\Controllers\Api\V1\Customer\AddressController;
 use App\Http\Controllers\Api\V1\Customer\FavouriteController;
 use App\Http\Controllers\Api\V1\Customer\OrderController;
 use App\Http\Controllers\Api\V1\Customer\PaymentController;
+use App\Http\Controllers\Api\V1\Customer\ReferralController;
+use App\Http\Controllers\Api\V1\Customer\ReviewController;
 use App\Http\Controllers\Api\V1\Customer\WalletController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\ReviewListController;
 use App\Http\Controllers\Api\V1\Rider\EarningsController as RiderEarningsController;
 use App\Http\Controllers\Api\V1\Rider\JobController;
 use App\Http\Controllers\Api\V1\Rider\PayoutController as RiderPayoutController;
@@ -70,6 +74,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('zones/lookup', [CatalogueController::class, 'zoneLookup']);
         Route::get('vendors', [CatalogueController::class, 'vendors']);
         Route::get('vendors/{vendor:slug}', [CatalogueController::class, 'vendor']);
+        Route::get('vendors/{vendor:slug}/reviews', [ReviewListController::class, 'forCatalogue']);
         Route::get('vendors/{vendor:slug}/delivery-quote', [CatalogueController::class, 'deliveryQuote']);
         Route::get('vendors/{vendor:slug}/products', [CatalogueController::class, 'products']);
         Route::get('products/{product}', [CatalogueController::class, 'product']);
@@ -96,6 +101,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('orders/{code}/pay', [PaymentController::class, 'payOrder']);
             Route::post('payments/{reference}/verify', [PaymentController::class, 'verify']);
         });
+        Route::post('orders/{code}/reviews', [ReviewController::class, 'store']);
+        Route::get('referrals', [ReferralController::class, 'mine']);
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{code}', [OrderController::class, 'show']);
 
@@ -118,6 +125,8 @@ Route::prefix('v1')->group(function (): void {
         Route::post('jobs/{code}/deliver', [JobController::class, 'deliver'])->middleware('throttle:handover');
         Route::post('jobs/{code}/fail', [JobController::class, 'fail']);
 
+        Route::get('documents', [DocumentController::class, 'riderIndex']);
+        Route::post('documents', [DocumentController::class, 'riderSubmit']);
         Route::get('banks', [RiderPayoutController::class, 'banks']);
         Route::get('payout-accounts', [RiderPayoutController::class, 'accounts']);
         Route::post('payout-accounts', [RiderPayoutController::class, 'storeAccount'])->middleware('throttle:wallet');
@@ -156,6 +165,9 @@ Route::prefix('v1')->group(function (): void {
             Route::post('orders/{code}/ready', [VendorOrderController::class, 'ready']);
             Route::post('orders/{code}/handover', [VendorOrderController::class, 'handover'])->middleware('throttle:handover');
 
+            Route::get('reviews', [ReviewListController::class, 'forStore']);
+            Route::get('documents', [DocumentController::class, 'vendorIndex']);
+            Route::post('documents', [DocumentController::class, 'vendorSubmit']);
             Route::get('banks', [VendorPayoutController::class, 'banks']);
             Route::get('payout-accounts', [VendorPayoutController::class, 'accounts']);
             Route::post('payout-accounts', [VendorPayoutController::class, 'storeAccount'])->middleware('throttle:wallet');
@@ -221,6 +233,12 @@ Route::prefix('v1')->group(function (): void {
             Route::post('payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->whereUuid('payout');
             Route::post('payouts/{payout}/sync', [AdminPayoutController::class, 'sync'])->whereUuid('payout');
             Route::post('payout-accounts/{account}/approve', [AdminPayoutController::class, 'approveAccount'])->whereUuid('account');
+            Route::get('reviews', [ReviewListController::class, 'forAdmin']);
+            Route::patch('reviews/{review}', [ReviewListController::class, 'setVisibility'])->whereUuid('review');
+            Route::get('documents', [DocumentController::class, 'adminIndex']);
+            Route::post('documents', [DocumentController::class, 'adminRequest']);
+            Route::post('documents/{document}/review', [DocumentController::class, 'adminReview'])->whereUuid('document');
+            Route::post('referrals/{referral}/void', [ReferralController::class, 'void'])->whereUuid('referral');
             Route::get('riders', [AdminRiderController::class, 'index']);
             Route::post('riders', [AdminRiderController::class, 'store']);
 

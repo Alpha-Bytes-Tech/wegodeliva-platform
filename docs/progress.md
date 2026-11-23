@@ -42,6 +42,8 @@ Last updated: 2026-11-20
 - 2026-11-23 — **Milestone 2.6, order fulfilment**: vendor inbox and actions (accept with prep time, reject/cancel with full refund, ready, pickup handover with code); admin-created riders and manual assignment (vendor-owned limits, capacity, unassign before pickup); rider jobs (picked up, deliver with code and three-try lock, failed delivery with photo); settlement at delivery (pay on delivery paid, cash owed by the collector, commission record, vendor and rider earnings); admin order list/detail, cancel with fault and cancellation fee, delivery override, fail, refunds with earnings reversals; `orders:monitor` for store timeouts, no-rider and stale alerts.
 - 2026-11-23 — Milestone 2.6 merged (PR #28).
 - 2026-11-23 — **Milestone 2.7a, payouts**: bank accounts checked with the gateway's account-resolve API (name match or admin review, masked numbers); payout requests with Idempotency-Key and a ₦1,000 minimum; admin approve (settle commission, VAT and cash owed, then transfer via Paystack or Flutterwave Transfers), reject, sync and account approval; transfer results from signed webhooks or `payouts:sync`; failures release the hold. Referrals, reviews and documents follow in 2.7b.
+- 2026-11-23 — Milestone 2.7a merged (PR #29).
+- 2026-11-23 — **Milestone 2.7b, referrals, reviews and documents**: referral reward (5%, max ₦5,000) on the referred customer's first delivered order, clawed back on a full refund within 7 days, admin void; unknown codes no longer block sign-up. Reviews of vendor, rider and products after delivery with recomputed ratings, admin hide/show, public store reviews. Vendor and rider documents with admin request, approve and reject.
 
 ## In progress
 
@@ -55,7 +57,7 @@ Last updated: 2026-11-20
 1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 — milestone 2.7b, referrals, reviews and documents, after 2.7a is merged.
+4. Phase 2 — milestone 2.8, notifications (push, in-app inbox, email), after 2.7b is merged.
 
 ## Blockers / owner actions
 

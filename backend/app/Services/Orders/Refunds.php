@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class Refunds
 {
-    public function __construct(private readonly WalletLedger $wallets) {}
+    public function __construct(private readonly WalletLedger $wallets, private readonly Referrals $referrals) {}
 
     public function refund(Order $order, int $amount, string $reason, Fault $fault, ?User $by, string $reference): Refund
     {
@@ -63,6 +63,7 @@ final class Refunds
             $locked->payment_status = $amount === $refundable ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded;
             $locked->save();
             $order->payment_status = $locked->payment_status;
+            $this->referrals->clawBackIfRefunded($locked);
 
             return $refund;
         });

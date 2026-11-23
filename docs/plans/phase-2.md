@@ -106,3 +106,13 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
   - Paystack Transfers must be enabled on the business account, and the transfer OTP turned off so the API can send transfers.
   - Flutterwave Transfers must be approved on its account.
   - The transfer balance must be funded.
+
+## Notes from 2.7b (referrals, reviews, documents)
+
+- **Referrals** (`App\Services\Orders\Referrals`):
+  - Signing up with a code records a pending referral. An unknown code no longer blocks sign-up (spec 06 §6.8); the response says `referral_applied: false`. The Phase 1 test that expected a rejection was changed accordingly.
+  - The reward is paid at the referred customer's first delivered order, inside the delivery transaction: 5% of subtotal − discount, capped at ₦5,000 (settings), credited to the referrer's wallet.
+  - A full refund of that order within 7 days takes the reward back (only as much as the referrer's wallet holds) and the next delivered order counts. Admins can void a referral, which also takes back a paid reward. Clawbacks and voids are audited.
+  - One referral per new account; self-referral is ignored. Device-based limits come with the apps.
+- **Reviews** (`App\Services\Orders\Reviews`): after delivery, within 30 days (setting), the customer rates the vendor, the rider and the order's products, once each. Averages and counts on vendors, products and riders are recomputed from visible reviews. Admins can hide or show a review. Stores' visible reviews are public in the catalogue and shown to their staff, with the author's first name only.
+- **Documents** (`App\Services\Documents`): store owners and riders submit documents of set kinds, with paths that must sit in their own folder (`vendors/{uuid}/documents/…`, `riders/{uuid}/documents/…`). Admins can ask for a kind, then approve or reject with a note; resubmitting replaces a request or a rejection. Signed URLs for viewing come with the admin panel; approval does not yet gate going live (admins approve vendors and riders separately).

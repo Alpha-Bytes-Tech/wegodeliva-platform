@@ -20,6 +20,7 @@ use App\Services\AuditLogger;
 use App\Services\Auth\EmailVerification;
 use App\Services\Auth\OtpService;
 use App\Services\Auth\TokenIssuer;
+use App\Services\Orders\Referrals;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -35,6 +36,7 @@ class AuthController extends Controller
         private readonly OtpService $otp,
         private readonly TokenIssuer $tokens,
         private readonly EmailVerification $emailVerification,
+        private readonly Referrals $referrals,
     ) {}
 
     /** Customer sign-up. The role is always `customer`; the email is verified by OTP next. */
@@ -49,11 +51,9 @@ class AuthController extends Controller
                 'phone' => $data['phone'],
                 'password' => $data['password'] ?? null,
             ]);
-            if (! empty($data['referral_code'])) {
-                $user->referred_by_user_id = User::query()->where('referral_code', $data['referral_code'])->value('id');
-            }
             $user->save();
             $user->assignRole(RoleName::Customer);
+            $this->referrals->recordSignUp($user, $data['referral_code'] ?? null);
 
             return $user;
         });
@@ -62,6 +62,7 @@ class AuthController extends Controller
 
         return response()->json(['data' => [
             'user' => ['uuid' => $user->uuid, 'email' => $user->email],
+            'referral_applied' => $user->referred_by_user_id !== null,
             'otp' => $this->otpTiming(),
         ]], 201);
     }

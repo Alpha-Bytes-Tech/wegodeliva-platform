@@ -89,15 +89,18 @@ it('records who referred the new customer', function () {
     $referrer = makeUser();
 
     $this->postJson('/api/v1/auth/register', registration(['referral_code' => strtolower($referrer->referral_code)]))
-        ->assertCreated();
+        ->assertCreated()
+        ->assertJsonPath('data.referral_applied', true);
 
     expect(User::query()->where('email', 'tolu@example.com')->value('referred_by_user_id'))->toBe($referrer->id);
 });
 
-it('rejects unknown referral codes', function () {
-    $error = expectApiError($this->postJson('/api/v1/auth/register', registration(['referral_code' => 'NOPE1234'])), 400, 'validation_failed');
+it('signs up with an unknown referral code, saying it did not apply (spec 06 §6.8)', function () {
+    $this->postJson('/api/v1/auth/register', registration(['referral_code' => 'NOPE1234']))
+        ->assertCreated()
+        ->assertJsonPath('data.referral_applied', false);
 
-    expect($error['fields'])->toHaveKey('referral_code');
+    expect(User::query()->where('email', 'tolu@example.com')->value('referred_by_user_id'))->toBeNull();
 });
 
 it('rate-limits sign-ups per IP', function () {
