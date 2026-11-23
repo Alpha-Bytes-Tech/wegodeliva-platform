@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
 use App\Http\Controllers\Api\V1\Customer\AddressController;
 use App\Http\Controllers\Api\V1\Customer\FavouriteController;
 use App\Http\Controllers\Api\V1\Customer\OrderController;
+use App\Http\Controllers\Api\V1\Customer\PaymentController;
 use App\Http\Controllers\Api\V1\Customer\WalletController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Api\V1\Vendor\MenuController;
 use App\Http\Controllers\Api\V1\Vendor\OptionGroupController;
 use App\Http\Controllers\Api\V1\Vendor\ProductController;
 use App\Http\Controllers\Api\V1\Vendor\StoreController;
+use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +50,11 @@ Route::prefix('v1')->group(function (): void {
         Route::post('devices', [DeviceController::class, 'store']);
         Route::delete('devices/{uuid}', [DeviceController::class, 'destroy'])->whereUuid('uuid');
     });
+
+    // Gateway webhooks: no sign-in; the signature is the authentication (spec 06 §6.3).
+    Route::post('webhooks/{gateway}', [WebhookController::class, 'handle'])
+        ->whereIn('gateway', ['paystack', 'flutterwave'])
+        ->middleware('throttle:webhooks');
 
     // Public catalogue: no sign-in needed (spec 14 §14.2 "Catalogue").
     Route::prefix('catalogue')->middleware('throttle:catalogue')->group(function (): void {
@@ -79,6 +86,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('cart/quote', [OrderController::class, 'quote']);
             Route::post('orders', [OrderController::class, 'place']);
             Route::post('orders/{code}/cancel', [OrderController::class, 'cancel']);
+            Route::post('orders/{code}/pay', [PaymentController::class, 'payOrder']);
+            Route::post('payments/{reference}/verify', [PaymentController::class, 'verify']);
         });
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{code}', [OrderController::class, 'show']);
@@ -86,6 +95,7 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware('throttle:wallet')->group(function (): void {
             Route::get('wallet', [WalletController::class, 'show']);
             Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+            Route::post('wallet/topups', [PaymentController::class, 'topUp']);
         });
     });
 

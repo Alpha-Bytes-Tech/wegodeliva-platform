@@ -83,6 +83,8 @@ class AppServiceProvider extends ServiceProvider
         // Checkout (quote, place, cancel) per user (CLAUDE.md §4).
         RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(30)->by('checkout:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
+        RateLimiter::for('webhooks', fn (Request $request) => Limit::perMinute(600)->by('webhooks:'.$request->ip()));
+
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
     }
 }

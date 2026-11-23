@@ -28,6 +28,19 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Payment gateways (spec 06). Test keys on staging, live keys only at launch.
+    'paystack' => [
+        'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+    ],
+
+    'flutterwave' => [
+        'base_url' => env('FLUTTERWAVE_BASE_URL', 'https://api.flutterwave.com'),
+        'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
+        // The "secret hash" set on the Flutterwave dashboard; sent back as the verif-hash header.
+        'secret_hash' => env('FLUTTERWAVE_SECRET_HASH'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
