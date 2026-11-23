@@ -40,11 +40,14 @@ Last updated: 2026-11-20
 - 2026-11-23 — **Milestone 2.5, Paystack and Flutterwave**: gateway clients (Paystack in kobo, Flutterwave in naira), payment attempts per order and top-up, server-side verification of status, reference, amount, currency and one-use transaction ids (tampered-amount, wrong-currency and replayed-transaction tests), signed and de-duplicated webhooks processed on the queue, wallet top-ups within tier limits, `payments:expire` for unpaid orders and top-ups, late payments returned to the wallet, daily `payments:reconcile` coverage check. Coverage gate extended to the payment code.
 - 2026-11-23 — Milestone 2.5 merged (PR #27).
 - 2026-11-23 — **Milestone 2.6, order fulfilment**: vendor inbox and actions (accept with prep time, reject/cancel with full refund, ready, pickup handover with code); admin-created riders and manual assignment (vendor-owned limits, capacity, unassign before pickup); rider jobs (picked up, deliver with code and three-try lock, failed delivery with photo); settlement at delivery (pay on delivery paid, cash owed by the collector, commission record, vendor and rider earnings); admin order list/detail, cancel with fault and cancellation fee, delivery override, fail, refunds with earnings reversals; `orders:monitor` for store timeouts, no-rider and stale alerts.
+- 2026-11-23 — Milestone 2.6 merged (PR #28).
+- 2026-11-23 — **Milestone 2.7a, payouts**: bank accounts checked with the gateway's account-resolve API (name match or admin review, masked numbers); payout requests with Idempotency-Key and a ₦1,000 minimum; admin approve (settle commission, VAT and cash owed, then transfer via Paystack or Flutterwave Transfers), reject, sync and account approval; transfer results from signed webhooks or `payouts:sync`; failures release the hold. Referrals, reviews and documents follow in 2.7b.
 
 ## In progress
 
 - Owner: turn on the scheduler in Laravel Cloud (needed from 2.4 for scheduled orders; from 2.5 for payment timeouts and reconciliation; from 2.6 for store timeouts and order alerts).
 - Owner (to test payments on staging): add Paystack and Flutterwave **test** keys to Laravel Cloud (`PAYSTACK_SECRET_KEY`, `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_SECRET_HASH`), set `PAYMENT_PAYSTACK_ENABLED=true` / `PAYMENT_FLUTTERWAVE_ENABLED=true`, and set the webhook URLs on both dashboards to `<API URL>/api/v1/webhooks/paystack` and `/api/v1/webhooks/flutterwave`.
+- Owner (before real payouts): enable Paystack Transfers and turn off the transfer OTP, get Flutterwave Transfers approved, and fund the transfer balance.
 - Owner: queue worker on Laravel Cloud, Brevo (domain DNS + SMTP key), removing Supabase secrets from the Vercel project, deleting `SUPER_ADMIN_PASSWORD` from Laravel Cloud.
 
 ## Next
@@ -52,7 +55,7 @@ Last updated: 2026-11-20
 1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 — milestone 2.7, payouts, referrals and reviews, after 2.6 is merged.
+4. Phase 2 — milestone 2.7b, referrals, reviews and documents, after 2.7a is merged.
 
 ## Blockers / owner actions
 

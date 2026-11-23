@@ -4,9 +4,11 @@ namespace App\Jobs;
 
 use App\Enums\PaymentGateway;
 use App\Models\Payment;
+use App\Models\Payout;
 use App\Models\WebhookEvent;
 use App\Services\Payments\Gateways\Gateways;
 use App\Services\Payments\PaymentProcessor;
+use App\Services\Payments\Payouts;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
@@ -14,7 +16,7 @@ use Throwable;
 /**
  * Acts on a stored webhook (spec 06 §6.3). A charge event only triggers our own verification
  * with the gateway; the webhook payload is never trusted for status or amount. Transfer events
- * (payouts) are recorded now and handled with milestone 2.7.
+ * check the payout the same way: the gateway is asked how the transfer went.
  */
 class ProcessWebhookEvent implements ShouldQueue
 {
@@ -27,7 +29,7 @@ class ProcessWebhookEvent implements ShouldQueue
 
     public function __construct(public readonly int $eventId) {}
 
-    public function handle(Gateways $gateways, PaymentProcessor $payments): void
+    public function handle(Gateways $gateways, PaymentProcessor $payments, Payouts $payouts): void
     {
         $event = WebhookEvent::query()->findOrFail($this->eventId);
         if ($event->processed_at !== null) {
@@ -39,6 +41,13 @@ class ProcessWebhookEvent implements ShouldQueue
             $payment = Payment::query()->where('gateway', $event->gateway)->where('reference', $notice->reference)->first();
             if ($payment !== null) {
                 $payments->verify($payment);
+            }
+        }
+
+        if ($notice !== null && $notice->isTransfer && $notice->reference !== null) {
+            $payout = Payout::query()->where('gateway', $event->gateway)->where('transfer_reference', $notice->reference)->first();
+            if ($payout !== null) {
+                $payouts->sync($payout);
             }
         }
 

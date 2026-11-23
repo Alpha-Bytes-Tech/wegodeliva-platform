@@ -3,6 +3,8 @@
 namespace App\Services\Payments\Gateways;
 
 use App\Models\Payment;
+use App\Models\Payout;
+use App\Models\PayoutAccount;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -10,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 /** Paystack (https://paystack.com/docs/api). Amounts are in kobo on both sides. */
-final class PaystackClient implements GatewayClient
+final class PaystackClient implements GatewayClient, TransferClient
 {
     public function initialize(Payment $payment, string $email, string $callbackUrl): string
     {
@@ -65,7 +67,67 @@ final class PaystackClient implements GatewayClient
             return null;
         }
 
-        return new WebhookNotice($event, $event.':'.$data['id'], isset($data['reference']) ? (string) $data['reference'] : null, $event === 'charge.success');
+        return new WebhookNotice(
+            $event,
+            $event.':'.$data['id'],
+            isset($data['reference']) ? (string) $data['reference'] : null,
+            $event === 'charge.success',
+            in_array($event, ['transfer.success', 'transfer.failed', 'transfer.reversed'], true),
+        );
+    }
+
+    public function banks(): array
+    {
+        $data = $this->call(fn (PendingRequest $http) => $http->get('/bank', ['country' => 'nigeria', 'currency' => 'NGN', 'perPage' => 200]));
+
+        return array_values(array_map(fn ($b) => ['code' => (string) $b['code'], 'name' => (string) $b['name']], array_filter($data, 'is_array')));
+    }
+
+    public function resolveAccount(string $bankCode, string $accountNumber): ?string
+    {
+        $response = $this->send(fn (PendingRequest $http) => $http->get('/bank/resolve', ['account_number' => $accountNumber, 'bank_code' => $bankCode]));
+        if ($response->status() === 422 || $response->status() === 400) {
+            return null;
+        }
+
+        $name = $this->data($response)['account_name'] ?? null;
+
+        return is_string($name) && $name !== '' ? $name : null;
+    }
+
+    public function sendTransfer(Payout $payout, PayoutAccount $account): string
+    {
+        if ($account->recipient_code === null) {
+            $recipient = $this->call(fn (PendingRequest $http) => $http->post('/transferrecipient', [
+                'type' => 'nuban',
+                'name' => $account->account_name,
+                'account_number' => $account->account_number,
+                'bank_code' => $account->bank_code,
+                'currency' => 'NGN',
+            ]));
+            $account->forceFill(['recipient_code' => (string) $recipient['recipient_code']])->save();
+        }
+
+        $data = $this->call(fn (PendingRequest $http) => $http->post('/transfer', [
+            'source' => 'balance',
+            'amount' => $payout->amount_kobo,
+            'recipient' => $account->recipient_code,
+            'reference' => $payout->transfer_reference,
+            'reason' => 'WeGoDeliva payout',
+        ]));
+
+        return (string) ($data['transfer_code'] ?? $data['id'] ?? throw new GatewayUnavailable('Paystack returned no transfer id.'));
+    }
+
+    public function transferStatus(string $reference): string
+    {
+        $status = (string) ($this->call(fn (PendingRequest $http) => $http->get('/transfer/verify/'.rawurlencode($reference)))['status'] ?? '');
+
+        return match ($status) {
+            'success' => 'success',
+            'failed', 'reversed', 'abandoned', 'rejected' => 'failed',
+            default => 'pending',
+        };
     }
 
     public function balanceKobo(): int
@@ -82,7 +144,7 @@ final class PaystackClient implements GatewayClient
 
     /**
      * @param  callable(PendingRequest): Response  $request
-     * @return array<string, mixed>
+     * @return array<int|string, mixed>
      */
     private function call(callable $request): array
     {
@@ -105,7 +167,7 @@ final class PaystackClient implements GatewayClient
         }
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<int|string, mixed> */
     private function data(Response $response): array
     {
         $data = $response->json('data');

@@ -11,7 +11,7 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
 | 2.4 | **Cart, checkout and order state machine** | Quote → place order with server-side recalculation and double-tap protection. Stock reservation. All order states, who may move them, full history. Pay on delivery and wallet payment. | 2.2, 2.3 |
 | 2.5 | **Paystack and Flutterwave** | Start a payment, verify it (reference, amount, currency), signed webhooks, wallet top-ups, timeout jobs. Tests for tampered amounts, wrong currency and replayed transactions. | 2.4 |
 | 2.6 | **Order fulfilment** | Vendor accept/reject/ready, rider picked up / delivered with handover code / failed, admin manual assignment. Commission and earnings on delivery; refunds by fault rules on cancel or fail. Scheduled jobs (vendor timeout, scheduled release, open/close). | 2.4, 2.5 |
-| 2.7 | **Payouts, referrals, reviews, documents** | Payout accounts (account-name check), payout requests and admin approval through the gateway Transfers API, rider cash remittance, referral reward (5%, max ₦5,000), ratings. Vendor and rider documents for approval. | 2.6 |
+| 2.7 | **Payouts, referrals, reviews, documents** (two PRs: 2.7a payouts, 2.7b the rest) | Payout accounts (account-name check), payout requests and admin approval through the gateway Transfers API, rider cash remittance, referral reward (5%, max ₦5,000), ratings. Vendor and rider documents for approval. | 2.6 |
 | 2.8 | **Notifications** | Push (FCM), in-app inbox and email per order event, queued. | 2.6 |
 | 2.9 | **Parcels and service bookings** | Parcel pricing (stops, size, extra stops) and service bookings (slots, capacity, own states). | 2.4–2.6 |
 
@@ -91,3 +91,18 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
   
   Alerts go to the log and the audit log until notifications arrive (2.8). Store open/close needs no job: the open state is computed from hours when read.
 - Not yet: zone-scoped access for zone admins (admin panel, Phase 6), pharmacy prescription review, signed upload URLs for delivery photos (rider app).
+
+## Notes from 2.7a (payouts)
+
+- Bank accounts: the vendor owner or rider picks a bank from the gateway's list (cached a day) and gives a 10-digit number. The name comes from the bank via the gateway's account-resolve API, never from the user. The account is `verified` if a word of three or more letters matches the rider's name, or the vendor's name or one of its owners' names; otherwise it is `needs_review` until an admin approves it. Numbers are shown masked.
+- Payout flow (`App\Services\Payments\Payouts`), with an Idempotency-Key on the request:
+  - **Request:** at least ₦1,000 (setting), to a verified account; the amount is held against the earnings.
+  - **Admin approves:** commission, its VAT and (riders) cash owed are settled from the balance, then the transfer is sent through the payout gateway (setting, default Paystack). If the gateway is down the payout stays approved, and approving again retries.
+  - **Result:** the transfer's result is always asked from the gateway — prompted by its signed webhook, an admin "sync", or `payouts:sync` every 5 minutes for payouts processing over 5 minutes. Success pays out the hold; failure releases it (the settled commission stays settled) and is audited.
+  - **Admin rejects:** releases the hold.
+- Transfer fees are borne by WeGoDeliva (spec 13 default); deducting them from the payout is not built.
+- Not yet: approving only from settled gateway funds (needs settlement tracking), auto-approval under a threshold (SHOULD), and payout statements (SHOULD).
+- **Owner, before real payouts:**
+  - Paystack Transfers must be enabled on the business account, and the transfer OTP turned off so the API can send transfers.
+  - Flutterwave Transfers must be approved on its account.
+  - The transfer balance must be funded.
