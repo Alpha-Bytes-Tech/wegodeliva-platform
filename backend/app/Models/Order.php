@@ -52,6 +52,12 @@ use Illuminate\Support\Carbon;
  * @property int $tip_kobo
  * @property int $total_kobo
  * @property int|null $coupon_id
+ * @property int|null $package_type_id
+ * @property int|null $weight_g
+ * @property int|null $length_cm
+ * @property int|null $width_cm
+ * @property int|null $height_cm
+ * @property string|null $payer sender | recipient (parcels)
  * @property string $handover_code
  * @property int|null $prep_time_minutes
  * @property Carbon|null $estimated_ready_at
@@ -80,9 +86,12 @@ class Order extends Model
 {
     use HasUuids, SoftDeletes;
 
+    /** The order type of parcel deliveries (the parcels vendor type's slug). */
+    public const TYPE_PARCEL = 'parcels';
+
     protected $guarded = ['*'];
 
-    protected $hidden = ['id', 'customer_id', 'vendor_id', 'rider_id', 'vendor_type_id', 'delivery_address_id', 'coupon_id', 'quote_id', 'handover_code', 'idempotency_key'];
+    protected $hidden = ['id', 'customer_id', 'vendor_id', 'rider_id', 'vendor_type_id', 'delivery_address_id', 'coupon_id', 'package_type_id', 'quote_id', 'handover_code', 'idempotency_key'];
 
     /** @return list<string> */
     public function uniqueIds(): array
@@ -136,6 +145,10 @@ class Order extends Model
             'tax_rate_bp' => 'integer',
             'tip_kobo' => 'integer',
             'total_kobo' => 'integer',
+            'weight_g' => 'integer',
+            'length_cm' => 'integer',
+            'width_cm' => 'integer',
+            'height_cm' => 'integer',
         ];
     }
 
@@ -189,6 +202,23 @@ class Order extends Model
     public function fees(): HasMany
     {
         return $this->hasMany(OrderFee::class)->orderBy('id');
+    }
+
+    public function isParcel(): bool
+    {
+        return $this->type === self::TYPE_PARCEL;
+    }
+
+    /** @return BelongsTo<PackageType, $this> */
+    public function packageType(): BelongsTo
+    {
+        return $this->belongsTo(PackageType::class);
+    }
+
+    /** @return HasMany<OrderStop, $this> */
+    public function stops(): HasMany
+    {
+        return $this->hasMany(OrderStop::class)->orderBy('sequence');
     }
 
     /** @return HasMany<OrderStatusHistory, $this> */

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Admin\CouponController;
 use App\Http\Controllers\Api\V1\Admin\FeeController;
 use App\Http\Controllers\Api\V1\Admin\LedgerController;
 use App\Http\Controllers\Api\V1\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Api\V1\Admin\PackageTypeController;
 use App\Http\Controllers\Api\V1\Admin\PayoutController as AdminPayoutController;
 use App\Http\Controllers\Api\V1\Admin\RiderController as AdminRiderController;
 use App\Http\Controllers\Api\V1\Admin\VendorController as AdminVendorController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
 use App\Http\Controllers\Api\V1\Customer\AddressController;
 use App\Http\Controllers\Api\V1\Customer\FavouriteController;
 use App\Http\Controllers\Api\V1\Customer\OrderController;
+use App\Http\Controllers\Api\V1\Customer\ParcelController as CustomerParcelController;
 use App\Http\Controllers\Api\V1\Customer\PaymentController;
 use App\Http\Controllers\Api\V1\Customer\ReferralController;
 use App\Http\Controllers\Api\V1\Customer\ReviewController;
@@ -30,6 +32,7 @@ use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsContr
 use App\Http\Controllers\Api\V1\Vendor\MenuController;
 use App\Http\Controllers\Api\V1\Vendor\OptionGroupController;
 use App\Http\Controllers\Api\V1\Vendor\OrderController as VendorOrderController;
+use App\Http\Controllers\Api\V1\Vendor\ParcelController as VendorParcelController;
 use App\Http\Controllers\Api\V1\Vendor\PayoutController as VendorPayoutController;
 use App\Http\Controllers\Api\V1\Vendor\ProductController;
 use App\Http\Controllers\Api\V1\Vendor\StoreController;
@@ -71,6 +74,7 @@ Route::prefix('v1')->group(function (): void {
     // Public catalogue: no sign-in needed (spec 14 §14.2 "Catalogue").
     Route::prefix('catalogue')->middleware('throttle:catalogue')->group(function (): void {
         Route::get('vendor-types', [CatalogueController::class, 'vendorTypes']);
+        Route::get('package-types', [CatalogueController::class, 'packageTypes']);
         Route::get('vendor-types/{vendorType:slug}/categories', [CatalogueController::class, 'categories']);
         Route::get('zones/lookup', [CatalogueController::class, 'zoneLookup']);
         Route::get('vendors', [CatalogueController::class, 'vendors']);
@@ -97,6 +101,8 @@ Route::prefix('v1')->group(function (): void {
 
         Route::middleware('throttle:checkout')->group(function (): void {
             Route::post('cart/quote', [OrderController::class, 'quote']);
+            Route::post('parcels/options', [CustomerParcelController::class, 'options'])->name('me.parcels.options');
+            Route::post('parcels/quote', [CustomerParcelController::class, 'quote'])->name('me.parcels.quote');
             Route::post('orders', [OrderController::class, 'place']);
             Route::post('orders/{code}/cancel', [OrderController::class, 'cancel']);
             Route::post('orders/{code}/pay', [PaymentController::class, 'payOrder']);
@@ -127,6 +133,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('jobs/{code}/picked-up', [JobController::class, 'pickedUp']);
         Route::post('jobs/{code}/deliver', [JobController::class, 'deliver'])->middleware('throttle:handover');
         Route::post('jobs/{code}/fail', [JobController::class, 'fail']);
+        Route::post('jobs/{code}/stops/{sequence}/complete', [JobController::class, 'completeStop'])->whereNumber('sequence')->middleware('throttle:handover');
 
         Route::get('notifications', [NotificationController::class, 'index'])->defaults('app', 'rider');
         Route::post('notifications/read', [NotificationController::class, 'markRead'])->defaults('app', 'rider');
@@ -171,6 +178,11 @@ Route::prefix('v1')->group(function (): void {
             Route::post('orders/{code}/reject', [VendorOrderController::class, 'reject']);
             Route::post('orders/{code}/ready', [VendorOrderController::class, 'ready']);
             Route::post('orders/{code}/handover', [VendorOrderController::class, 'handover'])->middleware('throttle:handover');
+
+            Route::get('parcel-rates', [VendorParcelController::class, 'rates']);
+            Route::put('parcel-rates/{packageType}', [VendorParcelController::class, 'saveRate'])->whereUuid('packageType')->withoutScopedBindings();
+            Route::get('riders', [VendorParcelController::class, 'riders']);
+            Route::post('orders/{code}/assign-rider', [VendorParcelController::class, 'assign']);
 
             Route::get('reviews', [ReviewListController::class, 'forStore']);
             Route::get('documents', [DocumentController::class, 'vendorIndex']);
@@ -248,6 +260,10 @@ Route::prefix('v1')->group(function (): void {
             Route::post('referrals/{referral}/void', [ReferralController::class, 'void'])->whereUuid('referral');
             Route::get('riders', [AdminRiderController::class, 'index']);
             Route::post('riders', [AdminRiderController::class, 'store']);
+
+            Route::get('package-types', [PackageTypeController::class, 'index']);
+            Route::post('package-types', [PackageTypeController::class, 'store']);
+            Route::patch('package-types/{packageType}', [PackageTypeController::class, 'update'])->whereUuid('packageType');
 
             Route::get('fees', [FeeController::class, 'index']);
             Route::post('fees', [FeeController::class, 'store']);

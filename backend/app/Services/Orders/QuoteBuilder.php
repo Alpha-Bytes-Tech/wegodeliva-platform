@@ -5,7 +5,6 @@ namespace App\Services\Orders;
 use App\Enums\Fulfilment;
 use App\Enums\OpenState;
 use App\Enums\OrderStatus;
-use App\Enums\PaymentMethod;
 use App\Exceptions\ApiException;
 use App\Models\Address;
 use App\Models\Coupon;
@@ -15,7 +14,6 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Services\Catalogue\VendorSchedule;
-use App\Services\Ledger\WalletLedger;
 use App\Services\Pricing\CouponContext;
 use App\Services\Pricing\CouponDiscount;
 use App\Services\Pricing\CouponRules;
@@ -41,7 +39,7 @@ final class QuoteBuilder
         private readonly CouponRules $coupons,
         private readonly DeliveryQuoter $deliveries,
         private readonly VendorSchedule $schedule,
-        private readonly WalletLedger $wallets,
+        private readonly PaymentOptions $payments,
     ) {}
 
     public function build(User $customer, QuoteInput $input): BuiltQuote
@@ -71,7 +69,7 @@ final class QuoteBuilder
             $input->tipKobo,
         );
 
-        return new BuiltQuote($input, $vendor, $price, $products, $address, $delivery, $this->paymentOptions($customer, $price->totalKobo));
+        return new BuiltQuote($input, $vendor, $price, $products, $address, $delivery, $this->payments->for($customer, $price->totalKobo));
     }
 
     private function checkTiming(Vendor $vendor, ?Carbon $at): void
@@ -193,23 +191,6 @@ final class QuoteBuilder
             usesByCustomer: CouponRedemption::query()->counted()->where('coupon_id', $coupon->id)->where('user_id', $customer->id)->count(),
             now: now(),
         ));
-    }
-
-    /** @return array<string, string|null> method => null if available, else why not */
-    private function paymentOptions(User $customer, int $total): array
-    {
-        $cfg = config('wegodeliva.payments');
-        $options = [];
-        foreach (PaymentMethod::cases() as $method) {
-            $options[$method->value] = match (true) {
-                ! $cfg[$method->value] => 'disabled',
-                $method === PaymentMethod::Wallet && $this->wallets->wallet($customer)->balance_kobo < $total => 'insufficient_balance',
-                $method === PaymentMethod::PayOnDelivery && $total > (int) $cfg['pay_on_delivery_max_kobo'] => 'above_limit',
-                default => null,
-            };
-        }
-
-        return $options;
     }
 
     /**

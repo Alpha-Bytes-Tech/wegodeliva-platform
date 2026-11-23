@@ -48,9 +48,12 @@ class RiderProfile extends Model
 
     public function canDeliverFor(Order $order): bool
     {
+        // Parcel jobs go only to the operator's own riders (owner decision 2026-11-23).
+        $ownRider = $this->rider_type === RiderType::VendorOwned && $this->vendor_id === $order->vendor_id;
+
         return $this->status === 'active'
             && $this->approved_at !== null
-            && ($this->rider_type !== RiderType::VendorOwned || $this->vendor_id === $order->vendor_id);
+            && ($order->isParcel() ? $ownRider : ($this->rider_type !== RiderType::VendorOwned || $ownRider));
     }
 
     /** @return BelongsTo<User, $this> */

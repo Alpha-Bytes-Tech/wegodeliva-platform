@@ -3,6 +3,7 @@
 namespace App\Services\Orders;
 
 use App\Enums\ActorRole;
+use App\Enums\Fulfilment;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -13,6 +14,7 @@ use App\Models\Order;
 use App\Models\OrderFee;
 use App\Models\OrderItem;
 use App\Models\OrderQuote;
+use App\Models\OrderStop;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\Ledger\WalletLedger;
@@ -32,6 +34,7 @@ final class OrderPlacer
 {
     public function __construct(
         private readonly QuoteBuilder $builder,
+        private readonly ParcelQuoteBuilder $parcels,
         private readonly OrderStateMachine $machine,
         private readonly OrderLifecycle $lifecycle,
         private readonly WalletLedger $wallets,
@@ -53,7 +56,9 @@ final class OrderPlacer
             throw new ApiException('quote_used', 409);
         }
 
-        $built = $this->builder->build($customer, QuoteInput::fromArray($quote->input));
+        $built = ($quote->input['kind'] ?? null) === ParcelInput::KIND
+            ? $this->parcels->build($customer, ParcelInput::fromArray($quote->input))
+            : $this->builder->build($customer, QuoteInput::fromArray($quote->input));
         if ($built->fingerprint() !== $quote->fingerprint) {
             throw new ApiException('quote_changed', 409, meta: ['quote' => QuoteStore::present(QuoteStore::save($customer, $built), $built)]);
         }
@@ -105,6 +110,7 @@ final class OrderPlacer
         $price = $built->price;
         $vendor = $built->vendor;
         $scheduledFor = $built->input->scheduledFor;
+        $parcel = $built->parcel;
 
         $status = match (true) {
             $method->isGateway() => OrderStatus::AwaitingPayment,
@@ -119,15 +125,18 @@ final class OrderPlacer
             'vendor_id' => $vendor->id,
             'vendor_type_id' => $vendor->vendor_type_id,
             'type' => $vendor->vendorType->slug,
-            'fulfilment' => $built->input->fulfilment,
+            'fulfilment' => $built->input instanceof QuoteInput ? $built->input->fulfilment : Fulfilment::Delivery,
             'status' => $status,
             'payment_status' => PaymentStatus::Unpaid,
             'payment_method' => $method,
             'delivery_address_id' => $built->address?->id,
-            'address_snapshot' => $built->address === null ? null : $built->address->only([
-                'label', 'line1', 'landmark', 'area', 'lat', 'lng', 'campus_building', 'contact_name', 'contact_phone',
-            ]),
-            'distance_m' => $built->delivery?->distanceM,
+            // A parcel's address is its final drop-off; every stop is kept in order_stops.
+            'address_snapshot' => match (true) {
+                $built->address !== null => $built->address->only(['label', 'line1', 'landmark', 'area', 'lat', 'lng', 'campus_building', 'contact_name', 'contact_phone']),
+                $parcel !== null => array_intersect_key(array_slice($parcel->input->stops, -1)[0], array_flip(['line1', 'landmark', 'area', 'lat', 'lng', 'contact_name', 'contact_phone'])),
+                default => null,
+            },
+            'distance_m' => $built->delivery->distanceM ?? $parcel?->price->routeM,
             'campus_mode' => $built->delivery?->source === 'campus',
             'scheduled_for' => $scheduledFor,
             'release_at' => $scheduledFor?->copy()->subMinutes($vendor->prep_time_minutes + (int) config('wegodeliva.orders.schedule_release_buffer_minutes')),
@@ -143,6 +152,12 @@ final class OrderPlacer
             'tip_kobo' => $price->tipKobo,
             'total_kobo' => $price->totalKobo,
             'coupon_id' => $price->coupon?->coupon->id,
+            'package_type_id' => $parcel?->packageType->id,
+            'weight_g' => $parcel?->input->weightG,
+            'length_cm' => $parcel?->input->lengthCm,
+            'width_cm' => $parcel?->input->widthCm,
+            'height_cm' => $parcel?->input->heightCm,
+            'payer' => $parcel?->input->payer,
             'handover_code' => OrderCodes::handoverCode(),
             'placed_at' => $status === OrderStatus::Placed ? now() : null,
             'estimated_delivery_at' => $built->delivery?->etaMaxMinutes === null ? null : ($scheduledFor ?? now())->copy()->addMinutes($built->delivery->etaMaxMinutes),
@@ -175,6 +190,10 @@ final class OrderPlacer
             $row->forceFill(['order_id' => $order->id, 'fee_id' => $fee->feeId, 'name' => $fee->name, 'amount_kobo' => $fee->amountKobo, 'beneficiary' => $fee->beneficiary])->save();
         }
 
+        if ($parcel !== null) {
+            $this->createStops($order, $parcel);
+        }
+
         if ($price->coupon !== null) {
             $redemption = new CouponRedemption;
             $redemption->forceFill([
@@ -194,6 +213,34 @@ final class OrderPlacer
         $this->machine->record($order, null, $status, ActorRole::Customer, $customer);
 
         return $order;
+    }
+
+    /**
+     * The parcel's stops in route order. The last drop-off uses the order's handover code; when
+     * the package type asks for it, every other drop-off gets its own code (spec 07 §7.3).
+     */
+    private function createStops(Order $order, ParcelQuote $parcel): void
+    {
+        $last = count($parcel->input->stops) - 1;
+        foreach ($parcel->input->stops as $i => $stop) {
+            $code = match (true) {
+                $i === 0 => null,
+                $i === $last => $order->handover_code,
+                default => $parcel->packageType->requires_stop_verification ? OrderCodes::handoverCode() : null,
+            };
+
+            $row = new OrderStop;
+            $row->forceFill([
+                'order_id' => $order->id,
+                'sequence' => $i + 1,
+                'kind' => $i === 0 ? 'pickup' : 'dropoff',
+                'address' => ['line1' => $stop['line1'], 'landmark' => $stop['landmark'], 'area' => $stop['area'], 'lat' => $stop['lat'], 'lng' => $stop['lng']],
+                'contact_name' => $stop['contact_name'],
+                'contact_phone' => $stop['contact_phone'],
+                'note' => $stop['note'],
+                'verification_code' => $code,
+            ])->save();
+        }
     }
 
     /**

@@ -10,7 +10,7 @@ use App\Services\Pricing\DeliveryQuote;
 use App\Services\Pricing\PriceBreakdown;
 use App\Support\Money;
 
-/** A fully validated and priced cart. */
+/** A fully validated and priced cart, or a parcel (then `parcel` is set and there are no products). */
 final readonly class BuiltQuote
 {
     /**
@@ -18,18 +18,21 @@ final readonly class BuiltQuote
      * @param  array<string, string|null>  $paymentOptions  every payment method => null when available, else the reason it is not
      */
     public function __construct(
-        public QuoteInput $input,
+        public QuoteInput|ParcelInput $input,
         public Vendor $vendor,
         public PriceBreakdown $price,
         public array $products,
         public ?Address $address,
         public ?DeliveryQuote $delivery,
         public array $paymentOptions,
+        public ?ParcelQuote $parcel = null,
     ) {}
 
     public function fingerprint(): string
     {
-        return hash('sha256', (string) json_encode($this->price->toArray()));
+        $priced = $this->parcel === null ? $this->price->toArray() : ['price' => $this->price->toArray(), 'parcel' => $this->parcel->toArray()];
+
+        return hash('sha256', (string) json_encode($priced));
     }
 
     public function unavailableReason(PaymentMethod $method): ?string
@@ -42,9 +45,11 @@ final readonly class BuiltQuote
     {
         $scheduled = $this->input->scheduledFor;
 
+        $parcel = $this->parcel === null ? [] : ['parcel' => $this->parcel->toArray()];
+
         return [
             'vendor' => ['id' => $this->vendor->uuid, 'name' => $this->vendor->name, 'slug' => $this->vendor->slug],
-            'fulfilment' => $this->input->fulfilment->value,
+            'fulfilment' => $this->input instanceof QuoteInput ? $this->input->fulfilment->value : 'delivery',
             'address_id' => $this->address?->uuid,
             'scheduled_for' => $scheduled?->toIso8601String(),
             'delivery' => $this->delivery === null ? null : [
@@ -57,6 +62,6 @@ final readonly class BuiltQuote
                 fn (string $method) => ['method' => $method, 'available' => $this->paymentOptions[$method] === null, 'reason' => $this->paymentOptions[$method]],
                 array_keys($this->paymentOptions),
             ),
-        ];
+        ] + $parcel;
     }
 }
