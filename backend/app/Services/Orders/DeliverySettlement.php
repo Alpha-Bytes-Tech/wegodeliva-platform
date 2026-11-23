@@ -19,13 +19,14 @@ use App\Services\Pricing\PriceBreakdown;
  * What happens once, at delivery (spec 04 §4.7, spec 05 §5.8): pay-on-delivery orders become
  * paid and the cash is owed by whoever collected it; commission is computed and recorded; the
  * vendor's and the deliverer's earnings are credited. Call it inside the transaction that marks
- * the order delivered.
+ * the order delivered. The referral reward for a first delivered order is paid here too.
  */
 final class DeliverySettlement
 {
     public function __construct(
         private readonly CommissionCalculator $commission,
         private readonly EarningsLedger $earnings,
+        private readonly Referrals $referrals,
     ) {}
 
     public function settle(Order $order): void
@@ -70,6 +71,8 @@ final class DeliverySettlement
         if ($split->delivery->grossKobo > 0) {
             $this->earnings->recordOrderEarning($deliveryAccount, $split->delivery, "order:{$order->uuid}:delivery", $order->id);
         }
+
+        $this->referrals->rewardIfFirstPurchase($order);
     }
 
     /** The order's stored amounts in the shape the commission calculator takes. */

@@ -20,7 +20,8 @@ class RegisterRequest extends ApiRequest
             'email' => ['required', 'string', 'email:rfc', 'max:191', 'unique:users,email'],
             'phone' => ['required', 'string', new NigerianMobile, 'unique:users,phone'],
             'password' => ['nullable', 'string', 'max:72', Password::min(8)->letters()->numbers()],
-            'referral_code' => ['nullable', 'string', 'max:12', 'exists:users,referral_code'],
+            // An unknown code never blocks sign-up (spec 06 §6.8); the response says whether it applied.
+            'referral_code' => ['nullable', 'string', 'max:12'],
             'accept_terms' => ['accepted'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ];

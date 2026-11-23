@@ -93,6 +93,20 @@ return [
         'min_kobo' => (int) env('PAYOUT_MIN_KOBO', 100000),
     ],
 
+    // Referrals (spec 06 §6.8): 5% of the first purchase, capped, funded by WeGoDeliva.
+    'referrals' => [
+        'enabled' => (bool) env('REFERRALS_ENABLED', true),
+        'reward_bp' => (int) env('REFERRAL_REWARD_BP', 500),
+        'max_reward_kobo' => (int) env('REFERRAL_MAX_REWARD_KOBO', 500000),
+        'clawback_days' => (int) env('REFERRAL_CLAWBACK_DAYS', 7),
+        'share_url' => env('REFERRAL_SHARE_URL', 'https://wegodeliva.com/r/'),
+    ],
+
+    // Reviews (spec 03 §3.8): customers rate a delivered order within this many days.
+    'reviews' => [
+        'window_days' => (int) env('REVIEW_WINDOW_DAYS', 30),
+    ],
+
     'otp' => [
         'length' => 6,
         'ttl_minutes' => (int) env('OTP_TTL_MINUTES', 10),
