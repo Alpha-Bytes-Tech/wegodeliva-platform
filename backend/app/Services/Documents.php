@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\EarningsOwner;
+use App\Events\DocumentRequested;
 use App\Exceptions\ApiException;
 use App\Models\Document;
 use App\Models\User;
@@ -52,6 +53,7 @@ final class Documents
         $document = new Document;
         $document->forceFill(['owner_type' => $type, 'owner_id' => $ownerId, 'kind' => $kind, 'status' => 'requested', 'review_note' => $note])->save();
         $this->audit->record($admin, 'document.requested', $type->value, (string) $ownerId, after: ['kind' => $kind, 'note' => $note]);
+        event(new DocumentRequested($document->id));
 
         return $document;
     }

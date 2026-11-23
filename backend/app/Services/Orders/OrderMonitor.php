@@ -6,6 +6,7 @@ use App\Enums\ActorRole;
 use App\Enums\Fault;
 use App\Enums\Fulfilment;
 use App\Enums\OrderStatus;
+use App\Events\OrderAlert;
 use App\Models\Order;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +40,7 @@ final class OrderMonitor
             ->each(function (Order $order) use (&$counts): void {
                 $order->forceFill(['vendor_alerted_at' => now()])->save();
                 $this->alert($order, 'order.vendor_slow');
+                event(new OrderAlert($order->id, 'vendor_slow'));
                 $counts['vendor_alerts']++;
             });
 
@@ -53,6 +55,9 @@ final class OrderMonitor
                 ->each(function (Order $order) use ($level, &$counts): void {
                     $order->forceFill(['rider_escalation_level' => $level])->save();
                     $this->alert($order, $level === 1 ? 'order.no_rider' : 'order.no_rider_escalated');
+                    if ($level === 1) {
+                        event(new OrderAlert($order->id, 'no_rider'));
+                    }
                     $counts['rider_alerts']++;
                 });
         }

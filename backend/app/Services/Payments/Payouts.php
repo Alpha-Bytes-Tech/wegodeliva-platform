@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Enums\EarningsOwner;
 use App\Enums\PaymentGateway;
+use App\Events\PayoutUpdated;
 use App\Exceptions\ApiException;
 use App\Models\EarningsAccount;
 use App\Models\Payout;
@@ -166,6 +167,7 @@ final class Payouts
         }
 
         $payout->forceFill(['status' => 'processing', 'gateway_transfer_id' => $transferId, 'failure_reason' => null])->save();
+        event(new PayoutUpdated($payout->id));
 
         return $payout;
     }
@@ -181,6 +183,7 @@ final class Payouts
             $this->earnings->releasePayout($locked->earningsAccount()->firstOrFail(), $locked->amount_kobo, "payout:{$locked->uuid}:release");
             $locked->forceFill(['status' => 'rejected', 'note' => $reason, 'reviewed_by' => $admin->id, 'reviewed_at' => now()])->save();
             $this->audit->record($admin, 'payout.rejected', 'payout', $locked->uuid, after: ['reason' => $reason]);
+            event(new PayoutUpdated($locked->id));
 
             return $payout->setRawAttributes($locked->getAttributes(), true);
         });
@@ -214,6 +217,7 @@ final class Payouts
                 $locked->forceFill(['status' => 'failed', 'failure_reason' => 'transfer_failed'])->save();
                 $this->audit->record(null, 'payout.transfer_failed', 'payout', $locked->uuid, after: ['amount_kobo' => $locked->amount_kobo]);
             }
+            event(new PayoutUpdated($locked->id));
 
             return $payout->setRawAttributes($locked->getAttributes(), true);
         });

@@ -5,6 +5,7 @@ namespace App\Services\Orders;
 use App\Enums\Fault;
 use App\Enums\PaymentStatus;
 use App\Enums\WalletKind;
+use App\Events\RefundIssued;
 use App\Exceptions\ApiException;
 use App\Models\Order;
 use App\Models\Refund;
@@ -64,6 +65,7 @@ final class Refunds
             $locked->save();
             $order->payment_status = $locked->payment_status;
             $this->referrals->clawBackIfRefunded($locked);
+            event(new RefundIssued($refund->id));
 
             return $refund;
         });

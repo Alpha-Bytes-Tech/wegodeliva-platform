@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\WalletKind;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -49,6 +50,12 @@ class WalletTransaction extends Model
             'kind' => WalletKind::class,
             'created_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<Wallet, $this> */
+    public function wallet(): BelongsTo
+    {
+        return $this->belongsTo(Wallet::class);
     }
 
     /** Signed change: positive for credits. */

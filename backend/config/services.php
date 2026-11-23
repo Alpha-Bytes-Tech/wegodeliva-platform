@@ -41,6 +41,12 @@ return [
         'secret_hash' => env('FLUTTERWAVE_SECRET_HASH'),
     ],
 
+    // Firebase Cloud Messaging (push only). The service-account JSON, base64-encoded, from the
+    // host's secret store. Never commit it.
+    'fcm' => [
+        'credentials' => env('FIREBASE_CREDENTIALS_BASE64'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

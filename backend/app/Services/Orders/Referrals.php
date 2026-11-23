@@ -4,6 +4,7 @@ namespace App\Services\Orders;
 
 use App\Enums\PaymentStatus;
 use App\Enums\WalletKind;
+use App\Events\WalletCredited;
 use App\Models\Order;
 use App\Models\Referral;
 use App\Models\User;
@@ -52,10 +53,11 @@ final class Referrals
         $purchase = max(0, $order->subtotal_kobo - $order->discount_kobo);
         $reward = min(Money::percentOf($purchase, (int) config('wegodeliva.referrals.reward_bp')), (int) config('wegodeliva.referrals.max_reward_kobo'));
         if ($reward > 0) {
-            $this->wallets->credit($referral->referrer()->firstOrFail(), $reward, WalletKind::ReferralReward, "referral:{$referral->uuid}:{$order->uuid}", [
+            $credit = $this->wallets->credit($referral->referrer()->firstOrFail(), $reward, WalletKind::ReferralReward, "referral:{$referral->uuid}:{$order->uuid}", [
                 'order_id' => $order->id,
                 'note' => 'Referral reward',
             ], enforceCap: false);
+            event(new WalletCredited($credit->id));
         }
         $referral->forceFill(['status' => 'rewarded', 'reward_kobo' => $reward, 'qualifying_order_id' => $order->id, 'rewarded_at' => now()])->save();
     }

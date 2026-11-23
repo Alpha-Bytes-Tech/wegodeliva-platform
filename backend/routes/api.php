@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V1\Customer\WalletController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ReviewListController;
 use App\Http\Controllers\Api\V1\Rider\EarningsController as RiderEarningsController;
 use App\Http\Controllers\Api\V1\Rider\JobController;
@@ -103,6 +104,8 @@ Route::prefix('v1')->group(function (): void {
         });
         Route::post('orders/{code}/reviews', [ReviewController::class, 'store']);
         Route::get('referrals', [ReferralController::class, 'mine']);
+        Route::get('notifications', [NotificationController::class, 'index'])->defaults('app', 'customer');
+        Route::post('notifications/read', [NotificationController::class, 'markRead'])->defaults('app', 'customer');
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{code}', [OrderController::class, 'show']);
 
@@ -125,6 +128,8 @@ Route::prefix('v1')->group(function (): void {
         Route::post('jobs/{code}/deliver', [JobController::class, 'deliver'])->middleware('throttle:handover');
         Route::post('jobs/{code}/fail', [JobController::class, 'fail']);
 
+        Route::get('notifications', [NotificationController::class, 'index'])->defaults('app', 'rider');
+        Route::post('notifications/read', [NotificationController::class, 'markRead'])->defaults('app', 'rider');
         Route::get('documents', [DocumentController::class, 'riderIndex']);
         Route::post('documents', [DocumentController::class, 'riderSubmit']);
         Route::get('banks', [RiderPayoutController::class, 'banks']);
@@ -138,6 +143,8 @@ Route::prefix('v1')->group(function (): void {
     // Vendor app: stores the user works at. Nested resources are scoped to their store.
     Route::prefix('vendor')->middleware(['auth:sanctum', 'active', 'abilities:app:vendor', 'throttle:api'])->group(function (): void {
         Route::get('stores', [StoreController::class, 'index']);
+        Route::get('notifications', [NotificationController::class, 'index'])->defaults('app', 'vendor');
+        Route::post('notifications/read', [NotificationController::class, 'markRead'])->defaults('app', 'vendor');
 
         Route::prefix('stores/{vendor}')->whereUuid('vendor')->scopeBindings()->group(function (): void {
             Route::get('/', [StoreController::class, 'show']);
