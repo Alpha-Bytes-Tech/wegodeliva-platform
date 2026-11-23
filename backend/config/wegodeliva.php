@@ -73,6 +73,11 @@ return [
         'wallet' => (bool) env('PAYMENT_WALLET_ENABLED', true),
         'pay_on_delivery' => (bool) env('PAYMENT_POD_ENABLED', true),
         'pay_on_delivery_max_kobo' => (int) env('POD_MAX_ORDER_KOBO', 2000000),
+        // Where the gateway sends the customer after checkout; an App Link opens the app.
+        'callback_url' => env('PAYMENT_CALLBACK_URL', 'https://wegodeliva.com/payment/return'),
+        // Unpaid gateway orders and pending top-ups are re-verified, then given up, after this.
+        'timeout_minutes' => (int) env('PAYMENT_TIMEOUT_MINUTES', 15),
+        'topups_enabled' => (bool) env('WALLET_TOPUP_ENABLED', true),
     ],
 
     'otp' => [

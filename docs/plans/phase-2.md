@@ -59,3 +59,13 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
 - Products that need a prescription are refused at checkout (`prescription_required`) until the prescription upload and pharmacy review flow is built.
 - The handover code is stored encrypted rather than hashed, because the customer's app must show it until delivery. Riders' code attempts will be rate-limited in 2.6.
 - Not yet: reorder (returns a new quote) and the order chat; both come with the customer app work.
+
+## Notes from 2.5
+
+- `backend/app/Services/Payments`: `PaystackClient` and `FlutterwaveClient` behind one `GatewayClient` interface; `PaymentProcessor` starts checkouts, verifies and applies results; `Reconciliation` runs the daily check. Flutterwave works in naira, converted to and from kobo in its client only (string arithmetic, no float drift).
+- A payment is accepted only when the gateway, asked with our secret key, reports success **and** our reference, the exact amount in kobo and NGN all match, **and** the gateway transaction has not already paid for something else (a unique key backs this). Anything else fails the payment, leaves the order unpaid, logs a critical error and writes `payment.rejected` to the audit log.
+- The app's "verify" and the webhook both only trigger that server check; applying a result is idempotent under a row lock, so they can race. Webhooks need a valid signature (`x-paystack-signature` HMAC-SHA512, Flutterwave `verif-hash`), are stored once (replays ignored) and processed on the queue. Transfer webhooks are stored now and handled with payouts (2.7).
+- `payments:expire` (every minute): gateway orders unpaid after 15 minutes get one last check, then are cancelled (stock and coupon returned); pending top-ups are failed. Money that arrives later is never lost: top-ups are still credited, and payments for cancelled or already-paid orders go to the customer's wallet (`payment.refunded_late` in the audit log).
+- Wallet top-ups: Idempotency-Key, minimum ₦100, tier daily limit and balance cap, counting top-ups still in flight. Once paid, a top-up is always credited even if the wallet filled up meanwhile.
+- `payments:reconcile` (daily, 06:00 Lagos) checks that gateway balances cover positive wallet balances plus vendor and rider earnings net of commission, VAT and cash owed; a shortfall or an unreadable gateway is logged as critical and audited. Exact ledger-to-gateway equality needs the platform's own revenue ledger and in-flight settlements, which come with payouts (2.7).
+- Not yet: gateway IP allow-listing for webhooks (SHOULD), admin alerts beyond logs and the audit log (notifications, 2.8).

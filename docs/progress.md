@@ -36,10 +36,13 @@ Last updated: 2026-11-20
 - 2026-11-20 — **Milestone 2.3, wallet and earnings ledgers**: append-only `wallet_transactions` and `earnings_entries` (database triggers refuse edits and deletes); balances change only through `WalletLedger` / `EarningsLedger` under row locks with idempotent references. Customer wallet with CBN-style tier limits (balance cap enforced, daily top-up count ready for 2.5); vendor and rider earnings with commission and VAT accrual, cash owed, payout hold/settle/pay/release, reversals that can leave a debt. Endpoints: `GET /me/wallet` (+ transactions), `GET /vendor/stores/{id}/earnings` (+ entries), `GET /rider/earnings` (+ entries), admin wallet/earnings views, adjustments and rider cash remittances (audited, idempotency key, rate-limited). Coverage gate extended to the ledger code.
 - 2026-11-20 — Milestone 2.3 merged (PR #13).
 - 2026-11-20 — **Milestone 2.4, checkout and order state machine**: server-priced quotes bound to the customer (10 min), placement with re-pricing (409 `quote_changed`), `Idempotency-Key`, stock reservation under row locks, coupon redemption, wallet payment in the same transaction, pay on delivery, order snapshots and encrypted handover code. State machine with the spec 04 transition table per actor and append-only status history. Customer endpoints: quote, place, list (active/past), details, cancel (stock, coupon and wallet refund returned). Scheduled orders and `orders:release-scheduled` (every minute); auto-accept stores. Coverage gate extended to the orders code. Notes and open points in `docs/plans/phase-2.md`.
+- 2026-11-22 — Milestone 2.4 merged (PR #14).
+- 2026-11-23 — **Milestone 2.5, Paystack and Flutterwave**: gateway clients (Paystack in kobo, Flutterwave in naira), payment attempts per order and top-up, server-side verification of status, reference, amount, currency and one-use transaction ids (tampered-amount, wrong-currency and replayed-transaction tests), signed and de-duplicated webhooks processed on the queue, wallet top-ups within tier limits, `payments:expire` for unpaid orders and top-ups, late payments returned to the wallet, daily `payments:reconcile` coverage check. Coverage gate extended to the payment code.
 
 ## In progress
 
-- Owner: turn on the scheduler in Laravel Cloud (needed from 2.4 for scheduled orders).
+- Owner: turn on the scheduler in Laravel Cloud (needed from 2.4 for scheduled orders; from 2.5 also for payment timeouts and reconciliation).
+- Owner (to test payments on staging): add Paystack and Flutterwave **test** keys to Laravel Cloud (`PAYSTACK_SECRET_KEY`, `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_SECRET_HASH`), set `PAYMENT_PAYSTACK_ENABLED=true` / `PAYMENT_FLUTTERWAVE_ENABLED=true`, and set the webhook URLs on both dashboards to `<API URL>/api/v1/webhooks/paystack` and `/api/v1/webhooks/flutterwave`.
 - Owner: queue worker on Laravel Cloud, Brevo (domain DNS + SMTP key), removing Supabase secrets from the Vercel project, deleting `SUPER_ADMIN_PASSWORD` from Laravel Cloud.
 
 ## Next
@@ -47,7 +50,7 @@ Last updated: 2026-11-20
 1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 — milestone 2.5, Paystack and Flutterwave, after 2.4 is merged.
+4. Phase 2 — milestone 2.6, order fulfilment (vendor, rider and admin actions; earnings on delivery; refunds), after 2.5 is merged.
 
 ## Blockers / owner actions
 
