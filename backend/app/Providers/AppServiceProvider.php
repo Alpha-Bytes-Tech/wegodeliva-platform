@@ -41,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
         // Coupons: admins write all (spec 02 §2.2); zone admins do not.
         // Wallets, earnings and adjustments (spec 02 §2.2: admins only, not zone admins).
         Gate::define('manage-money', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
+        // Live order operations. Zone admins get zone-scoped access with the admin panel (Phase 6).
+        Gate::define('manage-orders', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
         Gate::define('manage-promotions', fn (User $user) => $user->hasRole(RoleName::Admin, RoleName::SuperAdmin));
     }
 
@@ -82,6 +84,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Checkout (quote, place, cancel) per user (CLAUDE.md §4).
         RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(30)->by('checkout:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        // Handover code tries per user, on top of the three-attempt lock per order.
+        RateLimiter::for('handover', fn (Request $request) => Limit::perMinute(10)->by('handover:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         RateLimiter::for('webhooks', fn (Request $request) => Limit::perMinute(600)->by('webhooks:'.$request->ip()));
 

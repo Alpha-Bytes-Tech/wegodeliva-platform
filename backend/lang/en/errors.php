@@ -61,5 +61,10 @@ return [
     'topup_below_minimum' => 'That top-up is below the minimum.',
     'topup_daily_limit' => 'That would go over your daily top-up limit. Verify your identity to raise it.',
     'invalid_signature' => 'Invalid signature.',
+    'rider_not_eligible' => 'This rider cannot deliver this order.',
+    'rider_busy' => 'This rider already has as many jobs as they can take.',
+    'handover_code_invalid' => 'That code is not correct.',
+    'handover_locked' => 'Too many wrong codes. Please call support to complete this delivery.',
+    'refund_exceeds_paid' => 'That is more than can be refunded for this order.',
     'account_exists' => 'An account with this email already exists. Sign in with your email to link it.',
 ];

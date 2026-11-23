@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\V1\Admin\AuditLogController;
 use App\Http\Controllers\Api\V1\Admin\CouponController;
 use App\Http\Controllers\Api\V1\Admin\FeeController;
 use App\Http\Controllers\Api\V1\Admin\LedgerController;
+use App\Http\Controllers\Api\V1\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Api\V1\Admin\RiderController as AdminRiderController;
 use App\Http\Controllers\Api\V1\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
@@ -15,10 +17,12 @@ use App\Http\Controllers\Api\V1\Customer\WalletController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\Rider\EarningsController as RiderEarningsController;
+use App\Http\Controllers\Api\V1\Rider\JobController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
 use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsController;
 use App\Http\Controllers\Api\V1\Vendor\MenuController;
 use App\Http\Controllers\Api\V1\Vendor\OptionGroupController;
+use App\Http\Controllers\Api\V1\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\Api\V1\Vendor\ProductController;
 use App\Http\Controllers\Api\V1\Vendor\StoreController;
 use App\Http\Controllers\Api\V1\WebhookController;
@@ -104,6 +108,13 @@ Route::prefix('v1')->group(function (): void {
         Route::get('earnings', [RiderEarningsController::class, 'show']);
         Route::get('earnings/entries', [RiderEarningsController::class, 'entries']);
     });
+    Route::prefix('rider')->middleware(['auth:sanctum', 'active', 'abilities:app:rider', 'throttle:api'])->group(function (): void {
+        Route::get('jobs', [JobController::class, 'index']);
+        Route::get('jobs/{code}', [JobController::class, 'show']);
+        Route::post('jobs/{code}/picked-up', [JobController::class, 'pickedUp']);
+        Route::post('jobs/{code}/deliver', [JobController::class, 'deliver'])->middleware('throttle:handover');
+        Route::post('jobs/{code}/fail', [JobController::class, 'fail']);
+    });
 
     // Vendor app: stores the user works at. Nested resources are scoped to their store.
     Route::prefix('vendor')->middleware(['auth:sanctum', 'active', 'abilities:app:vendor', 'throttle:api'])->group(function (): void {
@@ -127,6 +138,13 @@ Route::prefix('v1')->group(function (): void {
             Route::post('option-groups/{optionGroup}/options', [OptionGroupController::class, 'storeOption']);
             Route::patch('option-groups/{optionGroup}/options/{option}', [OptionGroupController::class, 'updateOption']);
             Route::delete('option-groups/{optionGroup}/options/{option}', [OptionGroupController::class, 'destroyOption']);
+
+            Route::get('orders', [VendorOrderController::class, 'index']);
+            Route::get('orders/{code}', [VendorOrderController::class, 'show']);
+            Route::post('orders/{code}/accept', [VendorOrderController::class, 'accept']);
+            Route::post('orders/{code}/reject', [VendorOrderController::class, 'reject']);
+            Route::post('orders/{code}/ready', [VendorOrderController::class, 'ready']);
+            Route::post('orders/{code}/handover', [VendorOrderController::class, 'handover'])->middleware('throttle:handover');
 
             Route::get('earnings', [VendorEarningsController::class, 'show']);
             Route::get('earnings/entries', [VendorEarningsController::class, 'entries']);
@@ -172,6 +190,17 @@ Route::prefix('v1')->group(function (): void {
                 Route::post('riders/{rider}/earnings/adjustments', [LedgerController::class, 'adjustRider'])->whereUuid('rider');
                 Route::post('riders/{rider}/cash-remittances', [LedgerController::class, 'remitCash'])->whereUuid('rider');
             });
+
+            Route::get('orders', [AdminOrderController::class, 'index']);
+            Route::get('orders/{code}', [AdminOrderController::class, 'show']);
+            Route::post('orders/{code}/assign-rider', [AdminOrderController::class, 'assign']);
+            Route::post('orders/{code}/unassign-rider', [AdminOrderController::class, 'unassign']);
+            Route::post('orders/{code}/cancel', [AdminOrderController::class, 'cancel']);
+            Route::post('orders/{code}/deliver', [AdminOrderController::class, 'deliver']);
+            Route::post('orders/{code}/fail', [AdminOrderController::class, 'fail']);
+            Route::post('orders/{code}/refunds', [AdminOrderController::class, 'refund'])->middleware('throttle:wallet');
+            Route::get('riders', [AdminRiderController::class, 'index']);
+            Route::post('riders', [AdminRiderController::class, 'store']);
 
             Route::get('fees', [FeeController::class, 'index']);
             Route::post('fees', [FeeController::class, 'store']);

@@ -3,16 +3,18 @@
 namespace App\Services\Orders;
 
 use App\Enums\ActorRole;
+use App\Enums\EarningsOwner;
 use App\Enums\Fault;
 use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
-use App\Enums\WalletKind;
 use App\Models\CouponRedemption;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
-use App\Services\Ledger\WalletLedger;
+use App\Services\Ledger\EarningsLedger;
+use App\Services\Pricing\EarningsShare;
+use App\Services\Pricing\PricingSettings;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -24,7 +26,9 @@ final class OrderLifecycle
 {
     public function __construct(
         private readonly OrderStateMachine $machine,
-        private readonly WalletLedger $wallets,
+        private readonly Refunds $refunds,
+        private readonly EarningsLedger $earnings,
+        private readonly PricingSettings $settings,
     ) {}
 
     /** A placed order goes straight to accepted when the vendor auto-accepts (spec 04 §4.1). */
@@ -61,12 +65,13 @@ final class OrderLifecycle
 
     /**
      * Cancels the order and undoes what placement did, in one transaction: stock returned,
-     * coupon use released, and whatever was paid refunded in full to the customer's wallet.
-     * Partial refunds and the fault-based rules for later cancellations arrive in milestone 2.6.
+     * coupon use released, and the paid amount refunded to the customer's wallet (spec 04 §4.7,
+     * spec 06 §6.6). A cancellation fee, when the customer cancels after the store accepted,
+     * is kept back from the refund and paid to the vendor less commission.
      */
-    public function cancel(Order $order, ActorRole $actor, ?User $user, ?string $reason, Fault $fault): Order
+    public function cancel(Order $order, ActorRole $actor, ?User $user, ?string $reason, Fault $fault, int $cancellationFeeKobo = 0): Order
     {
-        return DB::transaction(function () use ($order, $actor, $user, $reason, $fault): Order {
+        return DB::transaction(function () use ($order, $actor, $user, $reason, $fault, $cancellationFeeKobo): Order {
             $this->machine->transition($order, OrderStatus::Cancelled, $actor, $user, $reason, [
                 'cancel_reason' => $reason,
                 'cancelled_by' => $actor->value,
@@ -76,13 +81,15 @@ final class OrderLifecycle
             $this->returnStock($order);
             CouponRedemption::query()->where('order_id', $order->id)->whereNull('released_at')->update(['released_at' => now()]);
 
-            if ($order->payment_status === PaymentStatus::Paid) {
-                $this->wallets->credit($order->loadMissing('customer')->customer, $order->total_kobo, WalletKind::Refund, "order:{$order->uuid}:refund", [
-                    'order_id' => $order->id,
-                    'note' => "Refund for order {$order->code}",
-                ], enforceCap: false);
-                $order->payment_status = PaymentStatus::Refunded;
-                $order->save();
+            $refundable = $order->refundableKobo();
+            $fee = min($cancellationFeeKobo, $refundable);
+            if ($refundable - $fee > 0) {
+                $this->refunds->refund($order, $refundable - $fee, $reason ?? 'Order cancelled', $fault, $user, "order:{$order->uuid}:refund");
+            }
+            if ($fee > 0) {
+                $commission = Money::percentOf($fee, $order->loadMissing('vendor')->vendor->commission_rate_bp ?? $this->settings->vendorCommissionBp);
+                $share = new EarningsShare($fee, $fee, $order->vendor->commission_rate_bp ?? $this->settings->vendorCommissionBp, $commission, Money::percentOf($commission, $this->settings->commissionVatRateBp));
+                $this->earnings->recordOrderEarning($this->earnings->account(EarningsOwner::Vendor, $order->vendor_id), $share, "order:{$order->uuid}:cancellation-fee", $order->id);
             }
 
             return $order;

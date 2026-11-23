@@ -63,6 +63,15 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $delivered_at
  * @property Carbon|null $cancelled_at
  * @property Carbon|null $failed_at
+ * @property Carbon|null $assigned_at
+ * @property int $handover_attempts
+ * @property string|null $collected_via
+ * @property string|null $failure_reason
+ * @property string|null $failure_photo_path
+ * @property bool $customer_called
+ * @property Carbon|null $vendor_alerted_at
+ * @property int $rider_escalation_level
+ * @property Carbon|null $stale_alerted_at
  * @property int|null $quote_id
  * @property string $idempotency_key
  * @property Carbon $created_at
@@ -110,6 +119,12 @@ class Order extends Model
             'delivered_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'failed_at' => 'datetime',
+            'assigned_at' => 'datetime',
+            'vendor_alerted_at' => 'datetime',
+            'stale_alerted_at' => 'datetime',
+            'customer_called' => 'boolean',
+            'handover_attempts' => 'integer',
+            'rider_escalation_level' => 'integer',
             'distance_m' => 'integer',
             'prep_time_minutes' => 'integer',
             'subtotal_kobo' => 'integer',
@@ -134,6 +149,28 @@ class Order extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class)->withTrashed();
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function rider(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rider_id');
+    }
+
+    /** @return HasMany<Refund, $this> */
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class)->orderBy('id');
+    }
+
+    /** Paid amount not yet refunded. */
+    public function refundableKobo(): int
+    {
+        if (! in_array($this->payment_status, [PaymentStatus::Paid, PaymentStatus::PartiallyRefunded], true)) {
+            return 0;
+        }
+
+        return max(0, $this->total_kobo - (int) $this->refunds()->sum('amount_kobo'));
     }
 
     /** @return BelongsTo<Coupon, $this> */

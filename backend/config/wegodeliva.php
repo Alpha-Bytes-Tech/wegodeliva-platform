@@ -64,6 +64,12 @@ return [
         // Scheduled orders reach the vendor at: scheduled time − prep time − this buffer.
         'schedule_release_buffer_minutes' => (int) env('SCHEDULE_RELEASE_BUFFER_MINUTES', 10),
         'customer_cancellable' => ['awaiting_payment', 'awaiting_review', 'scheduled', 'placed'],
+        // Background checks (spec 04 §4.6).
+        'vendor_alert_minutes' => (int) env('VENDOR_ALERT_MINUTES', 5),
+        'vendor_timeout_minutes' => (int) env('VENDOR_TIMEOUT_MINUTES', 10),
+        'rider_alert_minutes' => (int) env('NO_RIDER_ALERT_MINUTES', 10),
+        'rider_escalate_minutes' => (int) env('NO_RIDER_ESCALATE_MINUTES', 30),
+        'stale_hours' => (int) env('STALE_ORDER_HOURS', 24),
     ],
 
     'payments' => [
