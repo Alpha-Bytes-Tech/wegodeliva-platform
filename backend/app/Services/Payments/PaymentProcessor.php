@@ -220,7 +220,11 @@ final class PaymentProcessor
 
         if ($order->status === OrderStatus::AwaitingPayment) {
             $order->forceFill(['payment_status' => PaymentStatus::Paid])->save();
-            $to = $order->scheduled_for !== null ? OrderStatus::Scheduled : OrderStatus::Placed;
+            $to = match (true) {
+                $order->isBooking() => OrderStatus::Requested,
+                $order->scheduled_for !== null => OrderStatus::Scheduled,
+                default => OrderStatus::Placed,
+            };
             $this->machine->transition($order, $to, ActorRole::System, reason: 'Payment verified');
             $this->lifecycle->autoAcceptIfEnabled($order);
 

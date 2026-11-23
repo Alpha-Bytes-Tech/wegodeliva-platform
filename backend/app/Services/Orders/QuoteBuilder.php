@@ -4,19 +4,13 @@ namespace App\Services\Orders;
 
 use App\Enums\Fulfilment;
 use App\Enums\OpenState;
-use App\Enums\OrderStatus;
 use App\Exceptions\ApiException;
 use App\Models\Address;
-use App\Models\Coupon;
-use App\Models\CouponRedemption;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Services\Catalogue\VendorSchedule;
-use App\Services\Pricing\CouponContext;
-use App\Services\Pricing\CouponDiscount;
-use App\Services\Pricing\CouponRules;
 use App\Services\Pricing\DeliveryQuote;
 use App\Services\Pricing\DeliveryQuoter;
 use App\Services\Pricing\LinePricer;
@@ -36,7 +30,7 @@ final class QuoteBuilder
     public function __construct(
         private readonly LinePricer $lines,
         private readonly PriceCalculator $calculator,
-        private readonly CouponRules $coupons,
+        private readonly CouponLookup $coupons,
         private readonly DeliveryQuoter $deliveries,
         private readonly VendorSchedule $schedule,
         private readonly PaymentOptions $payments,
@@ -58,7 +52,7 @@ final class QuoteBuilder
             $this->fail('validation_failed', ['tip_kobo' => ['Tips go to the rider, so pickup orders cannot include one.']], 400);
         }
 
-        $coupon = $input->couponCode === null ? null : $this->coupon($customer, $vendor, $input->couponCode, $priced, $delivery?->feeKobo);
+        $coupon = $input->couponCode === null ? null : $this->coupons->apply($customer, $vendor, $input->couponCode, $priced, $delivery?->feeKobo);
 
         $price = $this->calculator->calculate(
             $priced,
@@ -171,26 +165,6 @@ final class QuoteBuilder
         if ($maxes !== [] && $subtotal > min($maxes)) {
             $this->fail('above_maximum_order', [], meta: ['maximum' => Money::of((int) min($maxes))]);
         }
-    }
-
-    /** @param  list<PricedLine>  $lines */
-    private function coupon(User $customer, Vendor $vendor, string $code, array $lines, ?int $deliveryFee): CouponDiscount
-    {
-        $coupon = Coupon::query()->where('code', Coupon::normaliseCode($code))->with('vendors', 'products')->first();
-        if ($coupon === null) {
-            throw new ApiException('coupon_invalid', 422, fields: ['coupon_code' => ['We do not recognise this code.']], meta: ['reason' => 'not_found']);
-        }
-
-        return $this->coupons->apply($coupon, new CouponContext(
-            vendorId: $vendor->id,
-            vendorTypeId: $vendor->vendor_type_id,
-            lines: $lines,
-            deliveryFeeKobo: $deliveryFee,
-            isFirstOrder: ! Order::query()->where('customer_id', $customer->id)->where('status', '!=', OrderStatus::Cancelled->value)->exists(),
-            usesTotal: CouponRedemption::query()->counted()->where('coupon_id', $coupon->id)->count(),
-            usesByCustomer: CouponRedemption::query()->counted()->where('coupon_id', $coupon->id)->where('user_id', $customer->id)->count(),
-            now: now(),
-        ));
     }
 
     /**

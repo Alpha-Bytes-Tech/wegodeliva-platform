@@ -8,3 +8,4 @@ Schedule::command('payments:expire')->everyMinute()->withoutOverlapping();
 Schedule::command('payments:reconcile')->dailyAt('06:00')->timezone('Africa/Lagos');
 Schedule::command('orders:monitor')->everyMinute()->withoutOverlapping();
 Schedule::command('payouts:sync')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('bookings:monitor')->everyMinute()->withoutOverlapping();

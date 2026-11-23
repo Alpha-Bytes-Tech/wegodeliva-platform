@@ -28,6 +28,7 @@ class OptionGroupRequest extends ApiRequest
                 'options.*.name' => ['required', 'string', 'min:1', 'max:80'],
                 'options.*.description' => ['nullable', 'string', 'max:255'],
                 'options.*.price_kobo' => ['sometimes', 'integer', 'min:0', 'max:100000000'],
+                'options.*.per_unit' => ['sometimes', 'boolean'],
                 'options.*.sort_order' => ['sometimes', 'integer', 'min:0', 'max:10000'],
             ];
         }

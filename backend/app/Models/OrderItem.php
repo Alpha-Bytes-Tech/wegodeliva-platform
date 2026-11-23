@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property list<array{group_id: string, group: string, option_id: string, option: string, price_kobo: int}> $options
  * @property int $options_kobo
  * @property int $quantity
+ * @property int|null $units booked units of a service line
  * @property int $line_total_kobo
  * @property int $discount_kobo
  * @property VatTreatment $vat_treatment
@@ -40,6 +41,7 @@ class OrderItem extends Model
             'unit_price_kobo' => 'integer',
             'options_kobo' => 'integer',
             'quantity' => 'integer',
+            'units' => 'integer',
             'line_total_kobo' => 'integer',
             'discount_kobo' => 'integer',
             'vat_rate_bp' => 'integer',

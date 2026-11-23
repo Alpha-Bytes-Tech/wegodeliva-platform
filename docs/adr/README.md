@@ -17,3 +17,4 @@ One file per significant decision: context, decision, consequences. Status is Pr
 | [0011](0011-melos-pub-workspace.md) | Flutter monorepo: pub workspace + Melos, shared auth package | Accepted |
 | [0012](0012-distrust-unverified-sign-up-data.md) | Distrust everything an unverified sign-up chose (pre-hijack fix) | Accepted |
 | [0013](0013-npm-audit-blocks-on-shipped-dependencies.md) | npm audit blocks merges on shipped dependencies only | Accepted |
+| [0014](0014-services-as-products.md) | Services are products of a services store; bookings are orders | Accepted |

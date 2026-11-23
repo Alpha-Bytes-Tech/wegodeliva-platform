@@ -169,3 +169,32 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
 - **Admin:** `GET/POST/PATCH /admin/package-types` (audited). Public: `GET /catalogue/package-types`.
 - **Flags:** `PARCELS_ENABLED`, `PARCELS_MULTI_STOP`, `PARCELS_MAX_STOPS` (default 5 stops including pickup).
 - **Not yet:** the rate's `auto_dispatch` flag is stored but has no effect until automatic rider offers (Phase 5). Proof-of-delivery photos per stop and parcel insurance are not built.
+
+## Notes from 2.9b (service bookings)
+
+- **Owner decisions (2026-11-23):**
+  - Cancelling a confirmed booking less than 12 hours before the start costs **50% of the service price** (after any discount). The provider keeps it, less commission. Earlier cancellations, and cancelling a request the provider has not yet confirmed, are free.
+  - The provider is paid **on confirmation**. Earnings are credited when the customer confirms the job is done, or automatically 24 hours after the provider marks it complete if no problem was reported. A reported problem freezes the money until support decides.
+- **Model:** services are products of a services store with a pricing unit, and bookings are orders of type `services` (ADR 0014). Option groups are shared, and each option can be charged per unit or once per booking.
+- **Price** (spec 05 §5.9): price × units + options + call-out fee (flat or per km, only at the customer's address, treated like a delivery fee: 3% delivery commission, to the provider). Coupons, store fees and VAT apply as for goods.
+- **Slots:**
+  - A booking must fall inside the provider's hours. Services by the hour or of fixed length must also end before closing.
+  - Fewer bookings than the service's capacity may overlap the slot. Bookings waiting for payment or for the provider hold their slot.
+  - The lead time is 1 hour and bookings can be made up to 30 days ahead.
+  - `GET /catalogue/services/{id}/slots?date=&units=` lists free start times every 30 minutes.
+- **Flow:**
+  1. The customer gets a quote with `POST /me/bookings/quote` and places it with `POST /me/orders`. The booking becomes `requested`, or `awaiting_payment` first for card payment.
+  2. The provider confirms with `POST /vendor/stores/{id}/orders/{code}/confirm` or declines with `/reject` (full refund).
+  3. The provider starts the job with the customer's start code (the handover code) via `/start`. This is possible from an hour before the slot; three wrong codes lock it.
+  4. The provider marks the job done with `/complete`, entering how the customer paid if the booking is pay on completion.
+  5. The customer confirms with `POST /me/orders/{code}/confirm-completion`, or reports a problem with `/report-problem` within 24 hours.
+  6. Support resolves a problem with `POST /admin/orders/{code}/resolve-dispute`: `release` pays the provider; `refund` cancels and refunds in full. For a partial refund, support releases and then uses the refund endpoint. Resolutions are audited.
+- **`bookings:monitor`** (every minute):
+  - Requests not confirmed within 2 hours (30 minutes when the booking starts within 3 hours) are cancelled with a full refund, at the provider's fault.
+  - Reminders go out 24 hours and 1 hour before the start.
+  - Completed bookings are auto-confirmed after 24 hours.
+  - Bookings are left out of the generic "stale order" alert.
+- **Notifications:** request sent and new booking (loud push to the store), confirmed, reminder, started, done ("confirm or report a problem"), problem reported (to the store).
+- **Provider's view:** the provider sees the customer's address and phone, like a rider. The vendor inbox has `requested`, `booked` and `booking_done` tabs.
+- **Pay on completion** collects the cash at confirmation. A dispute on a pay-on-completion booking has no platform refund (the cash went to the provider); support handles it with a release plus an earnings adjustment.
+- **Not yet:** calendar view, recurring bookings, in-app chat (Phase 3), laundry pickup and return with a rider (LATER in spec 01).

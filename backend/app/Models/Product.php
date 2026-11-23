@@ -38,6 +38,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $sort_order
  * @property string $rating_avg
  * @property int $rating_count
+ * @property string|null $pricing_unit null for goods; fixed | hour | day | month for services
+ * @property int|null $min_units
+ * @property int|null $max_units
+ * @property string|null $location_mode at_customer | at_provider | either
+ * @property string|null $callout_fee_mode none | flat | per_km
+ * @property int $callout_fee_kobo
+ * @property int|null $capacity
+ * @property int|null $duration_minutes
  */
 class Product extends Model
 {
@@ -48,15 +56,22 @@ class Product extends Model
         'name', 'description', 'sku', 'barcode', 'price_kobo', 'compare_at_price_kobo', 'unit', 'unit_size',
         'pack_count', 'stock_qty', 'vat_treatment', 'is_active', 'is_featured', 'is_deliverable',
         'requires_prescription', 'age_restricted', 'sort_order',
+        'pricing_unit', 'min_units', 'max_units', 'location_mode', 'callout_fee_mode', 'callout_fee_kobo', 'capacity', 'duration_minutes',
     ];
 
     /** Same defaults as the database, so new records serialise correctly. @var array<string, mixed> */
-    protected $attributes = ['is_active' => true, 'is_featured' => false, 'is_deliverable' => true, 'requires_prescription' => false, 'age_restricted' => false, 'sort_order' => 0, 'rating_avg' => '0.00', 'rating_count' => 0];
+    protected $attributes = ['callout_fee_kobo' => 0, 'is_active' => true, 'is_featured' => false, 'is_deliverable' => true, 'requires_prescription' => false, 'age_restricted' => false, 'sort_order' => 0, 'rating_avg' => '0.00', 'rating_count' => 0];
 
     /** @return list<string> */
     public function uniqueIds(): array
     {
         return ['uuid'];
+    }
+
+    /** A bookable service (spec 03 "Services", ADR 0014) rather than goods. */
+    public function isService(): bool
+    {
+        return $this->pricing_unit !== null;
     }
 
     public function getRouteKeyName(): string
@@ -69,6 +84,11 @@ class Product extends Model
     {
         return [
             'price_kobo' => 'integer',
+            'min_units' => 'integer',
+            'max_units' => 'integer',
+            'callout_fee_kobo' => 'integer',
+            'capacity' => 'integer',
+            'duration_minutes' => 'integer',
             'compare_at_price_kobo' => 'integer',
             'pack_count' => 'integer',
             'stock_qty' => 'integer',

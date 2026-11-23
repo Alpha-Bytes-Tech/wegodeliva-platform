@@ -37,7 +37,8 @@ class OrderOpsResource extends JsonResource
     {
         $address = $this->address_snapshot;
         $customer = $this->customer;
-        $full = $this->audience !== 'vendor';
+        // A service provider goes to the customer, so it sees the address like a rider does.
+        $full = $this->audience !== 'vendor' || $this->resource->isBooking();
 
         return [
             'code' => $this->code,
@@ -60,6 +61,7 @@ class OrderOpsResource extends JsonResource
             'delivery_fee' => Money::of($this->delivery_fee_kobo),
             'tip' => Money::of($this->tip_kobo),
             'total' => Money::of($this->total_kobo),
+            'booking' => $this->when($this->resource->isBooking(), fn () => BookingDetails::for($this->resource, false)),
             'parcel' => $this->when($this->resource->isParcel(), fn () => ParcelDetails::for($this->resource, false)),
             'prep_time_minutes' => $this->prep_time_minutes,
             'estimated_ready_at' => $this->estimated_ready_at?->toIso8601String(),

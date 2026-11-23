@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $name
  * @property string|null $description
  * @property int $price_kobo
+ * @property bool $per_unit service options: charged per booked unit, else once per booking
  * @property int $sort_order
  * @property bool $is_active
  */
@@ -22,10 +23,10 @@ class Option extends Model
 {
     use HasUuids;
 
-    protected $fillable = ['name', 'description', 'price_kobo', 'sort_order', 'is_active'];
+    protected $fillable = ['name', 'description', 'price_kobo', 'per_unit', 'sort_order', 'is_active'];
 
     /** Same defaults as the database, so new records serialise correctly. @var array<string, mixed> */
-    protected $attributes = ['price_kobo' => 0, 'sort_order' => 0, 'is_active' => true];
+    protected $attributes = ['price_kobo' => 0, 'per_unit' => true, 'sort_order' => 0, 'is_active' => true];
 
     /** @return list<string> */
     public function uniqueIds(): array
@@ -41,7 +42,7 @@ class Option extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['price_kobo' => 'integer', 'sort_order' => 'integer', 'is_active' => 'boolean'];
+        return ['price_kobo' => 'integer', 'per_unit' => 'boolean', 'sort_order' => 'integer', 'is_active' => 'boolean'];
     }
 
     /** @return BelongsTo<OptionGroup, $this> */

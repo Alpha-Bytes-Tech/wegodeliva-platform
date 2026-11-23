@@ -28,6 +28,7 @@ final class OrderStateMachine
         'awaiting_payment' => [
             'placed' => [ActorRole::System, ActorRole::Admin],
             'scheduled' => [ActorRole::System, ActorRole::Admin],
+            'requested' => [ActorRole::System, ActorRole::Admin],
             'cancelled' => [ActorRole::Customer, ActorRole::System, ActorRole::Admin],
         ],
         'awaiting_review' => [
@@ -57,12 +58,31 @@ final class OrderStateMachine
             'delivered' => [ActorRole::Rider, ActorRole::Admin],
             'failed' => [ActorRole::Rider, ActorRole::Admin],
         ],
+        // Service bookings (spec 04 §4.8).
+        'requested' => [
+            'confirmed' => [ActorRole::Vendor, ActorRole::Admin],
+            'cancelled' => [ActorRole::Customer, ActorRole::Vendor, ActorRole::System, ActorRole::Admin],
+        ],
+        'confirmed' => [
+            'in_progress' => [ActorRole::Vendor, ActorRole::Admin],
+            'cancelled' => [ActorRole::Customer, ActorRole::Vendor, ActorRole::Admin],
+        ],
+        'in_progress' => [
+            'completed' => [ActorRole::Vendor, ActorRole::Admin],
+        ],
+        // The provider is paid once the customer confirms; a reported problem goes to support.
+        'disputed' => [
+            'completed' => [ActorRole::Admin],
+        ],
     ];
+
+    /** A completed booking is final except for a problem the customer reports. */
+    private const REOPEN = ['completed' => ['disputed' => [ActorRole::Customer]]];
 
     public function allows(S $from, S $to, ActorRole $actor): bool
     {
         if ($from->isFinal()) {
-            return false;
+            return in_array($actor, self::REOPEN[$from->value][$to->value] ?? [], true);
         }
         if ($actor === ActorRole::Admin && ($to === S::Cancelled || $to === S::Failed)) {
             return true;
