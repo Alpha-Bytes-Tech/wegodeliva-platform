@@ -10,6 +10,7 @@ use App\Enums\PaymentMethod;
 use App\Events\RiderAssigned;
 use App\Exceptions\ApiException;
 use App\Models\Order;
+use App\Models\OrderStop;
 use App\Models\RiderProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -50,12 +51,13 @@ final class OrderFulfilment
     }
 
     /**
-     * Assigns a rider (spec 07 §7.2 "Manual assignment"). Only before pickup, only delivery
-     * orders, and only a rider allowed to deliver for this vendor.
+     * Assigns a rider (spec 07 §7.2 "Manual assignment"): an admin, or a store assigning one of
+     * its own riders. Only before pickup, only delivery orders, and only a rider allowed to
+     * deliver for this vendor (parcels: only the operator's own riders).
      */
-    public function assign(Order $order, User $rider, User $admin): Order
+    public function assign(Order $order, User $rider, User $by, ActorRole $actor = ActorRole::Admin): Order
     {
-        return DB::transaction(function () use ($order, $rider, $admin): Order {
+        return DB::transaction(function () use ($order, $rider, $by, $actor): Order {
             /** @var Order $locked */
             $locked = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             if ($locked->fulfilment !== Fulfilment::Delivery || ! in_array($locked->status, [OrderStatus::Placed, OrderStatus::Accepted, OrderStatus::Ready], true)) {
@@ -73,7 +75,7 @@ final class OrderFulfilment
             }
 
             $locked->forceFill(['rider_id' => $rider->id, 'assigned_at' => now(), 'rider_escalation_level' => 0])->save();
-            $this->machine->record($locked, $locked->status, $locked->status, ActorRole::Admin, $admin, "Assigned rider {$rider->name}");
+            $this->machine->record($locked, $locked->status, $locked->status, $actor, $by, "Assigned rider {$rider->name}");
             event(new RiderAssigned($locked->id));
             $order->setRawAttributes($locked->getAttributes(), true);
 
@@ -100,7 +102,55 @@ final class OrderFulfilment
 
     public function pickedUp(Order $order, User $rider): Order
     {
-        return $this->machine->transition($order, OrderStatus::PickedUp, ActorRole::Rider, $rider);
+        return DB::transaction(function () use ($order, $rider): Order {
+            $this->machine->transition($order, OrderStatus::PickedUp, ActorRole::Rider, $rider);
+            $order->stops()->where('kind', 'pickup')->update(['verified_at' => now()]);
+
+            return $order;
+        });
+    }
+
+    /**
+     * The rider completes a parcel drop-off before the last one, against that stop's code when
+     * it has one (spec 07 §7.3). The last drop-off is the delivery itself, with the handover code.
+     */
+    public function completeStop(Order $order, User $rider, int $sequence, ?string $code): Order
+    {
+        $left = DB::transaction(function () use ($order, $sequence, $code): ?int {
+            /** @var Order $locked */
+            $locked = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if (! $locked->isParcel() || $locked->status !== OrderStatus::PickedUp) {
+                throw new ApiException('order_status_conflict', 409, meta: ['status' => $locked->status->value]);
+            }
+
+            $stops = $locked->stops()->get();
+            /** @var OrderStop|null $stop */
+            $stop = $stops->firstWhere('sequence', $sequence);
+            if ($stop === null || $stop->kind !== 'dropoff' || $stop->verified_at !== null || $stop->is($stops->last())) {
+                throw new ApiException('stop_not_completable', 409);
+            }
+
+            if ($stop->verification_code !== null) {
+                if ($stop->verify_attempts >= self::MAX_HANDOVER_ATTEMPTS) {
+                    throw new ApiException('handover_locked', 423);
+                }
+                if ($code === null || ! hash_equals($stop->verification_code, $code)) {
+                    $stop->increment('verify_attempts');
+
+                    return self::MAX_HANDOVER_ATTEMPTS - $stop->verify_attempts;
+                }
+            }
+
+            $stop->forceFill(['verified_at' => now()])->save();
+
+            return null;
+        });
+
+        if ($left !== null) {
+            $this->wrongCode($left);
+        }
+
+        return $order->load('stops');
     }
 
     /** The rider delivers against the customer's code (spec 07 §7.3 step 5). */
@@ -155,6 +205,9 @@ final class OrderFulfilment
             if ($locked->handover_attempts >= self::MAX_HANDOVER_ATTEMPTS) {
                 throw new ApiException('handover_locked', 423);
             }
+            if ($locked->isParcel() && $locked->stops()->where('kind', 'dropoff')->whereNull('verified_at')->count() > 1) {
+                throw new ApiException('stops_incomplete', 409);
+            }
             if (! hash_equals($locked->handover_code, $code)) {
                 $locked->increment('handover_attempts');
 
@@ -162,6 +215,7 @@ final class OrderFulfilment
             }
 
             $this->machine->transition($order, OrderStatus::Delivered, $actor, $by, attributes: ['collected_via' => $collectedVia]);
+            $locked->stops()->whereNull('verified_at')->update(['verified_at' => now()]);
             $this->settlement->settle($order);
 
             return null;
@@ -169,10 +223,15 @@ final class OrderFulfilment
 
         // The wrong attempt is committed before answering, so it counts.
         if ($result !== null) {
-            throw new ApiException($result > 0 ? 'handover_code_invalid' : 'handover_locked', $result > 0 ? 422 : 423, meta: ['attempts_left' => $result]);
+            $this->wrongCode($result);
         }
 
         return $order;
+    }
+
+    private function wrongCode(int $attemptsLeft): never
+    {
+        throw new ApiException($attemptsLeft > 0 ? 'handover_code_invalid' : 'handover_locked', $attemptsLeft > 0 ? 422 : 423, meta: ['attempts_left' => $attemptsLeft]);
     }
 
     private function requireCollection(Order $order, ?string $collectedVia): void

@@ -53,6 +53,7 @@ class OrderResource extends JsonResource
             'tip' => Money::of($this->tip_kobo),
             'total' => Money::of($this->total_kobo),
             'handover_code' => $this->status->isFinal() || $this->status === OrderStatus::AwaitingPayment ? null : $this->handover_code,
+            'parcel' => $this->when($this->resource->isParcel(), fn () => ParcelDetails::for($this->resource, true)),
             'can_cancel' => $cancellable && ! $this->status->isFinal(),
             'cancel_reason' => $this->cancel_reason,
             'estimated_ready_at' => $this->estimated_ready_at?->toIso8601String(),

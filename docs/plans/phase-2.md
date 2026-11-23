@@ -142,3 +142,30 @@ Agreed with the owner on 2026-11-20. Each milestone is one PR, merged only on gr
   - Realtime updates (Phase 3/5).
   - "Rider nearby" (Phase 5).
 - **Owner:** create a Firebase service-account key (Firebase console → Project settings → Service accounts → Generate new private key), base64-encode the JSON, and add it to Laravel Cloud as `FIREBASE_CREDENTIALS_BASE64`. Emails need the Brevo sender set up.
+
+## Notes from 2.9a (parcels)
+
+- **Owner decisions (2026-11-23):**
+  - Only the operator's own (vendor-owned) riders can take its parcel jobs. The operator earns the whole parcel price less the vendor commission (5% by default) and pays its riders off-platform.
+  - There is no VAT on parcels: the price is treated like a delivery charge. The accountant can revisit this before launch.
+- **Data:** `package_types` (admin-managed, seeded: Document, Small parcel, Medium box, Large box), `parcel_rates` (one per operator and package type), `order_stops` (pickup, then drop-offs, with address snapshot, contact and an encrypted code) and parcel columns on `orders` (package type, weight, dimensions, payer). Parcel orders have type `parcels` (the vendor type slug); their `address_snapshot` is the final drop-off.
+- **Price** (`ParcelPricer`, spec 05 §5.3): base + distance rate (per km of route, or flat) + size rate (per kg, or flat) + extra-stop fee × (stops − 2). The route is the sum of the legs, each straight-line × 1.3. The price is the order subtotal and total. There is no delivery fee, VAT, coupon or tip; commission applies to the subtotal, and delivery earnings go to the operator.
+- **Coverage:** a stop is covered if it lies in one of the operator's zones or within its delivery radius (and the platform maximum), the same fallback as deliveries until zone polygons are drawn.
+- **Flow:**
+  1. `POST /me/parcels/options` lists the operators covering every stop, cheapest first. Operators that cannot take the parcel show why: weight or dimensions needed, closed, or schedule not possible.
+  2. `POST /me/parcels/quote` with `operator_id` saves a quote.
+  3. `POST /me/orders` places it like any order.
+
+  Scheduling uses the rate's `max_advance_booking_days` and the usual minimum lead time. A recipient who pays can only pay on delivery.
+- **Codes and delivery:**
+  - The last drop-off uses the order's handover code.
+  - When the package type requires stop verification, each earlier drop-off gets its own code; the sender's app shows the codes until each stop is done.
+  - The rider completes earlier drop-offs with `POST /rider/jobs/{code}/stops/{n}/complete` (three wrong codes lock the stop), then delivers at the last stop with the handover code. Delivery is refused while earlier drop-offs are open (`stops_incomplete`).
+  - Picking up marks the pickup stop done.
+- **Operators:**
+  - `GET/PUT /vendor/stores/{id}/parcel-rates[/{packageType}]` (prices are owner-only).
+  - `GET /vendor/stores/{id}/riders`.
+  - `POST /vendor/stores/{id}/orders/{code}/assign-rider` lets any store assign its own riders, audited in the status history as the vendor.
+- **Admin:** `GET/POST/PATCH /admin/package-types` (audited). Public: `GET /catalogue/package-types`.
+- **Flags:** `PARCELS_ENABLED`, `PARCELS_MULTI_STOP`, `PARCELS_MAX_STOPS` (default 5 stops including pickup).
+- **Not yet:** the rate's `auto_dispatch` flag is stored but has no effect until automatic rider offers (Phase 5). Proof-of-delivery photos per stop and parcel insurance are not built.

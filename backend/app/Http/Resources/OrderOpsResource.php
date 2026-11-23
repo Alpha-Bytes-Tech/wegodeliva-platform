@@ -60,6 +60,7 @@ class OrderOpsResource extends JsonResource
             'delivery_fee' => Money::of($this->delivery_fee_kobo),
             'tip' => Money::of($this->tip_kobo),
             'total' => Money::of($this->total_kobo),
+            'parcel' => $this->when($this->resource->isParcel(), fn () => ParcelDetails::for($this->resource, false)),
             'prep_time_minutes' => $this->prep_time_minutes,
             'estimated_ready_at' => $this->estimated_ready_at?->toIso8601String(),
             'placed_at' => $this->placed_at?->toIso8601String(),

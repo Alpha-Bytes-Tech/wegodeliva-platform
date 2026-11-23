@@ -72,6 +72,14 @@ return [
         'stale_hours' => (int) env('STALE_ORDER_HOURS', 24),
     ],
 
+    // Parcels (spec 05 §5.3, spec 13 feature flags "parcels" and "multi-stop parcels").
+    'parcels' => [
+        'enabled' => (bool) env('PARCELS_ENABLED', true),
+        'multi_stop' => (bool) env('PARCELS_MULTI_STOP', true),
+        // Pickup plus drop-offs.
+        'max_stops' => (int) env('PARCELS_MAX_STOPS', 5),
+    ],
+
     'payments' => [
         // Gateways are switched on in milestone 2.5, once payments can be started and verified.
         'paystack' => (bool) env('PAYMENT_PAYSTACK_ENABLED', false),

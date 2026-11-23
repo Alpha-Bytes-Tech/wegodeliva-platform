@@ -56,6 +56,14 @@ class JobController extends Controller
         return $this->present($this->fulfilment->riderDeliver($this->job($request, $code), $this->rider($request), $data['handover_code'], $data['collected_via'] ?? null));
     }
 
+    /** Completes a parcel drop-off before the last one (spec 11 "Parcel stops"). */
+    public function completeStop(Request $request, string $code, int $sequence): OrderOpsResource
+    {
+        $data = $request->validate(['code' => ['nullable', 'string', 'size:4']]);
+
+        return $this->present($this->fulfilment->completeStop($this->job($request, $code), $this->rider($request), $sequence, $data['code'] ?? null));
+    }
+
     public function fail(Request $request, string $code): OrderOpsResource
     {
         $order = $this->job($request, $code);

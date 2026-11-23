@@ -8,9 +8,11 @@ use App\Http\Requests\Catalogue\NearbyRequest;
 use App\Http\Requests\Catalogue\OptionalPointRequest;
 use App\Http\Requests\Catalogue\PointRequest;
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\PackageTypeResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\VendorResource;
 use App\Http\Resources\VendorTypeResource;
+use App\Models\PackageType;
 use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\VendorType;
@@ -33,6 +35,14 @@ class CatalogueController extends Controller
     {
         return VendorTypeResource::collection(
             VendorType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
+        );
+    }
+
+    /** Parcel package types customers can choose from (spec 09 §9.6). */
+    public function packageTypes(): AnonymousResourceCollection
+    {
+        return PackageTypeResource::collection(
+            PackageType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
         );
     }
 
