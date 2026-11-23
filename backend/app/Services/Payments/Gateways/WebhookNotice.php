@@ -11,5 +11,7 @@ final readonly class WebhookNotice
         public ?string $reference,
         // A charge event: verify the payment with the gateway's API.
         public bool $isCharge,
+        // A transfer event (payout): check the payout with the gateway's API.
+        public bool $isTransfer = false,
     ) {}
 }

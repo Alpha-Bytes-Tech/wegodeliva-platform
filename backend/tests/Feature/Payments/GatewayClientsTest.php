@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Payment;
+use App\Models\Payout;
+use App\Models\PayoutAccount;
 use App\Services\Payments\Gateways\FlutterwaveClient;
 use App\Services\Payments\Gateways\GatewayUnavailable;
 use App\Services\Payments\Gateways\PaystackClient;
@@ -150,4 +152,90 @@ it('checks the Flutterwave secret hash and parses its webhooks and balance', fun
 
     Http::fake(['flw.test/v3/balances/NGN' => Http::response(['status' => 'success', 'data' => ['currency' => 'NGN', 'available_balance' => 2500.75]])]);
     expect($client->balanceKobo())->toBe(250075);
+});
+
+function transferFixtures(): array
+{
+    $payout = new Payout;
+    $payout->forceFill(['transfer_reference' => 'WGDP-REF', 'amount_kobo' => 250075]);
+    $account = new PayoutAccount;
+    $account->forceFill(['account_name' => 'ADA OBI', 'account_number' => '0123456789', 'bank_code' => '058', 'recipient_code' => null]);
+
+    return [$payout, $account];
+}
+
+it('uses the Paystack transfers API for banks, account names and payouts', function () {
+    Http::fake([
+        'paystack.test/bank?*' => Http::response(['status' => true, 'data' => [['code' => '058', 'name' => 'GTBank'], 'junk']]),
+        'paystack.test/bank/resolve*' => Http::sequence()
+            ->push(['status' => true, 'data' => ['account_name' => 'ADA OBI']])
+            ->push(['status' => false, 'message' => 'Could not resolve account name'], 422),
+        'paystack.test/transferrecipient' => Http::response(['status' => true, 'data' => ['recipient_code' => 'RCP_1']]),
+        'paystack.test/transfer' => Http::response(['status' => true, 'data' => ['transfer_code' => 'TRF_1', 'status' => 'pending']]),
+        'paystack.test/transfer/verify/*' => Http::sequence()
+            ->push(['status' => true, 'data' => ['status' => 'success']])
+            ->push(['status' => true, 'data' => ['status' => 'reversed']])
+            ->push(['status' => true, 'data' => ['status' => 'otp']]),
+    ]);
+    $client = new PaystackClient;
+    [$payout, $account] = transferFixtures();
+    $account->forceFill(['owner_type' => 'vendor', 'owner_id' => 1, 'bank_name' => 'GTBank', 'status' => 'verified'])->save();
+
+    expect($client->banks())->toBe([['code' => '058', 'name' => 'GTBank']])
+        ->and($client->resolveAccount('058', '0123456789'))->toBe('ADA OBI')
+        ->and($client->resolveAccount('058', '9999999999'))->toBeNull();
+
+    expect($client->sendTransfer($payout, $account))->toBe('TRF_1')
+        ->and($account->fresh()->recipient_code)->toBe('RCP_1')
+        ->and($client->sendTransfer($payout, $account))->toBe('TRF_1'); // recipient reused
+    Http::assertSent(fn (HttpRequest $r) => str_ends_with($r->url(), '/transfer') && $r['amount'] === 250075 && $r['recipient'] === 'RCP_1' && $r['reference'] === 'WGDP-REF');
+    Http::assertSentCount(6);
+
+    expect([$client->transferStatus('WGDP-REF'), $client->transferStatus('WGDP-REF'), $client->transferStatus('WGDP-REF')])->toBe(['success', 'failed', 'pending']);
+});
+
+it('refuses a Paystack transfer without an id', function () {
+    Http::fake(['paystack.test/transfer' => Http::response(['status' => true, 'data' => ['status' => 'pending']])]);
+    [$payout, $account] = transferFixtures();
+    $account->recipient_code = 'RCP_1';
+
+    (new PaystackClient)->sendTransfer($payout, $account);
+})->throws(GatewayUnavailable::class);
+
+it('uses the Flutterwave transfers API in naira', function () {
+    Http::fake([
+        'flw.test/v3/banks/NG' => Http::response(['status' => 'success', 'data' => [['code' => '044', 'name' => 'Access Bank']]]),
+        'flw.test/v3/accounts/resolve' => Http::sequence()
+            ->push(['status' => 'success', 'data' => ['account_name' => 'ADA OBI']])
+            ->push(['status' => 'error', 'message' => 'Invalid account'], 400),
+        'flw.test/v3/transfers?*' => Http::sequence()
+            ->push(['status' => 'success', 'data' => [['status' => 'SUCCESSFUL']]])
+            ->push(['status' => 'success', 'data' => [['status' => 'FAILED']]])
+            ->push(['status' => 'success', 'data' => []]),
+        'flw.test/v3/transfers' => Http::response(['status' => 'success', 'data' => ['id' => 777, 'status' => 'NEW']]),
+    ]);
+    $client = new FlutterwaveClient;
+    [$payout, $account] = transferFixtures();
+
+    expect($client->banks())->toBe([['code' => '044', 'name' => 'Access Bank']])
+        ->and($client->resolveAccount('044', '0123456789'))->toBe('ADA OBI')
+        ->and($client->resolveAccount('044', '0000000000'))->toBeNull()
+        ->and($client->sendTransfer($payout, $account))->toBe('777')
+        ->and([$client->transferStatus('WGDP-REF'), $client->transferStatus('WGDP-REF'), $client->transferStatus('WGDP-REF')])->toBe(['success', 'failed', 'pending']);
+    Http::assertSent(fn (HttpRequest $r) => $r->method() === 'POST' && str_ends_with($r->url(), '/v3/transfers') && $r['amount'] === '2500.75' && $r['account_bank'] === '058');
+});
+
+it('refuses a Flutterwave transfer without an id', function () {
+    Http::fake(['flw.test/v3/transfers' => Http::response(['status' => 'success', 'data' => ['status' => 'NEW']])]);
+    [$payout, $account] = transferFixtures();
+
+    (new FlutterwaveClient)->sendTransfer($payout, $account);
+})->throws(GatewayUnavailable::class);
+
+it('recognises transfer webhooks from both gateways', function () {
+    $paystack = (new PaystackClient)->parseWebhook(['event' => 'transfer.reversed', 'data' => ['id' => 3, 'reference' => 'WGDP-REF']]);
+    $flutterwave = (new FlutterwaveClient)->parseWebhook(['event' => 'transfer.completed', 'data' => ['id' => 4, 'reference' => 'WGDP-REF', 'tx_ref' => 'ignored']]);
+
+    expect([$paystack->isTransfer, $paystack->isCharge, $paystack->reference])->toBe([true, false, 'WGDP-REF'])
+        ->and([$flutterwave->isTransfer, $flutterwave->reference])->toBe([true, 'WGDP-REF']);
 });

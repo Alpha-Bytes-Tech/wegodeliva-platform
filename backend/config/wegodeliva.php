@@ -86,6 +86,13 @@ return [
         'topups_enabled' => (bool) env('WALLET_TOPUP_ENABLED', true),
     ],
 
+    // Vendor and rider withdrawals (spec 06 §6.7, spec 13). Transfer fees are borne by the platform.
+    'payouts' => [
+        'enabled' => (bool) env('PAYOUTS_ENABLED', true),
+        'gateway' => env('PAYOUT_GATEWAY', 'paystack'),
+        'min_kobo' => (int) env('PAYOUT_MIN_KOBO', 100000),
+    ],
+
     'otp' => [
         'length' => 6,
         'ttl_minutes' => (int) env('OTP_TTL_MINUTES', 10),

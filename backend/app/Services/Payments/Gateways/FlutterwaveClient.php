@@ -3,6 +3,8 @@
 namespace App\Services\Payments\Gateways;
 
 use App\Models\Payment;
+use App\Models\Payout;
+use App\Models\PayoutAccount;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\Http;
  * Flutterwave v3 (https://developer.flutterwave.com). Flutterwave takes and returns amounts in
  * naira, so they are converted to and from kobo here and nowhere else.
  */
-final class FlutterwaveClient implements GatewayClient
+final class FlutterwaveClient implements GatewayClient, TransferClient
 {
     public function initialize(Payment $payment, string $email, string $callbackUrl): string
     {
@@ -67,7 +69,55 @@ final class FlutterwaveClient implements GatewayClient
             return null;
         }
 
-        return new WebhookNotice($event, $event.':'.$data['id'], isset($data['tx_ref']) ? (string) $data['tx_ref'] : null, $event === 'charge.completed');
+        $isTransfer = $event === 'transfer.completed';
+        $reference = $isTransfer ? ($data['reference'] ?? null) : ($data['tx_ref'] ?? null);
+
+        return new WebhookNotice($event, $event.':'.$data['id'], $reference === null ? null : (string) $reference, $event === 'charge.completed', $isTransfer);
+    }
+
+    public function banks(): array
+    {
+        $data = $this->call(fn (PendingRequest $http) => $http->get('/v3/banks/NG'));
+
+        return array_values(array_map(fn ($b) => ['code' => (string) $b['code'], 'name' => (string) $b['name']], array_filter($data, 'is_array')));
+    }
+
+    public function resolveAccount(string $bankCode, string $accountNumber): ?string
+    {
+        $response = $this->send(fn (PendingRequest $http) => $http->post('/v3/accounts/resolve', ['account_number' => $accountNumber, 'account_bank' => $bankCode]));
+        if ($response->status() === 400 || $response->status() === 422) {
+            return null;
+        }
+
+        $name = $this->data($response)['account_name'] ?? null;
+
+        return is_string($name) && $name !== '' ? $name : null;
+    }
+
+    public function sendTransfer(Payout $payout, PayoutAccount $account): string
+    {
+        $data = $this->call(fn (PendingRequest $http) => $http->post('/v3/transfers', [
+            'account_bank' => $account->bank_code,
+            'account_number' => $account->account_number,
+            'amount' => self::naira($payout->amount_kobo),
+            'currency' => 'NGN',
+            'reference' => $payout->transfer_reference,
+            'narration' => 'WeGoDeliva payout',
+        ]));
+
+        return (string) ($data['id'] ?? throw new GatewayUnavailable('Flutterwave returned no transfer id.'));
+    }
+
+    public function transferStatus(string $reference): string
+    {
+        $data = $this->call(fn (PendingRequest $http) => $http->get('/v3/transfers', ['reference' => $reference]));
+        $transfer = is_array($data[0] ?? null) ? $data[0] : [];
+
+        return match (strtoupper((string) ($transfer['status'] ?? ''))) {
+            'SUCCESSFUL' => 'success',
+            'FAILED' => 'failed',
+            default => 'pending',
+        };
     }
 
     public function balanceKobo(): int
@@ -94,7 +144,7 @@ final class FlutterwaveClient implements GatewayClient
 
     /**
      * @param  callable(PendingRequest): Response  $request
-     * @return array<string, mixed>
+     * @return array<int|string, mixed>
      */
     private function call(callable $request): array
     {
@@ -117,7 +167,7 @@ final class FlutterwaveClient implements GatewayClient
         }
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<int|string, mixed> */
     private function data(Response $response): array
     {
         $data = $response->json('data');

@@ -66,5 +66,12 @@ return [
     'handover_code_invalid' => 'That code is not correct.',
     'handover_locked' => 'Too many wrong codes. Please call support to complete this delivery.',
     'refund_exceeds_paid' => 'That is more than can be refunded for this order.',
+    'bank_account_not_found' => 'The bank does not recognise this account.',
+    'bank_account_exists' => 'This bank account is already saved.',
+    'bank_account_unverified' => 'This bank account is waiting for review.',
+    'bank_account_in_use' => 'This bank account has a payout in progress.',
+    'payouts_disabled' => 'Payouts are not available right now.',
+    'payout_below_minimum' => 'That is below the minimum payout.',
+    'payout_status_conflict' => 'This payout has moved on. Please refresh.',
     'account_exists' => 'An account with this email already exists. Sign in with your email to link it.',
 ];
