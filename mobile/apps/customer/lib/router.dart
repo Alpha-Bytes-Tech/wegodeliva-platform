@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wegodeliva_auth/wegodeliva_auth.dart';
 
+import 'discover/favourites_screen.dart';
+import 'discover/product_screen.dart';
+import 'discover/search_screen.dart';
+import 'discover/store_screen.dart';
+import 'discover/vendor_type_screen.dart';
 import 'home/home_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'links/link_placeholder.dart';
@@ -43,14 +48,7 @@ final routerProvider = Provider<GoRouter>(
           routes: [
             GoRoute(
               path: CustomerRoutes.search,
-              builder: (context, _) {
-                final l10n = AppLocalizations.of(context);
-                return TabPlaceholder(
-                  title: l10n.tabSearch,
-                  icon: Icons.search,
-                  message: l10n.searchComingMessage,
-                );
-              },
+              builder: (_, _) => const SearchScreen(),
             ),
           ],
         ),
@@ -113,14 +111,20 @@ final routerProvider = Provider<GoRouter>(
       ),
       GoRoute(
         path: '/v/:slug',
-        builder: (context, _) =>
-            LinkPlaceholder(title: AppLocalizations.of(context).storeTitle),
+        builder: (_, state) => StoreScreen(slug: state.pathParameters['slug']!),
       ),
       GoRoute(
         path: '/p/:id',
-        builder: (context, _) =>
-            LinkPlaceholder(title: AppLocalizations.of(context).productTitle),
+        builder: (_, state) => ProductScreen(id: state.pathParameters['id']!),
       ),
+      GoRoute(
+        path: '/type/:slug',
+        builder: (_, state) => VendorTypeScreen(
+          slug: state.pathParameters['slug']!,
+          title: state.extra as String?,
+        ),
+      ),
+      GoRoute(path: '/favourites', builder: (_, _) => const FavouritesScreen()),
       GoRoute(
         path: '/o/:code',
         builder: (context, state) =>

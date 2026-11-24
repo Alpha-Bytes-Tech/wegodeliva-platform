@@ -6,6 +6,8 @@ use App\Models\Vendor;
 use App\Models\VendorType;
 use Database\Seeders\CitySeeder;
 use Database\Seeders\VendorTypeSeeder;
+use Illuminate\Support\Facades\Http;
+use Tests\Support\FakeStorage;
 
 /** Yaba, Lagos. Factory vendors sit about 1 km away. */
 const YABA = ['lat' => 6.5095, 'lng' => 3.3711];
@@ -169,4 +171,27 @@ it('rate-limits catalogue requests per IP', function () {
     }
 
     expectApiError($this->getJson('/api/v1/catalogue/vendor-types'), 429, 'rate_limited');
+});
+
+it('gives store and product images as short-lived signed links, signed in one call per page', function () {
+    FakeStorage::fake();
+    $vendor = Vendor::factory()->create(['logo_path' => 'vendors/x/logo.png', 'cover_path' => 'vendors/x/cover.jpg']);
+    $product = Product::factory()->for($vendor)->create();
+    $product->images()->create(['path' => 'vendors/x/products/rice.jpg', 'sort_order' => 0]);
+
+    $this->getJson('/api/v1/catalogue/vendors?lat=6.515&lng=3.385')->assertOk()
+        ->assertJsonPath('data.0.logo_url', FakeStorage::readUrl('vendors/x/logo.png'))
+        ->assertJsonPath('data.0.cover_url', FakeStorage::readUrl('vendors/x/cover.jpg'));
+    Http::assertSentCount(1);
+
+    $this->getJson("/api/v1/catalogue/vendors/{$vendor->slug}/products")->assertOk()
+        ->assertJsonPath('data.0.image_urls', [FakeStorage::readUrl('vendors/x/products/rice.jpg')]);
+    $this->getJson("/api/v1/catalogue/products/{$product->uuid}")->assertOk()
+        ->assertJsonPath('data.image_urls.0', FakeStorage::readUrl('vendors/x/products/rice.jpg'));
+    $this->getJson('/api/v1/catalogue/search?lat=6.515&lng=3.385&q='.urlencode(substr($product->name, 0, 4)))->assertOk()
+        ->assertJsonPath('data.products.0.image_urls.0', FakeStorage::readUrl('vendors/x/products/rice.jpg'));
+    // Everything after the first page came from the cache except the product image.
+    Http::assertSentCount(2);
+
+    $this->getJson("/api/v1/catalogue/vendors/{$vendor->slug}")->assertOk()->assertJsonPath('data.logo_url', FakeStorage::readUrl('vendors/x/logo.png'));
 });

@@ -142,4 +142,18 @@ void main() {
     await store.remove('k');
     expect(await store.read('k'), isNull);
   });
+
+  test('returns the whole body for paginated lists, and errors as ApiException', () async {
+    final ok = FakeAdapter((_) => FakeAdapter.json(200, {'data': [1], 'meta': {'next_cursor': 'abc'}}));
+    final client = ApiClient(config: config, tokenStorage: InMemoryTokenStorage(), dio: Dio()..httpClientAdapter = ok, logger: AppLogger(enabled: false));
+    expect((await client.getEnvelope('/x'))['meta'], {'next_cursor': 'abc'});
+
+    final notFound = FakeAdapter((_) => FakeAdapter.json(404, {'error': {'code': 'not_found', 'message': 'Nope'}}));
+    final failing = ApiClient(config: config, tokenStorage: InMemoryTokenStorage(), dio: Dio()..httpClientAdapter = notFound, logger: AppLogger(enabled: false));
+    await expectLater(failing.getEnvelope('/x'), throwsA(isA<ApiException>().having((e) => e.code, 'code', 'not_found')));
+
+    final odd = FakeAdapter((_) => FakeAdapter.json(200, [1, 2]));
+    final weird = ApiClient(config: config, tokenStorage: InMemoryTokenStorage(), dio: Dio()..httpClientAdapter = odd, logger: AppLogger(enabled: false));
+    await expectLater(weird.getEnvelope('/x'), throwsA(isA<ApiException>()));
+  });
 }
