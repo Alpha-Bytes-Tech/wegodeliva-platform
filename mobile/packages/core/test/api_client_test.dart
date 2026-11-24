@@ -202,7 +202,7 @@ void main() {
       final request = adapter.requests.single;
       expect(
         request.uri.toString(),
-        'https://api-staging.wegodeliva.com/api/v1/auth/me',
+        'https://wegodeliva-platform-eu-production-q1ab72.laravel.cloud/api/v1/auth/me',
       );
       expect(request.headers['Authorization'], 'Bearer 1|abc');
       expect(request.headers['X-App-Version'], '1.2.3');

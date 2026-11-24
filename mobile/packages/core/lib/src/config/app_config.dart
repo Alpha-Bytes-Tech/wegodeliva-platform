@@ -58,10 +58,12 @@ class AppConfig {
     );
   }
 
-  /// Placeholder hosts until staging/production are deployed (see docs/progress.md).
+  /// Staging is the EU Laravel Cloud environment (owner, 2026-11-24); production is a
+  /// placeholder until launch.
   static const defaultBaseUrls = <Flavor, String>{
     Flavor.dev: 'http://10.0.2.2:8000/api/v1',
-    Flavor.staging: 'https://api-staging.wegodeliva.com/api/v1',
+    Flavor.staging:
+        'https://wegodeliva-platform-eu-production-q1ab72.laravel.cloud/api/v1',
     Flavor.prod: 'https://api.wegodeliva.com/api/v1',
   };
 

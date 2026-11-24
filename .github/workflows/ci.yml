@@ -147,3 +147,38 @@ jobs:
       - run: melos run test
       - run: flutter pub outdated
         working-directory: mobile
+
+  # A staging build of the customer app the owner can install from the run's artifacts
+  # (Phase 3 plan, owner decision 2026-11-24). Signed with the debug key: test builds only,
+  # never uploaded to a store.
+  customer-apk:
+    name: Customer app APK (staging)
+    needs: [changes, mobile]
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - run: dart pub global activate melos
+      - run: melos bootstrap
+      - run: melos run generate
+      - name: Build the staging APK
+        working-directory: mobile/apps/customer
+        run: flutter build apk --flavor staging -t lib/main_staging.dart --release
+      - uses: actions/upload-artifact@v5
+        with:
+          name: wegodeliva-customer-staging-apk
+          path: mobile/apps/customer/build/app/outputs/flutter-apk/app-staging-release.apk
+          retention-days: 14
+          if-no-files-found: error

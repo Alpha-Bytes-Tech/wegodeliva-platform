@@ -53,4 +53,67 @@ void main() {
     expect(authRedirect(signedIn, AuthRoutes.splash), AuthRoutes.home);
     expect(authRedirect(signedIn, AuthRoutes.home), isNull);
   });
+
+  test('keeps a deep link through splash and sign-in, then opens it', () {
+    expect(
+      authRedirect(
+        const AuthUnknown(),
+        '/v/mama-put',
+        fullLocation: '/v/mama-put?tab=menu',
+      ),
+      '/splash?from=%2Fv%2Fmama-put%3Ftab%3Dmenu',
+    );
+    expect(
+      authRedirect(const SignedOut(), AuthRoutes.splash, from: '/v/mama-put'),
+      '/login?from=%2Fv%2Fmama-put',
+    );
+    expect(
+      authRedirect(const SignedOut(), AuthRoutes.login, from: '/v/mama-put'),
+      isNull,
+    );
+    expect(
+      authRedirect(const SignedOut(), AuthRoutes.signUp, from: '/v/mama-put'),
+      isNull,
+    );
+    expect(
+      authRedirect(
+        const SignedOut(),
+        AuthRoutes.otp,
+        hasOtpArgs: false,
+        from: '/o/ABC123',
+      ),
+      '/login?from=%2Fo%2FABC123',
+    );
+    expect(
+      authRedirect(const SignedIn(testUser), AuthRoutes.otp, from: '/o/ABC123'),
+      '/o/ABC123',
+    );
+    expect(
+      authRedirect(const SignedIn(testUser), AuthRoutes.splash, from: '/v/x'),
+      '/v/x',
+    );
+  });
+
+  test('never follows a return address outside the app', () {
+    const signedIn = SignedIn(testUser);
+    for (final bad in [
+      '//evil.example/x',
+      'https://evil.example',
+      '/',
+      '/login/code',
+      '/splash',
+    ]) {
+      expect(
+        authRedirect(signedIn, AuthRoutes.login, from: bad),
+        AuthRoutes.home,
+        reason: bad,
+      );
+    }
+    expect(authRedirect(const SignedOut(), AuthRoutes.home), AuthRoutes.login);
+  });
+
+  test('lets anyone open public pages', () {
+    expect(authRedirect(const SignedOut(), '/pages/terms', isPublic: true), isNull);
+    expect(authRedirect(const AuthUnknown(), '/r/ADA12', isPublic: true), isNull);
+  });
 }
