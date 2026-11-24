@@ -23,8 +23,10 @@ Connection values for Laravel, from Supabase → project → **Connect** → **S
 | `DB_SEARCH_PATH` | `public,extensions` (the default; set it explicitly anyway) |
 
 ## 2. Laravel Cloud (API) (done 2026-11-18)
-Live at `https://wegodeliva-platform-production-p9jmsm.laravel.cloud` (environment `production`,
-used as staging, region US East). Health: `/api/v1/health/ready`.
+Live at `https://wegodeliva-platform-eu-production-q1ab72.laravel.cloud` (EU environment, from
+2026-11-24; owner decision: all settings and deployments go here). Health: `/api/v1/health/ready`.
+The first environment (`wegodeliva-platform-production-p9jmsm.laravel.cloud`, US East) is retired:
+nothing points at it any more.
 
 1. New application → GitHub `Alpha-Bytes-Tech/wegodeliva-platform`, branch `main`. Cloud detects
    the monorepo: choose **`backend`** as the root directory. PHP 8.3.
@@ -67,14 +69,13 @@ everywhere and writes the audit log. Delete `SUPER_ADMIN_PASSWORD` again afterwa
 with a terminal, run it without `--from-env` and it asks for the password instead.
 
 ### Later
-- The app runs in US East and the database in eu-central-1: every query crosses the Atlantic.
-  Move the Laravel Cloud environment to an EU region before launch.
+- Done 2026-11-24: the app now runs in the EU environment, next to the database (eu-central-1).
 - Scale to zero is on: fine for staging; turn it off for launch.
 
 ## 3. Vercel (admin panel)
 Project `wegodeliva-platform`: root directory `web`, framework Next.js, Node 22 (set 2026-11-16).
-`API_BASE_URL=https://wegodeliva-platform-production-p9jmsm.laravel.cloud/api/v1` (Production and
-Preview, set 2026-11-18). Admin panel: `https://wegodeliva-platform.vercel.app` (behind Vercel
+`API_BASE_URL=https://wegodeliva-platform-eu-production-q1ab72.laravel.cloud/api/v1` (Production and
+Preview; set 2026-11-18, moved to the EU environment 2026-11-24). Admin panel: `https://wegodeliva-platform.vercel.app` (behind Vercel
 Authentication). The project must not hold Supabase or database secrets.
 
 ## 4. Transactional email (OTP codes)

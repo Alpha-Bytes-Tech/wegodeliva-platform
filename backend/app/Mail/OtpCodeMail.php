@@ -42,6 +42,7 @@ class OtpCodeMail extends Mailable implements ShouldQueue
                     OtpPurpose::Login => 'sign in',
                     OtpPurpose::Verify => 'confirm your email address',
                     OtpPurpose::Reset => 'reset your password',
+                    OtpPurpose::DeleteAccount => 'delete your account',
                 },
             ],
         );

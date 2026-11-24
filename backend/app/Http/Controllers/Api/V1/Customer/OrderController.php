@@ -103,6 +103,44 @@ class OrderController extends Controller
         return new OrderResource($this->loaded($order));
     }
 
+    /**
+     * The cart to order the same again (spec 09 "Reorder"): the order's items that are still
+     * on sale, with options still offered, and what could not be added and why. The app loads
+     * it into the cart and asks for a fresh quote; prices are today's.
+     */
+    public function reorder(Request $request, string $code): JsonResponse
+    {
+        $order = $this->own($request, $code)->load('vendor', 'items.product.optionGroups.options');
+        if ($order->isParcel() || $order->isBooking()) {
+            throw new ApiException('order_not_reorderable', 422);
+        }
+
+        $items = [];
+        $unavailable = [];
+        foreach ($order->items as $item) {
+            $product = $item->product;
+            if ($product === null || ! $product->is_active || $product->trashed() || ($product->stock_qty !== null && $product->stock_qty < 1)) {
+                $unavailable[] = ['name' => $item->product_name, 'reason' => 'unavailable'];
+
+                continue;
+            }
+            $offered = $product->optionGroups->where('is_active', true)->flatMap(fn ($g) => $g->options->where('is_active', true))->pluck('uuid')->all();
+            $wanted = array_column($item->options ?? [], 'option_id');
+            $kept = array_values(array_intersect($wanted, $offered));
+            if (count($kept) !== count($wanted)) {
+                $unavailable[] = ['name' => $item->product_name, 'reason' => 'options_changed'];
+            }
+            $items[] = ['product_id' => $product->uuid, 'quantity' => $item->quantity, 'option_ids' => $kept];
+        }
+
+        return response()->json(['data' => [
+            'vendor' => ['id' => $order->vendor->uuid, 'name' => $order->vendor->name, 'slug' => $order->vendor->slug, 'open_state' => $order->vendor->openState()->value],
+            'fulfilment' => $order->fulfilment->value,
+            'items' => $items,
+            'unavailable' => $unavailable,
+        ]]);
+    }
+
     /** The caller's own order; anyone else's answers 404 (spec 14 §14.1). */
     private function own(Request $request, string $code): Order
     {

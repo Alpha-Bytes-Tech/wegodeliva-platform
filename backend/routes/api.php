@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\Admin\AuditLogController;
+use App\Http\Controllers\Api\V1\Admin\ContentController;
 use App\Http\Controllers\Api\V1\Admin\CouponController;
 use App\Http\Controllers\Api\V1\Admin\FeeController;
 use App\Http\Controllers\Api\V1\Admin\LedgerController;
@@ -9,6 +11,7 @@ use App\Http\Controllers\Api\V1\Admin\PackageTypeController;
 use App\Http\Controllers\Api\V1\Admin\PayoutController as AdminPayoutController;
 use App\Http\Controllers\Api\V1\Admin\RiderController as AdminRiderController;
 use App\Http\Controllers\Api\V1\Admin\VendorController as AdminVendorController;
+use App\Http\Controllers\Api\V1\AppController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
 use App\Http\Controllers\Api\V1\Customer\AddressController;
@@ -29,6 +32,8 @@ use App\Http\Controllers\Api\V1\Rider\EarningsController as RiderEarningsControl
 use App\Http\Controllers\Api\V1\Rider\JobController;
 use App\Http\Controllers\Api\V1\Rider\PayoutController as RiderPayoutController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
+use App\Http\Controllers\Api\V1\SupportTicketController;
+use App\Http\Controllers\Api\V1\UploadController;
 use App\Http\Controllers\Api\V1\Vendor\BookingController as VendorBookingController;
 use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsController;
 use App\Http\Controllers\Api\V1\Vendor\MenuController;
@@ -60,18 +65,32 @@ Route::prefix('v1')->group(function (): void {
             Route::get('me', [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
             Route::post('phone/confirm', [AuthController::class, 'confirmPhone']);
+            Route::patch('me', [AccountController::class, 'update']);
+            Route::post('password', [AccountController::class, 'password'])->middleware('throttle:login');
+            Route::post('email/change', [AccountController::class, 'requestEmailChange'])->middleware('throttle:otp-send');
+            Route::post('email/confirm', [AccountController::class, 'confirmEmailChange'])->middleware('throttle:otp-verify');
+            Route::post('account/delete-code', [AccountController::class, 'requestDeletion'])->middleware('throttle:otp-send');
+            Route::delete('account', [AccountController::class, 'destroy'])->middleware('throttle:otp-verify');
         });
     });
 
     Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function (): void {
         Route::post('devices', [DeviceController::class, 'store']);
         Route::delete('devices/{uuid}', [DeviceController::class, 'destroy'])->whereUuid('uuid');
+        Route::post('uploads', [UploadController::class, 'store'])->middleware('throttle:uploads');
     });
 
     // Gateway webhooks: no sign-in; the signature is the authentication (spec 06 §6.3).
     Route::post('webhooks/{gateway}', [WebhookController::class, 'handle'])
         ->whereIn('gateway', ['paystack', 'flutterwave'])
         ->middleware('throttle:webhooks');
+
+    // App start-up settings and content: no sign-in needed.
+    Route::prefix('app')->middleware('throttle:catalogue')->group(function (): void {
+        Route::get('settings', [AppController::class, 'settings']);
+        Route::get('pages/{page:slug}', [AppController::class, 'page']);
+        Route::get('banners', [AppController::class, 'homeBanners']);
+    });
 
     // Public catalogue: no sign-in needed (spec 14 §14.2 "Catalogue").
     Route::prefix('catalogue')->middleware('throttle:catalogue')->group(function (): void {
@@ -120,6 +139,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('notifications/read', [NotificationController::class, 'markRead'])->defaults('app', 'customer');
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{code}', [OrderController::class, 'show']);
+        Route::post('orders/{code}/reorder', [OrderController::class, 'reorder']);
+        Route::get('support-tickets', [SupportTicketController::class, 'index']);
+        Route::post('support-tickets', [SupportTicketController::class, 'store'])->middleware('throttle:support');
+        Route::get('support-tickets/{ticket}', [SupportTicketController::class, 'show'])->whereUuid('ticket');
 
         Route::middleware('throttle:wallet')->group(function (): void {
             Route::get('wallet', [WalletController::class, 'show']);
@@ -275,6 +298,14 @@ Route::prefix('v1')->group(function (): void {
             Route::get('package-types', [PackageTypeController::class, 'index']);
             Route::post('package-types', [PackageTypeController::class, 'store']);
             Route::patch('package-types/{packageType}', [PackageTypeController::class, 'update'])->whereUuid('packageType');
+
+            Route::get('support-tickets', [SupportTicketController::class, 'adminIndex']);
+            Route::patch('support-tickets/{ticket}', [SupportTicketController::class, 'adminUpdate'])->whereUuid('ticket');
+            Route::get('pages', [ContentController::class, 'pages']);
+            Route::put('pages/{slug}', [ContentController::class, 'savePage']);
+            Route::get('banners', [ContentController::class, 'banners']);
+            Route::post('banners', [ContentController::class, 'storeBanner']);
+            Route::patch('banners/{banner}', [ContentController::class, 'updateBanner'])->whereUuid('banner');
 
             Route::get('fees', [FeeController::class, 'index']);
             Route::post('fees', [FeeController::class, 'store']);

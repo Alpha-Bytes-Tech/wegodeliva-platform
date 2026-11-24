@@ -72,6 +72,42 @@ return [
         'stale_hours' => (int) env('STALE_ORDER_HOURS', 24),
     ],
 
+    // What the apps read at start-up (spec 09 "Splash", spec 13 "Support").
+    'app' => [
+        'support' => [
+            'whatsapp' => env('SUPPORT_WHATSAPP'),
+            'email' => env('SUPPORT_EMAIL', 'support@wegodeliva.com'),
+            'phone' => env('SUPPORT_PHONE'),
+        ],
+        // Versions below the minimum must update; below the latest are invited to.
+        'versions' => [
+            'customer' => ['min' => env('MIN_VERSION_CUSTOMER', '1.0.0'), 'latest' => env('LATEST_VERSION_CUSTOMER', '1.0.0')],
+            'vendor' => ['min' => env('MIN_VERSION_VENDOR', '1.0.0'), 'latest' => env('LATEST_VERSION_VENDOR', '1.0.0')],
+            'rider' => ['min' => env('MIN_VERSION_RIDER', '1.0.0'), 'latest' => env('LATEST_VERSION_RIDER', '1.0.0')],
+        ],
+        'store_urls' => [
+            'android' => env('PLAY_STORE_URL'),
+            'ios' => env('APP_STORE_URL'),
+        ],
+        'support_categories' => ['order', 'payment', 'delivery', 'booking', 'parcel', 'account', 'wallet', 'other'],
+        'max_ticket_photos' => 5,
+    ],
+
+    // Private Supabase Storage (CLAUDE.md §2): apps upload to signed URLs; files are read through
+    // short-lived signed URLs. The service-role key lives only on the server.
+    'storage' => [
+        'url' => env('SUPABASE_URL'),
+        'service_key' => env('SUPABASE_SERVICE_ROLE_KEY'),
+        'bucket' => env('SUPABASE_UPLOADS_BUCKET', 'uploads'),
+        'read_ttl_seconds' => (int) env('STORAGE_READ_TTL_SECONDS', 3600),
+        // What each app may upload, and the types allowed (spec 13 "Uploads").
+        'kinds' => [
+            'avatar' => ['folder' => 'avatars', 'types' => ['image/jpeg', 'image/png', 'image/webp']],
+            'support_photo' => ['folder' => 'support', 'types' => ['image/jpeg', 'image/png', 'image/webp']],
+            'prescription' => ['folder' => 'prescriptions', 'types' => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']],
+        ],
+    ],
+
     // Parcels (spec 05 §5.3, spec 13 feature flags "parcels" and "multi-stop parcels").
     'parcels' => [
         'enabled' => (bool) env('PARCELS_ENABLED', true),

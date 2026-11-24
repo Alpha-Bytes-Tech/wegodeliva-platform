@@ -89,6 +89,10 @@ class AppServiceProvider extends ServiceProvider
         // Checkout (quote, place, cancel) per user (CLAUDE.md §4).
         RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(30)->by('checkout:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
+        // Signed upload URLs and support tickets per user.
+        RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(20)->by('uploads:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+        RateLimiter::for('support', fn (Request $request) => Limit::perHour(10)->by('support:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
         // Handover code tries per user, on top of the three-attempt lock per order.
         RateLimiter::for('handover', fn (Request $request) => Limit::perMinute(10)->by('handover:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
