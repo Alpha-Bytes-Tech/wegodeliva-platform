@@ -53,6 +53,8 @@ Last updated: 2026-11-23
 - 2026-11-24 — The API moved to a new Laravel Cloud environment in the EU: `https://wegodeliva-platform-eu-production-q1ab72.laravel.cloud` (owner: all settings and deployments go there). Vercel `API_BASE_URL` updated and the admin panel redeployed; the US East environment is no longer used.
 - 2026-11-24 — Phase 2 checked: every API endpoint is exercised by a feature test (one gap, rider inbox mark-read, now tested) and the payment tests cover tampered amounts, wrong currency and replayed transactions. Phase 3 plan drafted (`docs/plans/phase-3.md`) with owner decisions: Google Maps, hosted checkout in an in-app browser, KYC verification later, staging APK from each PR.
 - 2026-11-24 — **Milestone 3.1, app backend gaps**: start-up settings for each app (versions, feature flags, payment methods, limits, support contacts, pages, onboarding); content pages and home banners with admin management; signed upload URLs to private Supabase Storage; profile, password, change of email by code, account deletion by code with blockers; support tickets with admin handling; reorder.
+- 2026-11-24 — Milestone 3.1 merged (PR #34).
+- 2026-11-24 — **Milestone 3.2, app foundations** (customer app): bottom-navigation shell; sign-up with referral code; deep links kept through sign-in (`/r`, `/v`, `/p`, `/o`) with Android App Links; start-up settings with offline cache and "update required"; delivery location chip (saved addresses or current position); profile with dark mode, WhatsApp support and legal pages; shared loading/empty/error views; staging flavour on the EU API; CI builds an installable staging APK on every mobile PR.
 - 2026-11-23 — **Milestone 2.9b, service bookings** (owner decisions: 50% late-cancellation fee within 12 h; provider paid on confirmation): services as products of a services store (ADR 0014) with pricing unit, units, location, call-out fee, capacity and duration; free-slot lookup; booking quotes and placement through the normal checkout; provider confirm/decline, start with the customer's code, complete; customer confirm or report a problem; admin dispute resolution; `bookings:monitor` for acceptance timeouts, reminders and auto-confirmation. Phase 2 milestones are all built.
 
 ## In progress
@@ -66,10 +68,11 @@ Last updated: 2026-11-23
 
 ## Next
 
-1. Before launch: turn off scale-to-zero; point the mobile staging flavour at `https://wegodeliva-platform-eu-production-q1ab72.laravel.cloud/api/v1`.
-2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
-3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 wrap-up after 2.9b is merged: check the Phase 2 "done" criteria (feature tests for every endpoint, tampered-amount and replayed-transaction payment tests) and agree the start of Phase 3 (customer app).
+1. Before launch: turn off scale-to-zero on Laravel Cloud.
+2. Before launch: publish `assetlinks.json` and `apple-app-site-association` on wegodeliva.com for App Links / Universal Links.
+3. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
+4. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
+5. Phase 3 — next milestone 3.3, Discover (home, store types, search, store page, product details, favourites).
 
 ## Blockers / owner actions
 

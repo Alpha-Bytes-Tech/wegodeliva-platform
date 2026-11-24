@@ -23,6 +23,10 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> logout() async => logouts++;
 
   @override
+  Future<SignUpResult> register({required String name, required String email, required String phone, String? referralCode}) =>
+      throw UnimplementedError();
+
+  @override
   Future<OtpTiming> sendOtp(String email) async =>
       const OtpTiming(expiresIn: 600, resendIn: 60);
 

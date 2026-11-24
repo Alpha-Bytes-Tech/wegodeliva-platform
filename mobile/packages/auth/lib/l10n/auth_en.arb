@@ -8,12 +8,24 @@
   "sendingCode": "Sending code",
   "otpTitle": "Enter your code",
   "otpSentTo": "We sent a 6-digit code to {email}. It expires in 10 minutes.",
-  "@otpSentTo": { "placeholders": { "email": { "type": "String" } } },
+  "@otpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "codeLabel": "6-digit code",
   "verifyButton": "Verify",
   "verifying": "Verifying code",
   "resendIn": "You can request a new code in {seconds} s",
-  "@resendIn": { "placeholders": { "seconds": { "type": "int" } } },
+  "@resendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "resendButton": "Send a new code",
   "codeResent": "We sent you a new code.",
   "spamHint": "Can't find the email? Check your spam or promotions folder.",
@@ -21,5 +33,19 @@
   "backLabel": "Back",
   "offlineTitle": "Can't connect",
   "offlineMessage": "We couldn't reach WeGoDeliva. Check your connection; we'll keep trying.",
-  "retryButton": "Try again"
+  "retryButton": "Try again",
+  "signUpTitle": "Create your account",
+  "signUpSubtitle": "Order food, groceries and more, send parcels and book services.",
+  "nameLabel": "Full name",
+  "nameInvalid": "Enter your name.",
+  "phoneLabel": "Phone number",
+  "phoneInvalid": "Enter a Nigerian mobile number, e.g. 0803 123 4567.",
+  "referralLabel": "Referral code (optional)",
+  "acceptTerms": "I accept the terms of service and privacy policy",
+  "readTerms": "Read the terms",
+  "termsRequired": "Please accept the terms to continue.",
+  "createAccount": "Create account",
+  "creatingAccount": "Creating your account",
+  "haveAccount": "I already have an account",
+  "newHere": "New to WeGoDeliva? Create an account"
 }

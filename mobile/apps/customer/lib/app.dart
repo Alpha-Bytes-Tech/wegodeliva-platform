@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:wegodeliva_auth/wegodeliva_auth.dart';
 import 'package:wegodeliva_ui/wegodeliva_ui.dart';
 
-import 'home_screen.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'router.dart';
+import 'settings/theme_mode.dart';
+import 'update/update_gate.dart';
 
-final routerProvider = Provider<GoRouter>(
-  (ref) => createAuthRouter(
-    ref,
-    appSubtitle: null,
-    homeBuilder: (context) => const HomeScreen(),
-  ),
-);
+export 'router.dart' show routerProvider;
 
 class CustomerApp extends ConsumerWidget {
   const CustomerApp({super.key});
@@ -24,7 +19,10 @@ class CustomerApp extends ConsumerWidget {
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: WgdTheme.light(),
       darkTheme: WgdTheme.dark(),
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) =>
+          UpdateGate(child: child ?? const SizedBox.shrink()),
       localizationsDelegates: const [
         ...AppLocalizations.localizationsDelegates,
         AuthLocalizations.delegate,

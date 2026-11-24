@@ -2,7 +2,61 @@
   "@@locale": "en",
   "appTitle": "WeGoDeliva",
   "homeGreeting": "Hello, {name}",
-  "@homeGreeting": { "placeholders": { "name": { "type": "String" } } },
-  "homePlaceholder": "Your orders, stores and wallet arrive in Phase 3.",
-  "signOut": "Sign out"
+  "@homeGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "signOut": "Sign out",
+  "homeComingTitle": "Stores are on the way",
+  "homeComingMessage": "Restaurants, shops and services near you will show here in the next update.",
+  "tabHome": "Home",
+  "tabSearch": "Search",
+  "tabOrders": "Orders",
+  "tabWallet": "Wallet",
+  "tabProfile": "Profile",
+  "comingSoon": "Coming soon",
+  "searchComingMessage": "Search for stores and products arrives in the next update.",
+  "ordersComingMessage": "Your orders, bookings and parcels will show here.",
+  "walletComingMessage": "Your wallet balance and top-ups will show here.",
+  "linkComingMessage": "This link opens in an upcoming version of the app.",
+  "storeTitle": "Store",
+  "productTitle": "Product",
+  "chooseLocation": "Choose your location",
+  "deliveringToLabel": "Delivering to",
+  "deliveringTo": "Delivering to {place}. Tap to change.",
+  "@deliveringTo": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "useCurrentLocation": "Use my current location",
+  "currentLocation": "Current location",
+  "locationUnavailable": "We couldn't get your location. Turn on location, or choose a saved address.",
+  "addressesFailed": "Couldn't load your saved addresses.",
+  "noSavedAddresses": "No saved addresses yet. You can add one at checkout.",
+  "loading": "Loading",
+  "loadFailed": "Couldn't load this page.",
+  "retry": "Try again",
+  "appearance": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "chatOnWhatsApp": "Chat with support on WhatsApp",
+  "updateAvailable": "A new version is available",
+  "versionLabel": "Version {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateRequiredTitle": "Please update WeGoDeliva",
+  "updateRequiredMessage": "This version is no longer supported. Update to keep ordering.",
+  "updateNow": "Update now"
 }

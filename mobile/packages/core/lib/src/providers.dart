@@ -6,6 +6,9 @@ import 'config/app_config.dart';
 import 'logging/app_logger.dart';
 import 'network/api_client.dart';
 import 'push/push_service.dart';
+import 'settings/app_settings.dart';
+import 'settings/settings_repository.dart';
+import 'storage/key_value_store.dart';
 import 'storage/token_storage.dart';
 
 /// Must be overridden in each app's `ProviderScope` with the flavour's configuration.
@@ -19,6 +22,24 @@ final loggerProvider = Provider<AppLogger>((ref) => AppLogger());
 
 final tokenStorageProvider = Provider<TokenStorage>(
   (ref) => SecureTokenStorage(),
+);
+
+/// Non-secret preferences and caches.
+final keyValueStoreProvider = Provider<KeyValueStore>(
+  (ref) => SharedPreferencesStore(),
+);
+
+final settingsRepositoryProvider = Provider<SettingsRepository>(
+  (ref) => SettingsRepository(
+    ref.watch(apiClientProvider),
+    ref.watch(keyValueStoreProvider),
+    ref.watch(appConfigProvider).app,
+  ),
+);
+
+/// Start-up settings, loaded once (and again when invalidated, e.g. on retry).
+final appSettingsProvider = FutureProvider<AppSettings>(
+  (ref) => ref.watch(settingsRepositoryProvider).load(),
 );
 
 final pushServiceProvider = Provider<PushService>(

@@ -11,6 +11,11 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
+    // The flavours set their app name with resValue, which AGP 9 no longer enables by default.
+    buildFeatures {
+        resValues = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

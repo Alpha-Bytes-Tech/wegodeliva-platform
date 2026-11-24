@@ -5,4 +5,5 @@ export 'l10n/generated/auth_localizations.dart';
 export 'src/auth_router.dart';
 export 'src/email_login_screen.dart';
 export 'src/otp_screen.dart';
+export 'src/sign_up_screen.dart';
 export 'src/splash_screen.dart';

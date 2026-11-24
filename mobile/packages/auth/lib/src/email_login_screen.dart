@@ -7,13 +7,21 @@ import '../l10n/generated/auth_localizations.dart';
 
 /// Step 1 of email sign-in: asks for the email address and requests a code.
 class EmailLoginScreen extends ConsumerStatefulWidget {
-  const EmailLoginScreen({super.key, required this.onCodeSent, this.appSubtitle});
+  const EmailLoginScreen({
+    super.key,
+    required this.onCodeSent,
+    this.appSubtitle,
+    this.onSignUp,
+  });
 
   /// Called after the backend accepted the request (it answers the same for unknown emails).
   final void Function(String email, OtpTiming timing) onCodeSent;
 
   /// "Vendor" / "Rider" under the wordmark.
   final String? appSubtitle;
+
+  /// Shown as "Create an account" when the app allows sign-up (customer app only).
+  final VoidCallback? onSignUp;
 
   @override
   ConsumerState<EmailLoginScreen> createState() => _EmailLoginScreenState();
@@ -68,7 +76,10 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                   children: [
                     WgdBrandWordmark(subtitle: widget.appSubtitle),
                     const SizedBox(height: WgdSpacing.xl),
-                    Text(l10n.loginTitle, style: Theme.of(context).textTheme.headlineSmall),
+                    Text(
+                      l10n.loginTitle,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                     const SizedBox(height: WgdSpacing.sm),
                     Text(l10n.loginSubtitle),
                     const SizedBox(height: WgdSpacing.lg),
@@ -80,7 +91,9 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                       textInputAction: TextInputAction.done,
                       decoration: InputDecoration(labelText: l10n.emailLabel),
                       validator: (value) =>
-                          _emailPattern.hasMatch(value?.trim() ?? '') ? null : l10n.emailInvalid,
+                          _emailPattern.hasMatch(value?.trim() ?? '')
+                          ? null
+                          : l10n.emailInvalid,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     if (_error != null) WgdStatusMessage.error(_error!),
@@ -91,6 +104,13 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                       busy: _busy,
                       onPressed: _submit,
                     ),
+                    if (widget.onSignUp != null) ...[
+                      const SizedBox(height: WgdSpacing.sm),
+                      TextButton(
+                        onPressed: widget.onSignUp,
+                        child: Text(l10n.newHere),
+                      ),
+                    ],
                   ],
                 ),
               ),

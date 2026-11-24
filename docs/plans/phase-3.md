@@ -59,3 +59,29 @@ and unit and widget tests for cart, checkout and tracking.
   - In Supabase, create a **private** Storage bucket named `uploads`.
   - In Laravel Cloud, add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API; the service-role key is a secret, so put it only in Laravel Cloud).
   - Set `SUPPORT_WHATSAPP` (and optionally `SUPPORT_PHONE`).
+
+## Notes from 3.2 (app foundations)
+
+- **Navigation:** Home, Search, Orders, Wallet and Profile tabs (go_router `StatefulShellRoute`, one stack per tab; tapping the current tab returns to its first screen). Search, Orders and Wallet show "coming soon" until 3.3, 3.5 and 3.6.
+- **Sign-up added:** the app had sign-in only, so new customers could not create an account. The customer app now has "Create an account": name, email, Nigerian mobile number, optional referral code and the terms (readable while signed out). The server's code arrives by email and the user goes straight to the code screen. The vendor and rider apps keep sign-in only.
+- **Deep links:**
+  - `/r/{code}` keeps the referral code for sign-up.
+  - `/v/{slug}`, `/p/{id}` and `/o/{code}` already have routes, showing a placeholder until their screens arrive.
+  - A link opened while signed out is remembered through splash and sign-in, then opened. Only in-app paths are followed.
+  - The Android App Links intent filter is set for `https://wegodeliva.com/{r,v,p,o}/…`.
+  - The iOS `FlutterDeepLinkingEnabled` flag is set. Associated Domains needs Xcode on a Mac.
+  - **Owner, before launch:** publish `https://wegodeliva.com/.well-known/assetlinks.json` (package name and the release key's SHA-256) and `apple-app-site-association`.
+- **Start-up settings** (`GET /app/settings`) load at launch and are cached on the device, so the app opens offline with the last known flags. If the installed version is below the minimum, a full-screen "Update required" with a store link replaces the app. Profile shows "A new version is available" when there is one.
+- **Delivery location:**
+  - An address chip on Home shows the chosen place.
+  - The picker lists saved addresses and offers "Use my current location". Location permission is asked only on that tap. Refusal shows a message and keeps saved addresses usable.
+  - The choice is remembered between launches. Without one, the default saved address is used.
+  - Adding addresses with pin-drop comes with checkout (3.4).
+- **Profile (first part):** name and email, appearance (system, light or dark, remembered), WhatsApp support (number from settings), legal pages from settings, version and sign out.
+- **Shared pieces:**
+  - `WgdStateView` (loading, empty, error with retry) in the UI package.
+  - `KeyValueStore` (shared preferences) for non-secret preferences and caches. Tokens stay in secure storage.
+  - `SettingsRepository` with offline fallback.
+  - `compareVersions`.
+- **Staging address:** the staging flavour now points at the EU Laravel Cloud environment.
+- **Test APK:** the new CI job "Customer app APK (staging)" builds `app-staging-release.apk` after the mobile checks pass and attaches it to the run as **wegodeliva-customer-staging-apk** (kept 14 days). It is signed with a debug key: for testing only, never for the store. It installs next to the live app (package `com.wegodeliva.customerapp.staging`).
