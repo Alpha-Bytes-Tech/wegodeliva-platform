@@ -58,6 +58,18 @@ use Illuminate\Support\Carbon;
  * @property int|null $width_cm
  * @property int|null $height_cm
  * @property string|null $payer sender | recipient (parcels)
+ * @property int|null $units booked units (services)
+ * @property Carbon|null $starts_at
+ * @property Carbon|null $ends_at
+ * @property string|null $service_location at_customer | at_provider
+ * @property Carbon|null $confirmed_at
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $completion_confirmed_at
+ * @property Carbon|null $disputed_at
+ * @property string|null $dispute_reason
+ * @property Carbon|null $reminded_day_at
+ * @property Carbon|null $reminded_hour_at
  * @property string $handover_code
  * @property int|null $prep_time_minutes
  * @property Carbon|null $estimated_ready_at
@@ -88,6 +100,9 @@ class Order extends Model
 
     /** The order type of parcel deliveries (the parcels vendor type's slug). */
     public const TYPE_PARCEL = 'parcels';
+
+    /** The order type of service bookings (the services vendor type's slug). */
+    public const TYPE_SERVICE = 'services';
 
     protected $guarded = ['*'];
 
@@ -149,6 +164,16 @@ class Order extends Model
             'length_cm' => 'integer',
             'width_cm' => 'integer',
             'height_cm' => 'integer',
+            'units' => 'integer',
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
+            'confirmed_at' => 'datetime',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'completion_confirmed_at' => 'datetime',
+            'disputed_at' => 'datetime',
+            'reminded_day_at' => 'datetime',
+            'reminded_hour_at' => 'datetime',
         ];
     }
 
@@ -202,6 +227,11 @@ class Order extends Model
     public function fees(): HasMany
     {
         return $this->hasMany(OrderFee::class)->orderBy('id');
+    }
+
+    public function isBooking(): bool
+    {
+        return $this->type === self::TYPE_SERVICE;
     }
 
     public function isParcel(): bool

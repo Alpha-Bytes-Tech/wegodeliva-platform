@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Ledger\EarningsLedger;
+use App\Services\Orders\Bookings;
 use App\Services\Orders\OrderFulfilment;
 use App\Services\Orders\OrderLifecycle;
 use App\Services\Orders\Refunds;
@@ -116,6 +117,20 @@ class OrderController extends Controller
         ]);
         $order = $this->fulfilment->adminDeliver($this->order($code), $this->admin($request), $data['reason'], $data['collected_via'] ?? null);
         $this->audit->record($this->admin($request), 'order.delivered_override', 'order', $order->code, after: ['reason' => $data['reason']]);
+
+        return $this->present($order);
+    }
+
+    /** Settles a disputed booking: release pays the provider, refund cancels and refunds in full. */
+    public function resolveDispute(Request $request, string $code, Bookings $bookings): OrderOpsResource
+    {
+        Gate::authorize('manage-orders');
+        $data = $request->validate([
+            'outcome' => ['required', 'in:release,refund'],
+            'note' => ['required', 'string', 'min:3', 'max:255'],
+        ]);
+        $order = $bookings->resolve($this->order($code), $this->admin($request), $data['outcome'], $data['note']);
+        $this->audit->record($this->admin($request), 'booking.dispute_resolved', 'order', $order->code, after: $data);
 
         return $this->present($order);
     }

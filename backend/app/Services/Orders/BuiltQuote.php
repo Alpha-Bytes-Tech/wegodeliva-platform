@@ -2,6 +2,7 @@
 
 namespace App\Services\Orders;
 
+use App\Enums\Fulfilment;
 use App\Enums\PaymentMethod;
 use App\Models\Address;
 use App\Models\Product;
@@ -18,7 +19,7 @@ final readonly class BuiltQuote
      * @param  array<string, string|null>  $paymentOptions  every payment method => null when available, else the reason it is not
      */
     public function __construct(
-        public QuoteInput|ParcelInput $input,
+        public QuoteInput|ParcelInput|BookingInput $input,
         public Vendor $vendor,
         public PriceBreakdown $price,
         public array $products,
@@ -26,11 +27,26 @@ final readonly class BuiltQuote
         public ?DeliveryQuote $delivery,
         public array $paymentOptions,
         public ?ParcelQuote $parcel = null,
+        public ?BookingQuote $booking = null,
     ) {}
+
+    /** Goods follow the cart; parcels are delivered; services at the provider's place count as pickup. */
+    public function fulfilment(): Fulfilment
+    {
+        return match (true) {
+            $this->input instanceof QuoteInput => $this->input->fulfilment,
+            $this->input instanceof BookingInput => $this->input->atCustomer() ? Fulfilment::Delivery : Fulfilment::Pickup,
+            default => Fulfilment::Delivery,
+        };
+    }
 
     public function fingerprint(): string
     {
-        $priced = $this->parcel === null ? $this->price->toArray() : ['price' => $this->price->toArray(), 'parcel' => $this->parcel->toArray()];
+        $priced = match (true) {
+            $this->parcel !== null => ['price' => $this->price->toArray(), 'parcel' => $this->parcel->toArray()],
+            $this->booking !== null => ['price' => $this->price->toArray(), 'booking' => $this->booking->toArray()],
+            default => $this->price->toArray(),
+        };
 
         return hash('sha256', (string) json_encode($priced));
     }
@@ -43,13 +59,17 @@ final readonly class BuiltQuote
     /** @return array<string, mixed> */
     public function toArray(): array
     {
-        $scheduled = $this->input->scheduledFor;
+        $scheduled = $this->input instanceof BookingInput ? null : $this->input->scheduledFor;
 
-        $parcel = $this->parcel === null ? [] : ['parcel' => $this->parcel->toArray()];
+        $extra = match (true) {
+            $this->parcel !== null => ['parcel' => $this->parcel->toArray()],
+            $this->booking !== null => ['booking' => $this->booking->toArray()],
+            default => [],
+        };
 
         return [
             'vendor' => ['id' => $this->vendor->uuid, 'name' => $this->vendor->name, 'slug' => $this->vendor->slug],
-            'fulfilment' => $this->input instanceof QuoteInput ? $this->input->fulfilment->value : 'delivery',
+            'fulfilment' => $this->fulfilment()->value,
             'address_id' => $this->address?->uuid,
             'scheduled_for' => $scheduled?->toIso8601String(),
             'delivery' => $this->delivery === null ? null : [
@@ -62,6 +82,6 @@ final readonly class BuiltQuote
                 fn (string $method) => ['method' => $method, 'available' => $this->paymentOptions[$method] === null, 'reason' => $this->paymentOptions[$method]],
                 array_keys($this->paymentOptions),
             ),
-        ] + $parcel;
+        ] + $extra;
     }
 }

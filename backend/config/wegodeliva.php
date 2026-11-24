@@ -63,7 +63,7 @@ return [
         'max_schedule_days' => (int) env('MAX_SCHEDULE_DAYS', 3),
         // Scheduled orders reach the vendor at: scheduled time − prep time − this buffer.
         'schedule_release_buffer_minutes' => (int) env('SCHEDULE_RELEASE_BUFFER_MINUTES', 10),
-        'customer_cancellable' => ['awaiting_payment', 'awaiting_review', 'scheduled', 'placed'],
+        'customer_cancellable' => ['awaiting_payment', 'awaiting_review', 'scheduled', 'placed', 'requested', 'confirmed'],
         // Background checks (spec 04 §4.6).
         'vendor_alert_minutes' => (int) env('VENDOR_ALERT_MINUTES', 5),
         'vendor_timeout_minutes' => (int) env('VENDOR_TIMEOUT_MINUTES', 10),
@@ -78,6 +78,27 @@ return [
         'multi_stop' => (bool) env('PARCELS_MULTI_STOP', true),
         // Pickup plus drop-offs.
         'max_stops' => (int) env('PARCELS_MAX_STOPS', 5),
+    ],
+
+    // Service bookings (spec 04 §4.8, spec 13 "Services and chat").
+    'bookings' => [
+        'enabled' => (bool) env('BOOKINGS_ENABLED', true),
+        'min_lead_minutes' => (int) env('BOOKING_MIN_LEAD_MINUTES', 60),
+        'max_advance_days' => (int) env('BOOKING_MAX_ADVANCE_DAYS', 30),
+        // Start times offered by the slots endpoint.
+        'slot_step_minutes' => (int) env('BOOKING_SLOT_STEP_MINUTES', 30),
+        // Length of a fixed-price service with no duration set.
+        'default_duration_minutes' => 60,
+        'free_cancel_hours' => (int) env('BOOKING_FREE_CANCEL_HOURS', 12),
+        // Late-cancellation fee: 50% of the service price (owner decision 2026-11-23).
+        'late_cancel_fee_bp' => (int) env('BOOKING_LATE_CANCEL_FEE_BP', 5000),
+        'accept_timeout_minutes' => (int) env('BOOKING_ACCEPT_TIMEOUT_MINUTES', 120),
+        'short_notice_hours' => (int) env('BOOKING_SHORT_NOTICE_HOURS', 3),
+        'short_notice_accept_minutes' => (int) env('BOOKING_SHORT_NOTICE_ACCEPT_MINUTES', 30),
+        // The provider can start (with the customer's code) this long before the slot.
+        'start_early_minutes' => (int) env('BOOKING_START_EARLY_MINUTES', 60),
+        // The customer confirms or reports a problem within this window; then it auto-confirms.
+        'auto_confirm_hours' => (int) env('BOOKING_AUTO_CONFIRM_HOURS', 24),
     ],
 
     'payments' => [

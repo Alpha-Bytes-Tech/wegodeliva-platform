@@ -28,6 +28,7 @@ use App\Models\WalletTransaction;
 use App\Notifications\AppNotification;
 use App\Support\Money;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
 
@@ -68,6 +69,22 @@ class NotificationRouter
                     $customer('order_placed');
                 }
                 $this->toVendor($order->vendor, 'new_order', $p + ['items' => (string) $order->items->sum('quantity'), 'total' => Money::format($order->total_kobo)], $data, urgent: true, channel: self::NEW_ORDER_CHANNEL);
+                break;
+            case 'requested':
+                $time = ['time' => $this->localTime($order->starts_at)];
+                $customer('booking_requested', $time);
+                $this->toVendor($order->vendor, 'new_booking', $p + $time + ['service' => (string) $order->items->first()?->product_name], $data, urgent: true, channel: self::NEW_ORDER_CHANNEL);
+                break;
+            case 'confirmed':
+                $customer('booking_confirmed', ['time' => $this->localTime($order->starts_at)]);
+                break;
+            case 'in_progress':
+                $customer('booking_started');
+                break;
+            case 'completed':
+                if ($event->from === 'in_progress') {
+                    $customer('booking_completed');
+                }
                 break;
             case 'accepted':
                 $customer('order_accepted', ['minutes' => (string) ($order->prep_time_minutes ?? $order->vendor->prep_time_minutes)]);
@@ -129,6 +146,12 @@ class NotificationRouter
         $data = ['order' => $order->code];
         if ($event->alert === 'vendor_slow') {
             $this->toVendor($order->vendor, 'accept_reminder', $p, $data, urgent: true, channel: self::NEW_ORDER_CHANNEL);
+        } elseif ($event->alert === 'booking_reminder') {
+            $time = ['time' => $this->localTime($order->starts_at)];
+            $this->send($order->customer, ClientApp::Customer, 'customer.booking_reminder', $p + $time, $data);
+            $this->toVendor($order->vendor, 'booking_reminder', $p + $time, $data);
+        } elseif ($event->alert === 'booking_disputed') {
+            $this->toVendor($order->vendor, 'booking_disputed', $p, $data);
         } elseif ($event->alert === 'no_rider') {
             $this->send($order->customer, ClientApp::Customer, 'customer.still_finding_rider', $p, $data);
             $this->toVendor($order->vendor, 'no_rider', $p, $data);
@@ -237,6 +260,11 @@ class NotificationRouter
     private function order(int $id): Order
     {
         return Order::query()->with('vendor', 'customer', 'rider', 'items')->findOrFail($id);
+    }
+
+    private function localTime(?Carbon $at): string
+    {
+        return $at?->copy()->setTimezone((string) config('wegodeliva.timezone'))->format('D j M, g:i a') ?? '';
     }
 
     /** @return array<string, string> */

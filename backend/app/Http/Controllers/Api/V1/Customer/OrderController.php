@@ -14,6 +14,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\OrderQuote;
 use App\Models\User;
+use App\Services\Orders\Bookings;
 use App\Services\Orders\OrderLifecycle;
 use App\Services\Orders\OrderPlacer;
 use App\Services\Orders\QuoteBuilder;
@@ -83,7 +84,7 @@ class OrderController extends Controller
         return new OrderResource($this->loaded($this->own($request, $code)));
     }
 
-    public function cancel(Request $request, string $code, OrderLifecycle $lifecycle): OrderResource
+    public function cancel(Request $request, string $code, OrderLifecycle $lifecycle, Bookings $bookings): OrderResource
     {
         $reason = $request->validate(['reason' => ['nullable', 'string', 'max:255']])['reason'] ?? null;
         $order = $this->own($request, $code);
@@ -93,7 +94,11 @@ class OrderController extends Controller
 
         /** @var User $customer */
         $customer = $request->user();
-        $lifecycle->cancel($order, ActorRole::Customer, $customer, $reason ?? 'Cancelled by customer', Fault::Customer);
+        if ($order->isBooking()) {
+            $bookings->customerCancel($order, $customer, $reason ?? 'Cancelled by customer');
+        } else {
+            $lifecycle->cancel($order, ActorRole::Customer, $customer, $reason ?? 'Cancelled by customer', Fault::Customer);
+        }
 
         return new OrderResource($this->loaded($order));
     }

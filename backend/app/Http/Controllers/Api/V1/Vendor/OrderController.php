@@ -23,6 +23,10 @@ class OrderController extends VendorController
         'out' => ['picked_up'],
         'done' => ['delivered', 'cancelled', 'failed'],
         'scheduled' => ['scheduled'],
+        // Service bookings (spec 10 "Booking inbox").
+        'requested' => ['requested'],
+        'booked' => ['confirmed', 'in_progress'],
+        'booking_done' => ['completed', 'disputed'],
     ];
 
     public function __construct(private readonly OrderFulfilment $fulfilment) {}

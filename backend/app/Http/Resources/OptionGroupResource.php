@@ -32,6 +32,7 @@ class OptionGroupResource extends JsonResource
                 'name' => $o->name,
                 'description' => $o->description,
                 'price' => Money::of($o->price_kobo),
+                'per_unit' => $o->per_unit,
                 'sort_order' => $o->sort_order,
                 'is_active' => $o->is_active,
             ])->all(),

@@ -3,7 +3,6 @@
 namespace App\Services\Orders;
 
 use App\Enums\ActorRole;
-use App\Enums\Fulfilment;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -35,6 +34,8 @@ final class OrderPlacer
     public function __construct(
         private readonly QuoteBuilder $builder,
         private readonly ParcelQuoteBuilder $parcels,
+        private readonly BookingQuoteBuilder $bookings,
+        private readonly BookingSlots $slots,
         private readonly OrderStateMachine $machine,
         private readonly OrderLifecycle $lifecycle,
         private readonly WalletLedger $wallets,
@@ -56,9 +57,11 @@ final class OrderPlacer
             throw new ApiException('quote_used', 409);
         }
 
-        $built = ($quote->input['kind'] ?? null) === ParcelInput::KIND
-            ? $this->parcels->build($customer, ParcelInput::fromArray($quote->input))
-            : $this->builder->build($customer, QuoteInput::fromArray($quote->input));
+        $built = match ($quote->input['kind'] ?? null) {
+            ParcelInput::KIND => $this->parcels->build($customer, ParcelInput::fromArray($quote->input)),
+            BookingInput::KIND => $this->bookings->build($customer, BookingInput::fromArray($quote->input)),
+            default => $this->builder->build($customer, QuoteInput::fromArray($quote->input)),
+        };
         if ($built->fingerprint() !== $quote->fingerprint) {
             throw new ApiException('quote_changed', 409, meta: ['quote' => QuoteStore::present(QuoteStore::save($customer, $built), $built)]);
         }
@@ -109,11 +112,20 @@ final class OrderPlacer
         $this->reserveStock($built);
         $price = $built->price;
         $vendor = $built->vendor;
-        $scheduledFor = $built->input->scheduledFor;
+        $scheduledFor = $built->input instanceof BookingInput ? null : $built->input->scheduledFor;
         $parcel = $built->parcel;
+        $booking = $built->booking;
+        // The service row is locked by reserveStock, so this check holds against parallel bookings.
+        if ($booking !== null && ! $this->slots->hasRoom($booking->service, $booking->startsAt, $booking->endsAt)) {
+            // @codeCoverageIgnoreStart
+            // The re-priced quote already checked the slot; only a parallel request can take it in between.
+            throw new ApiException('slot_unavailable', 409, ['starts_at' => ['This time is already booked. Choose another.']]);
+            // @codeCoverageIgnoreEnd
+        }
 
         $status = match (true) {
             $method->isGateway() => OrderStatus::AwaitingPayment,
+            $booking !== null => OrderStatus::Requested,
             $scheduledFor !== null => OrderStatus::Scheduled,
             default => OrderStatus::Placed,
         };
@@ -125,7 +137,7 @@ final class OrderPlacer
             'vendor_id' => $vendor->id,
             'vendor_type_id' => $vendor->vendor_type_id,
             'type' => $vendor->vendorType->slug,
-            'fulfilment' => $built->input instanceof QuoteInput ? $built->input->fulfilment : Fulfilment::Delivery,
+            'fulfilment' => $built->fulfilment(),
             'status' => $status,
             'payment_status' => PaymentStatus::Unpaid,
             'payment_method' => $method,
@@ -158,8 +170,12 @@ final class OrderPlacer
             'width_cm' => $parcel?->input->widthCm,
             'height_cm' => $parcel?->input->heightCm,
             'payer' => $parcel?->input->payer,
+            'units' => $booking?->units,
+            'starts_at' => $booking?->startsAt,
+            'ends_at' => $booking?->endsAt,
+            'service_location' => $booking?->location,
             'handover_code' => OrderCodes::handoverCode(),
-            'placed_at' => $status === OrderStatus::Placed ? now() : null,
+            'placed_at' => in_array($status, [OrderStatus::Placed, OrderStatus::Requested], true) ? now() : null,
             'estimated_delivery_at' => $built->delivery?->etaMaxMinutes === null ? null : ($scheduledFor ?? now())->copy()->addMinutes($built->delivery->etaMaxMinutes),
             'quote_id' => $quote->id,
             'idempotency_key' => $key,
@@ -175,6 +191,7 @@ final class OrderPlacer
                 'options' => array_map(fn ($o) => $o->toArray(), $line->options),
                 'options_kobo' => $line->optionsKobo(),
                 'quantity' => $line->quantity,
+                'units' => $booking?->units,
                 'line_total_kobo' => $line->lineTotalKobo,
                 'discount_kobo' => $price->coupon?->lineDiscount($i) ?? 0,
                 'vat_treatment' => $line->vatTreatment,

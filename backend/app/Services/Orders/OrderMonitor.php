@@ -64,6 +64,8 @@ final class OrderMonitor
 
         Order::query()
             ->whereNotIn('status', [OrderStatus::Delivered->value, OrderStatus::Cancelled->value, OrderStatus::Failed->value])
+            // Bookings can sit confirmed for weeks; their own checks run in Bookings::monitor.
+            ->where('type', '!=', Order::TYPE_SERVICE)
             ->whereNull('stale_alerted_at')
             ->where('created_at', '<=', now()->subHours((int) $cfg['stale_hours']))
             ->orderBy('id')

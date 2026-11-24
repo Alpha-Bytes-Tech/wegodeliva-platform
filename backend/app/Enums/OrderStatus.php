@@ -15,17 +15,28 @@ enum OrderStatus: string
     case Delivered = 'delivered';
     case Cancelled = 'cancelled';
     case Failed = 'failed';
+    // Service bookings (spec 04 §4.8).
+    case Requested = 'requested';
+    case Confirmed = 'confirmed';
+    case InProgress = 'in_progress';
+    case Completed = 'completed';
+    case Disputed = 'disputed';
 
     public function isFinal(): bool
     {
-        return in_array($this, [self::Delivered, self::Cancelled, self::Failed], true);
+        return in_array($this, [self::Delivered, self::Cancelled, self::Failed, self::Completed], true);
     }
 
     /** The order's timestamp column for entering this status, if it has one. */
     public function timestampColumn(): ?string
     {
         return match ($this) {
-            self::Placed => 'placed_at',
+            // A booking request reaches the provider when it is placed.
+            self::Placed, self::Requested => 'placed_at',
+            self::Confirmed => 'confirmed_at',
+            self::InProgress => 'started_at',
+            self::Completed => 'completed_at',
+            self::Disputed => 'disputed_at',
             self::Accepted => 'accepted_at',
             self::Ready => 'ready_at',
             self::PickedUp => 'picked_up_at',

@@ -17,6 +17,7 @@ use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\VendorType;
 use App\Services\Catalogue\ZoneLocator;
+use App\Services\Orders\BookingSlots;
 use App\Services\Pricing\DeliveryQuoter;
 use App\Support\Geo;
 use App\Support\Money;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Carbon;
 
 /**
  * Public catalogue (spec 14 §14.2 "Catalogue"). No sign-in needed; only active vendors and
@@ -36,6 +38,26 @@ class CatalogueController extends Controller
         return VendorTypeResource::collection(
             VendorType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
         );
+    }
+
+    /** Free start times for a service on a day (spec 09 §9.9 "Book a service"). */
+    public function slots(Request $request, Product $product, BookingSlots $slots): JsonResponse
+    {
+        $data = $request->validate([
+            'date' => ['required', 'date_format:Y-m-d'],
+            'units' => ['sometimes', 'integer', 'min:1', 'max:1000'],
+        ]);
+        $product->loadMissing('vendor.hours');
+        abort_unless($product->is_active && $product->isService() && $product->vendor->status === VendorStatus::Active, 404);
+
+        $day = Carbon::createFromFormat('Y-m-d', $data['date'], (string) config('wegodeliva.timezone'));
+        abort_if($day === null, 404);
+
+        return response()->json(['data' => [
+            'date' => $data['date'],
+            'units' => (int) ($data['units'] ?? 1),
+            'starts' => $slots->available($product, $day, (int) ($data['units'] ?? 1)),
+        ]]);
     }
 
     /** Parcel package types customers can choose from (spec 09 §9.6). */

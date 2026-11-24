@@ -15,6 +15,7 @@ class OptionRequest extends ApiRequest
             'name' => [$required, 'string', 'min:1', 'max:80'],
             'description' => ['sometimes', 'nullable', 'string', 'max:255'],
             'price_kobo' => ['sometimes', 'integer', 'min:0', 'max:100000000'],
+            'per_unit' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:10000'],
             'is_active' => ['sometimes', 'boolean'],
         ];

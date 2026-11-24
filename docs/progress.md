@@ -48,10 +48,12 @@ Last updated: 2026-11-23
 - 2026-11-23 — **Milestone 2.8, notifications**: in-app inbox per app, FCM HTTP v1 push (service account from the environment, per-device tokens, invalid tokens removed, urgent new-order push on the `new_orders` channel) and email (receipt, refund, payouts, document requests), sent after commit through the queue. Domain events for order status, rider assignment, refunds, wallet credits, failed payments, payouts, documents and order alerts, routed to customers, store members or owners, and riders.
 - 2026-11-23 — Milestone 2.8 merged (PR #31).
 - 2026-11-23 — **Milestone 2.9a, parcels** (owner decisions: operator's own riders only; no VAT on parcels): package types, operator rates, operator comparison and quotes for multi-stop parcels (spec 05 §5.3 price), placement through the normal checkout with stops and per-stop codes, rider stop-by-stop completion, settlement of the whole price (less commission) to the operator, operator rate management, store rider list and assignment, admin package types.
+- 2026-11-23 — Milestone 2.9a merged (PR #32).
+- 2026-11-23 — **Milestone 2.9b, service bookings** (owner decisions: 50% late-cancellation fee within 12 h; provider paid on confirmation): services as products of a services store (ADR 0014) with pricing unit, units, location, call-out fee, capacity and duration; free-slot lookup; booking quotes and placement through the normal checkout; provider confirm/decline, start with the customer's code, complete; customer confirm or report a problem; admin dispute resolution; `bookings:monitor` for acceptance timeouts, reminders and auto-confirmation. Phase 2 milestones are all built.
 
 ## In progress
 
-- Owner: turn on the scheduler in Laravel Cloud (needed from 2.4 for scheduled orders; from 2.5 for payment timeouts and reconciliation; from 2.6 for store timeouts and order alerts).
+- Owner: turn on the scheduler in Laravel Cloud (needed from 2.4 for scheduled orders; from 2.5 for payment timeouts and reconciliation; from 2.6 for store timeouts and order alerts; from 2.9b for booking timeouts, reminders and auto-confirmation).
 - Owner (to test payments on staging): add Paystack and Flutterwave **test** keys to Laravel Cloud (`PAYSTACK_SECRET_KEY`, `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_SECRET_HASH`), set `PAYMENT_PAYSTACK_ENABLED=true` / `PAYMENT_FLUTTERWAVE_ENABLED=true`, and set the webhook URLs on both dashboards to `<API URL>/api/v1/webhooks/paystack` and `/api/v1/webhooks/flutterwave`.
 - Owner (before real payouts): enable Paystack Transfers and turn off the transfer OTP, get Flutterwave Transfers approved, and fund the transfer balance.
 - Owner (push notifications): add the Firebase service-account key, base64-encoded, to Laravel Cloud as `FIREBASE_CREDENTIALS_BASE64`.
@@ -62,7 +64,7 @@ Last updated: 2026-11-23
 1. Before launch: move the Laravel Cloud app to an EU region (it is in US East, the database in Frankfurt); turn off scale-to-zero; point the mobile staging flavour at the Laravel Cloud URL.
 2. Phase 1 leftovers: admin TOTP; iOS flavour schemes + privacy manifest + Sign in with Apple capability (needs a Mac); FCM wiring once Firebase access is granted; OpenAPI generation for the API; `X-App-Version` / 426 check; move CI and code to Flutter 3.48 (`material.dart` deprecation) in its own PR.
 3. Phase 3 note: the apps must show the phone re-confirmation screen when `phone_confirmation_required` is true and offer "set a password" after first verification (ADR 0012).
-4. Phase 2 — milestone 2.9b, service bookings (slots, capacity, booking states, start code, cancellation window, auto-confirm), after 2.9a is merged.
+4. Phase 2 wrap-up after 2.9b is merged: check the Phase 2 "done" criteria (feature tests for every endpoint, tampered-amount and replayed-transaction payment tests) and agree the start of Phase 3 (customer app).
 
 ## Blockers / owner actions
 

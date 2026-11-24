@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Admin\VendorController as AdminVendorController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Catalogue\CatalogueController;
 use App\Http\Controllers\Api\V1\Customer\AddressController;
+use App\Http\Controllers\Api\V1\Customer\BookingController as CustomerBookingController;
 use App\Http\Controllers\Api\V1\Customer\FavouriteController;
 use App\Http\Controllers\Api\V1\Customer\OrderController;
 use App\Http\Controllers\Api\V1\Customer\ParcelController as CustomerParcelController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Api\V1\Rider\EarningsController as RiderEarningsControl
 use App\Http\Controllers\Api\V1\Rider\JobController;
 use App\Http\Controllers\Api\V1\Rider\PayoutController as RiderPayoutController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
+use App\Http\Controllers\Api\V1\Vendor\BookingController as VendorBookingController;
 use App\Http\Controllers\Api\V1\Vendor\EarningsController as VendorEarningsController;
 use App\Http\Controllers\Api\V1\Vendor\MenuController;
 use App\Http\Controllers\Api\V1\Vendor\OptionGroupController;
@@ -83,6 +85,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('vendors/{vendor:slug}/delivery-quote', [CatalogueController::class, 'deliveryQuote']);
         Route::get('vendors/{vendor:slug}/products', [CatalogueController::class, 'products']);
         Route::get('products/{product}', [CatalogueController::class, 'product']);
+        Route::get('services/{product}/slots', [CatalogueController::class, 'slots'])->whereUuid('product');
         Route::get('search', [CatalogueController::class, 'search']);
     });
 
@@ -101,6 +104,7 @@ Route::prefix('v1')->group(function (): void {
 
         Route::middleware('throttle:checkout')->group(function (): void {
             Route::post('cart/quote', [OrderController::class, 'quote']);
+            Route::post('bookings/quote', [CustomerBookingController::class, 'quote']);
             Route::post('parcels/options', [CustomerParcelController::class, 'options'])->name('me.parcels.options');
             Route::post('parcels/quote', [CustomerParcelController::class, 'quote'])->name('me.parcels.quote');
             Route::post('orders', [OrderController::class, 'place']);
@@ -109,6 +113,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('payments/{reference}/verify', [PaymentController::class, 'verify']);
         });
         Route::post('orders/{code}/reviews', [ReviewController::class, 'store']);
+        Route::post('orders/{code}/confirm-completion', [CustomerBookingController::class, 'confirm']);
+        Route::post('orders/{code}/report-problem', [CustomerBookingController::class, 'report']);
         Route::get('referrals', [ReferralController::class, 'mine']);
         Route::get('notifications', [NotificationController::class, 'index'])->defaults('app', 'customer');
         Route::post('notifications/read', [NotificationController::class, 'markRead'])->defaults('app', 'customer');
@@ -179,6 +185,10 @@ Route::prefix('v1')->group(function (): void {
             Route::post('orders/{code}/ready', [VendorOrderController::class, 'ready']);
             Route::post('orders/{code}/handover', [VendorOrderController::class, 'handover'])->middleware('throttle:handover');
 
+            Route::post('orders/{code}/confirm', [VendorBookingController::class, 'confirm']);
+            Route::post('orders/{code}/start', [VendorBookingController::class, 'start'])->middleware('throttle:handover');
+            Route::post('orders/{code}/complete', [VendorBookingController::class, 'complete']);
+
             Route::get('parcel-rates', [VendorParcelController::class, 'rates']);
             Route::put('parcel-rates/{packageType}', [VendorParcelController::class, 'saveRate'])->whereUuid('packageType')->withoutScopedBindings();
             Route::get('riders', [VendorParcelController::class, 'riders']);
@@ -246,6 +256,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('orders/{code}/cancel', [AdminOrderController::class, 'cancel']);
             Route::post('orders/{code}/deliver', [AdminOrderController::class, 'deliver']);
             Route::post('orders/{code}/fail', [AdminOrderController::class, 'fail']);
+            Route::post('orders/{code}/resolve-dispute', [AdminOrderController::class, 'resolveDispute']);
             Route::post('orders/{code}/refunds', [AdminOrderController::class, 'refund'])->middleware('throttle:wallet');
             Route::get('payouts', [AdminPayoutController::class, 'index']);
             Route::post('payouts/{payout}/approve', [AdminPayoutController::class, 'approve'])->whereUuid('payout')->middleware('throttle:wallet');
