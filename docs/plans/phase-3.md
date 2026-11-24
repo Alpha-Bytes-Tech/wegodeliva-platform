@@ -27,3 +27,35 @@ and unit and widget tests for cart, checkout and tracking.
 2. **Card, transfer and USSD payments**: the gateway's hosted checkout in a secure in-app browser, then server verification (the Phase 2 API). No gateway SDKs.
 3. **Wallet KYC**: the wallet shows the current tier and limits; BVN/NIN verification for Tier 2 waits until the owner picks a provider before launch.
 4. **Testing builds**: CI builds a staging Android APK on every PR, downloadable from the PR's checks.
+
+## Notes from 3.1 (app backend gaps)
+
+- **Start-up settings:** `GET /app/settings?app=customer|vendor|rider` (public) returns:
+  - minimum and latest app version and store links;
+  - feature flags (parcels, multi-stop, service bookings, referrals, wallet top-ups, campus mode, Google and Apple sign-in);
+  - which payment methods are on;
+  - limits (pay-on-delivery maximum, maximum tip, parcel stops, ticket photos);
+  - support contacts and ticket categories;
+  - published pages;
+  - onboarding slides (customer app only).
+
+  Versions and contacts come from environment variables (`MIN_VERSION_*`, `LATEST_VERSION_*`, `PLAY_STORE_URL`, `APP_STORE_URL`, `SUPPORT_WHATSAPP`, `SUPPORT_EMAIL`, `SUPPORT_PHONE`).
+- **Content:** pages (`GET /app/pages/{slug}`, Markdown) and home banners (`GET /app/banners?vendor_type=`), active within their dates. Admins manage them with `GET /admin/pages`, `PUT /admin/pages/{slug}`, `GET/POST/PATCH /admin/banners` (audited). Banner images live under `banners/` in storage.
+- **Uploads:** `POST /uploads` (`kind`: avatar, support_photo or prescription; `content_type`) returns a one-use signed upload URL in the private Supabase bucket, under `{folder}/{user uuid}/…`. Files are read through short-lived signed URLs, cached for half their life. Without `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, uploads answer 503 and image URLs are null; nothing else breaks.
+- **Account (all apps):**
+  - `PATCH /auth/me`: name, avatar, phone. A new phone needs the password if the account has one.
+  - `POST /auth/password`: change, or set one for an account without a password. Signs out the user's other sessions.
+  - `POST /auth/email/change` then `/auth/email/confirm`: the code goes to the new address, and the email changes only once it is entered.
+  - `POST /auth/account/delete-code` then `DELETE /auth/account`.
+- **Deleting an account:**
+  - It is blocked by open orders or jobs, a non-zero wallet, rider earnings or cash owed, or owning a store; the response says which.
+  - Personal data (name, email, phone, password, avatar, addresses, favourites, devices, sign-in links) is removed and the account closed. Orders, payments and ledgers stay, linked to an anonymous user. The email address and phone number can be used again.
+- **Support tickets:**
+  - Customers report a problem with `POST /me/support-tickets` (category, optional order, message, up to 5 photos), and see their tickets with `GET /me/support-tickets[/{id}]`.
+  - Support lists them with `GET /admin/support-tickets?status=` and updates them with `PATCH /admin/support-tickets/{id}` (status and resolution; audited). The customer gets a notification when the status changes.
+  - Conversation with support comes with chat (3.8).
+- **Reorder:** `POST /me/orders/{code}/reorder` returns the items still on sale with options still offered, and lists what could not be added and why. The app loads them into the cart and quotes again at today's prices. Parcels and bookings cannot be reordered.
+- **Owner actions:**
+  - In Supabase, create a **private** Storage bucket named `uploads`.
+  - In Laravel Cloud, add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API; the service-role key is a secret, so put it only in Laravel Cloud).
+  - Set `SUPPORT_WHATSAPP` (and optionally `SUPPORT_PHONE`).

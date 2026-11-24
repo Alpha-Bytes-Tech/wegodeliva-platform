@@ -26,7 +26,7 @@ final class OtpService
      * Sends a code if an account exists for the address. The response is the same either way,
      * so the endpoint cannot be used to discover which emails have accounts.
      */
-    public function send(string $email, OtpPurpose $purpose, ClientApp $app, ?string $ip): void
+    public function send(string $email, OtpPurpose $purpose, ClientApp $app, ?string $ip, bool $requireAccount = true): void
     {
         $email = User::normaliseEmail($email);
         $cooldownKey = "otp-resend:{$purpose->value}:{$email}";
@@ -39,7 +39,8 @@ final class OtpService
         // Taken up front so parallel requests cannot both pass; given back below on failure.
         RateLimiter::hit($cooldownKey, $resendSeconds);
 
-        if (! User::query()->where('email', $email)->exists()) {
+        // A change of email sends to an address that has no account yet.
+        if ($requireAccount && ! User::query()->where('email', $email)->exists()) {
             return;
         }
 

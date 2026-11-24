@@ -25,6 +25,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $name
  * @property string $phone
  * @property string $email
+ * @property string|null $pending_email
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $phone_verified_at
  * @property bool $phone_confirmation_required

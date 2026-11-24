@@ -22,6 +22,7 @@ return [
         'payment_failed' => ['title' => 'Payment failed', 'body' => 'The payment for order :code did not go through. You can try again.'],
         'refund_issued' => ['title' => 'Refund issued', 'body' => ':amount for order :code is now in your wallet.'],
         'topup_credited' => ['title' => 'Wallet topped up', 'body' => ':amount has been added to your wallet.'],
+        'ticket_updated' => ['title' => 'Support update', 'body' => 'Your support request is now :status. Open it to see the details.'],
         'referral_reward' => ['title' => 'Referral reward', 'body' => 'You earned :amount because a friend you invited placed their first order.'],
     ],
     'vendor' => [
