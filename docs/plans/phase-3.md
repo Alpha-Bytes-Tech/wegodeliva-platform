@@ -85,3 +85,29 @@ and unit and widget tests for cart, checkout and tracking.
   - `compareVersions`.
 - **Staging address:** the staging flavour now points at the EU Laravel Cloud environment.
 - **Test APK:** the new CI job "Customer app APK (staging)" builds `app-staging-release.apk` after the mobile checks pass and attaches it to the run as **wegodeliva-customer-staging-apk** (kept 14 days). It is signed with a debug key: for testing only, never for the store. It installs next to the live app (package `com.wegodeliva.customerapp.staging`).
+
+## Notes from 3.3 (Discover)
+
+- **Backend:**
+  - Store and product images are now returned as short-lived signed links: `logo_url`, `cover_url` and `image_urls`, alongside the stored paths.
+  - Each page of results is signed in one storage call (`StorageImages::warm`), so a list costs one call instead of one per image.
+- **Home:**
+  - Address chip, search entry, banner carousel (`GET /app/banners`), store-type tiles, "Featured" and "Open near you", and pull to refresh.
+  - The store types and the first page of nearby stores are cached on the device for offline opening.
+  - Without a chosen location, Home asks for one.
+  - The reorder strip waits for the orders list (3.5).
+- **Store-type page:** "Open now", "Top rated" and category filters.
+- **Search:** one query across stores and products near the chosen location, with Stores and Products tabs. The last 8 searches are kept on the device.
+- **Store page:**
+  - Cover, rating, open, busy or closed state, delivery fee and time to the chosen location, and minimum order.
+  - A notice when the store is closed, saying whether orders can be scheduled.
+  - Menu sections, products with sold-out flags, an info tab (description, address, delivery and pickup, opening hours) and a reviews tab.
+  - Save to favourites.
+- **Product page:**
+  - Images, price with the crossed-out original, and rating.
+  - Option groups follow the server's rules: choose 1 (radio), up to N (checkboxes), and required groups are flagged when missing.
+  - Quantity and a live total, computed as (price + options) × quantity like the server.
+  - Prescription items show a notice (the prescription flow is 3.9).
+  - "Add to cart" checks the options; the cart itself arrives in 3.4.
+- **Favourites** (from Profile): saved stores and products. Toggles update at once and fall back to the server's list if saving fails.
+- **Deep links:** `/v/{slug}` and `/p/{id}` now open the store and product pages.

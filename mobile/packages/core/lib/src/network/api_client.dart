@@ -108,6 +108,20 @@ class ApiClient {
   Future<Map<String, Object?>> getJson(String path) async =>
       _asMap(await send('GET', path));
 
+  /// The whole JSON body (data plus `links` / `meta`), for paginated lists.
+  Future<Map<String, Object?>> getEnvelope(String path) async {
+    try {
+      final response = await dio.get<Object?>(path);
+      final body = response.data;
+      if (body is Map) return Map<String, Object?>.from(body);
+      throw const ApiException(ApiError.unknown);
+    } on DioException catch (e) {
+      final exception = toApiException(e);
+      _logger.warning('← GET $path failed: ${exception.statusCode} ${exception.code}');
+      throw exception;
+    }
+  }
+
   static Map<String, Object?> _asMap(Object? data) {
     if (data is Map) return Map<String, Object?>.from(data);
     throw const ApiException(ApiError.unknown);

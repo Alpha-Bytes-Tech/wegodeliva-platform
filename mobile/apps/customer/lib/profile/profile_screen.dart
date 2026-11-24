@@ -37,6 +37,11 @@ class ProfileScreen extends ConsumerWidget {
               title: Text(user.name),
               subtitle: Text(user.email),
             ),
+          ListTile(
+            leading: const Icon(Icons.favorite_border),
+            title: Text(l10n.favouritesTitle),
+            onTap: () => context.push('/favourites'),
+          ),
           const Divider(),
           Padding(
             padding: const EdgeInsets.fromLTRB(

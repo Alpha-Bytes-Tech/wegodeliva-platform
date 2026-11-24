@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Tag;
 use App\Models\VendorMenu;
+use App\Services\Storage\StorageSigner;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -60,6 +61,7 @@ class ProductResource extends JsonResource
             ]),
             'rating' => ['average' => (float) $this->rating_avg, 'count' => $this->rating_count],
             'images' => $this->whenLoaded('images', fn () => $this->images->map(fn (ProductImage $i) => $i->path)->all()),
+            'image_urls' => $this->whenLoaded('images', fn () => $this->images->map(fn (ProductImage $i) => app(StorageSigner::class)->readUrl($i->path))->all()),
             'categories' => $this->whenLoaded('categories', fn () => $this->categories->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name])->all()),
             'tags' => $this->whenLoaded('tags', fn () => $this->tags->map(fn (Tag $t) => ['id' => $t->id, 'name' => $t->name])->all()),
             'menu_ids' => $this->whenLoaded('menus', fn () => $this->menus->map(fn (VendorMenu $m) => $m->uuid)->all()),

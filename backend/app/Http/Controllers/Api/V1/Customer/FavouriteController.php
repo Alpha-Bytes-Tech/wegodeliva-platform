@@ -10,6 +10,7 @@ use App\Models\Favourite;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\Storage\StorageImages;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -29,6 +30,8 @@ class FavouriteController extends Controller
 
         $vendors = $favourites->pluck('vendor')->filter(fn (?Vendor $v) => $v !== null && $v->status === VendorStatus::Active)->values();
         $products = $favourites->pluck('product')->filter(fn (?Product $p) => $p !== null && $p->is_active && $p->vendor->status === VendorStatus::Active)->values();
+
+        app(StorageImages::class)->warm($vendors, $products);
 
         return response()->json(['data' => [
             'vendors' => VendorResource::collection($vendors)->resolve(),

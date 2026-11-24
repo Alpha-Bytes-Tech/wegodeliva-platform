@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Vendor;
 use App\Models\VendorHour;
 use App\Models\VendorMenu;
+use App\Services\Storage\StorageSigner;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -31,6 +32,9 @@ class VendorResource extends JsonResource
             'vendor_type' => $this->vendorType->slug,
             'logo_path' => $this->logo_path,
             'cover_path' => $this->cover_path,
+            // Short-lived signed links to the private images (sign a list first with StorageImages::warm).
+            'logo_url' => app(StorageSigner::class)->readUrl($this->logo_path),
+            'cover_url' => app(StorageSigner::class)->readUrl($this->cover_path),
             'address_line' => $this->address_line,
             'lat' => (float) $this->lat,
             'lng' => (float) $this->lng,

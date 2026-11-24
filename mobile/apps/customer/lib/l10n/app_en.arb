@@ -10,20 +10,15 @@
     }
   },
   "signOut": "Sign out",
-  "homeComingTitle": "Stores are on the way",
-  "homeComingMessage": "Restaurants, shops and services near you will show here in the next update.",
   "tabHome": "Home",
   "tabSearch": "Search",
   "tabOrders": "Orders",
   "tabWallet": "Wallet",
   "tabProfile": "Profile",
   "comingSoon": "Coming soon",
-  "searchComingMessage": "Search for stores and products arrives in the next update.",
   "ordersComingMessage": "Your orders, bookings and parcels will show here.",
   "walletComingMessage": "Your wallet balance and top-ups will show here.",
   "linkComingMessage": "This link opens in an upcoming version of the app.",
-  "storeTitle": "Store",
-  "productTitle": "Product",
   "chooseLocation": "Choose your location",
   "deliveringToLabel": "Delivering to",
   "deliveringTo": "Delivering to {place}. Tap to change.",
@@ -58,5 +53,175 @@
   },
   "updateRequiredTitle": "Please update WeGoDeliva",
   "updateRequiredMessage": "This version is no longer supported. Update to keep ordering.",
-  "updateNow": "Update now"
+  "updateNow": "Update now",
+  "searchHint": "Search stores and products",
+  "chooseLocationMessage": "Choose where we're delivering to, to see stores near you.",
+  "storesFailed": "Couldn't load stores.",
+  "noStoresNear": "No stores near you yet",
+  "noStoresNearMessage": "We're adding stores every week. Try another address.",
+  "featured": "Featured",
+  "openNearYou": "Open near you",
+  "noneOpenNow": "No stores are open near you right now.",
+  "storesTitle": "Stores",
+  "productsTitle": "Products",
+  "openNow": "Open now",
+  "busy": "Busy",
+  "closed": "Closed",
+  "sortRating": "Top rated",
+  "noStoresMatch": "No stores match these filters.",
+  "noRatingsYet": "New",
+  "ratingSemantics": "Rated {rating} out of 5 from {count} reviews",
+  "@ratingSemantics": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "metresAway": "{metres} m away",
+  "@metresAway": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "kmAway": "{km} km away",
+  "@kmAway": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "minutesRange": "{min}–{max} min",
+  "@minutesRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "pickupOnlyHere": "Pickup only here",
+  "soldOut": "Sold out",
+  "perHour": " / hour",
+  "perDay": " / day",
+  "perMonth": " / month",
+  "wasPrice": "Was {price}",
+  "@wasPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "recentSearches": "Recent searches",
+  "clear": "Clear",
+  "searchEmptyTitle": "Find food, groceries and more",
+  "searchEmptyMessage": "Search by store or product name.",
+  "searchFailed": "Search didn't work. Try again.",
+  "noResults": "Nothing found for \"{query}\"",
+  "@noResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "storeFailed": "Couldn't load this store.",
+  "menuTab": "Menu",
+  "infoTab": "Info",
+  "reviewsTab": "Reviews",
+  "addFavourite": "Save to favourites",
+  "removeFavourite": "Remove from favourites",
+  "favouriteFailed": "Couldn't update your favourites. Try again.",
+  "deliveryFeeLabel": "Delivery {fee}",
+  "@deliveryFeeLabel": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "noDeliveryHere": "Doesn't deliver to your address",
+  "minimumOrder": "Minimum order {amount}",
+  "@minimumOrder": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "closedCanSchedule": "This store is closed now. You can schedule an order for later at checkout.",
+  "closedNoSchedule": "This store is closed now.",
+  "allItems": "All",
+  "productsFailed": "Couldn't load the menu.",
+  "noProducts": "Nothing on the menu yet.",
+  "delivery": "Delivery",
+  "pickup": "Pickup",
+  "openingHours": "Opening hours",
+  "allDay": "Open 24 hours",
+  "reviewsFailed": "Couldn't load reviews.",
+  "noReviews": "No reviews yet.",
+  "starsOutOfFive": "{stars} out of 5 stars",
+  "@starsOutOfFive": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "customer": "Customer",
+  "productFailed": "Couldn't load this product.",
+  "prescriptionNeeded": "This item needs a prescription. Prescription orders arrive in a later update.",
+  "decreaseQuantity": "Decrease quantity",
+  "increaseQuantity": "Increase quantity",
+  "quantityLabel": "Quantity {count}",
+  "@quantityLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addToCart": "Add to cart · {total}",
+  "@addToCart": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "cartComingSoon": "The cart arrives in the next update.",
+  "chooseOne": "Choose 1",
+  "chooseBetween": "Choose {min}–{max}",
+  "@chooseBetween": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chooseUpTo": "Up to {max}",
+  "@chooseUpTo": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "optional": "Optional",
+  "favouritesTitle": "Favourites",
+  "favouritesFailed": "Couldn't load your favourites.",
+  "noFavouriteStores": "No saved stores yet. Tap the heart on a store to save it.",
+  "noFavouriteProducts": "No saved products yet."
 }

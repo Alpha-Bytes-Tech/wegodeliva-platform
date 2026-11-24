@@ -19,6 +19,7 @@ use App\Models\VendorType;
 use App\Services\Catalogue\ZoneLocator;
 use App\Services\Orders\BookingSlots;
 use App\Services\Pricing\DeliveryQuoter;
+use App\Services\Storage\StorageImages;
 use App\Support\Geo;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,6 +34,8 @@ use Illuminate\Support\Carbon;
  */
 class CatalogueController extends Controller
 {
+    public function __construct(private readonly StorageImages $images) {}
+
     public function vendorTypes(): AnonymousResourceCollection
     {
         return VendorTypeResource::collection(
@@ -106,7 +109,10 @@ class CatalogueController extends Controller
             ->orderByDesc('is_featured')
             ->orderBy('id');
 
-        return VendorResource::collection($query->simplePaginate($request->perPage())->withQueryString());
+        $page = $query->simplePaginate($request->perPage())->withQueryString();
+        $this->images->warm($page->items());
+
+        return VendorResource::collection($page);
     }
 
     public function vendor(OptionalPointRequest $request, Vendor $vendor): VendorResource
@@ -116,6 +122,8 @@ class CatalogueController extends Controller
         if ($point !== null) {
             $vendor->setAttribute('distance_m', Geo::distanceMeters($point[0], $point[1], (float) $vendor->lat, (float) $vendor->lng));
         }
+
+        $this->images->warm([$vendor]);
 
         return new VendorResource($vendor->load('vendorType', 'hours', 'menus'));
     }
@@ -156,6 +164,8 @@ class CatalogueController extends Controller
             ->cursorPaginate((int) ($validated['per_page'] ?? 30))
             ->withQueryString();
 
+        $this->images->warm(products: $products->items());
+
         return ProductResource::collection($products);
     }
 
@@ -165,6 +175,7 @@ class CatalogueController extends Controller
         $vendor = $this->activeVendor($product->vendor()->firstOrFail());
 
         $product->load('images', 'categories', 'tags', 'optionGroups.options');
+        $this->images->warm(products: [$product]);
 
         return response()->json(['data' => (new ProductResource($product))->resolve() + [
             'vendor' => ['id' => $vendor->uuid, 'slug' => $vendor->slug, 'name' => $vendor->name],
@@ -184,6 +195,7 @@ class CatalogueController extends Controller
             ->with('vendorType', 'hours')->orderBy('name')->limit($limit)->get();
         $products = Product::query()->available()->whereIn('vendor_id', $nearbyIds)->whereRaw('name ILIKE ?', [$term])
             ->with('images', 'vendor')->orderBy('name')->limit($limit)->get();
+        $this->images->warm($vendors, $products);
 
         return response()->json(['data' => [
             'vendors' => VendorResource::collection($vendors)->resolve(),
