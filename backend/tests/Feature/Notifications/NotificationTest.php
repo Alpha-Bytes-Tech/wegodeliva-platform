@@ -281,3 +281,14 @@ it('pushes to the user\'s devices for that app only, and drops tokens FCM reject
     notifiedOrder(key: 'k2');
     expect($fcm->sent)->toBe([]);
 });
+
+it('shows riders their own inbox and marks it read', function () {
+    $rider = makeUser(RoleName::Rider);
+    $rider->riderProfile()->forceCreate(['rider_type' => 'independent', 'approved_at' => now()]);
+    app(Documents::class)->request(EarningsOwner::Rider, $rider->id, 'drivers_licence', $this->admin, null);
+    $token = tokenFor($rider, ClientApp::Rider);
+
+    $this->withToken($token)->getJson('/api/v1/rider/notifications')->assertOk()->assertJsonCount(1, 'data');
+    $this->withToken($token)->postJson('/api/v1/rider/notifications/read')->assertOk()->assertJsonPath('data.marked', 1);
+    $this->withToken($token)->postJson('/api/v1/rider/notifications/read')->assertOk()->assertJsonPath('data.marked', 0);
+});

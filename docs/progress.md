@@ -51,6 +51,7 @@ Last updated: 2026-11-23
 - 2026-11-23 — Milestone 2.9a merged (PR #32).
 - 2026-11-23 — Milestone 2.9b merged (PR #33). All Phase 2 milestones are on `main`.
 - 2026-11-24 — The API moved to a new Laravel Cloud environment in the EU: `https://wegodeliva-platform-eu-production-q1ab72.laravel.cloud` (owner: all settings and deployments go there). Vercel `API_BASE_URL` updated and the admin panel redeployed; the US East environment is no longer used.
+- 2026-11-24 — Phase 2 checked: every API endpoint is exercised by a feature test (one gap, rider inbox mark-read, now tested) and the payment tests cover tampered amounts, wrong currency and replayed transactions. Phase 3 plan drafted (`docs/plans/phase-3.md`) with owner decisions: Google Maps, hosted checkout in an in-app browser, KYC verification later, staging APK from each PR.
 - 2026-11-23 — **Milestone 2.9b, service bookings** (owner decisions: 50% late-cancellation fee within 12 h; provider paid on confirmation): services as products of a services store (ADR 0014) with pricing unit, units, location, call-out fee, capacity and duration; free-slot lookup; booking quotes and placement through the normal checkout; provider confirm/decline, start with the customer's code, complete; customer confirm or report a problem; admin dispute resolution; `bookings:monitor` for acceptance timeouts, reminders and auto-confirmation. Phase 2 milestones are all built.
 
 ## In progress
